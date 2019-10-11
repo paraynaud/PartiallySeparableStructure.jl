@@ -4,5 +4,8 @@ include("../src/PartiallySeparableStructure.jl")
 
 using .PartiallySeparableStructure
 
-@test true
-@test greet() == nothing
+@testset "test de testS " begin
+    @test true
+    @test greet() == nothing
+    @test test_chemin(6) == 5 
+end
