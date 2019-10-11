@@ -16,3 +16,5 @@ module PartiallySeparableStructure
 
 
 end # module
+
+test_chemin(5)
