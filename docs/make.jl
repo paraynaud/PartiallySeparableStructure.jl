@@ -1,5 +1,8 @@
 using Documenter
 
+include("../src/PartiallySeparableStructure.jl")
+using .PartiallySeparableStructure
+
 
 makedocs(modules = [PartiallySeparableStructure],
 	 sitename="PartiallySeparableStructure.jl",
