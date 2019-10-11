@@ -7,5 +7,5 @@ using .PartiallySeparableStructure
 @testset "test de testS " begin
     @test true
     @test greet() == nothing
-    @test test_chemin(6) == 5 
+    @test test_chemin(6) == 6
 end
