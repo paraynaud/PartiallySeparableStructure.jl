@@ -1,6 +1,6 @@
 using Test
 
-include("../PartiallySeparableStructure.jl")
+include("../src/PartiallySeparableStructure.jl")
 
 using .PartiallySeparableStructure
 
