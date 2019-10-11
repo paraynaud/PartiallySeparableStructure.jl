@@ -1,4 +1,4 @@
-# creat_doc.jl Documentation
+# PartiallySeparable.jl Documentation
 
 ```@docs
 greet()
