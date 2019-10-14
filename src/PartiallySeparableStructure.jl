@@ -19,4 +19,4 @@ end # module
 
 using .PartiallySeparableStructure
 
-test_chemin(5)
+# test_chemin(5)
