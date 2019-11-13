@@ -1,5 +1,6 @@
 module interface_expr_node
 
+    _node_is_operator() = ()
     _node_is_plus() = ()
     _node_is_minus() = ()
     _node_is_times() = ()
@@ -10,7 +11,7 @@ module interface_expr_node
     _node_is_constant() = ()
 
 
-    
+
 
 
 end

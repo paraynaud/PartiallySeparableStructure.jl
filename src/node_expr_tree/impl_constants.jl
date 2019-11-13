@@ -1,7 +1,9 @@
 module constants
 
     import ..abstract_expr_node.ab_ex_nd, ..abstract_expr_node.create_node_expr
+    import ..interface_expr_node._node_is_plus, ..interface_expr_node._node_is_minus, ..interface_expr_node._node_is_power, ..interface_expr_node._node_is_times
 
+    import  ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
 
     mutable struct constant <: ab_ex_nd
         value :: Number
@@ -10,6 +12,17 @@ module constants
     function create_node_expr(x :: Number)
         return constant(x)
     end
+
+
+    _node_is_operator( c :: constant) = false
+    _node_is_plus( c :: constant) = false
+    _node_is_minus(c :: constant) = false
+    _node_is_times(c :: constant) = false
+    _node_is_power(c :: constant) = false
+
+    _node_is_variable(c :: constant) = false
+
+    _node_is_constant(c :: constant) = true
 
     export constant
 end
