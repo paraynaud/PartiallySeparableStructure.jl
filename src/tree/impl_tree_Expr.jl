@@ -13,7 +13,12 @@ module implementation_tree_Expr
         hd = ex.head
         args = ex.args
         if  hd == :call
-            return args[1]
+            op = args[1]
+            if op != :^
+                return args[1]
+            else
+                return vcat(args[1],args[end])
+            end
         elseif hd == :ref
             return args
         end
@@ -26,11 +31,17 @@ module implementation_tree_Expr
         hd = ex.head
         args = ex.args
         if hd == :call
-            return args[2:end]
+            op = args[1]
+            if op != :^
+                return args[2:end]
+            else
+                return args[2:end-1]
+            end
         elseif hd == :ref
             return []
         end
     end
+
     _get_children(ex :: Number) = ex
 
 

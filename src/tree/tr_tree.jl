@@ -9,6 +9,7 @@ module trait_tree
 
     is_type_trait_tree( a :: ab_tree) = type_trait_tree()
     is_type_trait_tree( a :: Expr) = type_trait_tree()
+    is_type_trait_tree( a :: Number) = type_trait_tree()
     is_type_trait_tree( a :: Any) = type_not_trait_tree()
 
     get_node(a) = _get_node(a, is_type_trait_tree(a))
@@ -23,3 +24,22 @@ module trait_tree
     export get_children
 
 end  # module trait_tree
+
+
+
+
+module algo_tree
+
+    using ..trait_tree
+
+    function printer_tree(tree, deepth = 0 )
+        ident = "\t"^deepth
+        nd = get_node(tree)
+        println(ident, nd )
+        ch = get_children(tree)
+        printer_tree.(ch, deepth + 1)
+    end
+
+    export printer_tree
+
+end

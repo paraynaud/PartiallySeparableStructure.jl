@@ -4,7 +4,9 @@ module abstract_expr_tree
 
     abstract type ab_ex_tr <: ab_tree end
 
+    create_expr_tree() = () 
 
-    export ab_tree
+
+    export ab_ex_tr
 
 end  # module abstract_expr_tree
