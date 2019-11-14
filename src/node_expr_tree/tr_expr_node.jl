@@ -3,6 +3,11 @@ module trait_expr_node
 
     import ..interface_expr_node._node_is_plus, ..interface_expr_node._node_is_minus, ..interface_expr_node._node_is_power, ..interface_expr_node._node_is_times
     import  ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
+    import ..interface_expr_node._get_type_node
+
+    using ..implementation_type_expr
+    using ..trait_type_expr
+
 
     struct type_expr_node end
     struct type_not_expr_node end
@@ -46,5 +51,22 @@ module trait_expr_node
     _node_is_constant(a, ::type_expr_node) = _node_is_constant(a)
     _node_is_constant(a, ::type_not_expr_node) = error("This node is not a expr node")
 
+
+    get_type_node(a) = _get_type_node(a, is_expr_node(a))
+    _get_type_node(a, ::type_expr_node) = _get_type_node(a)
+    _get_type_node(a, ::type_not_expr_node) = error("This node is not a expr node")
+    get_type_node(a,b) = _get_type_node(a, is_expr_node(a), b)
+    function _get_type_node(a, :: type_expr_node, b :: Array)
+         trait_array = trait_type_expr.is_trait_type_expr.(b)
+         preparation_cond = isa.(trait_array, trait_type_expr.type_type_expr)         
+         if foldl(&, preparation_cond) == true
+             _get_type_node(a,b)
+         else
+             error("nous n'avons pas que des types expr")
+         end
+    end
+    function _get_type_node(a, :: type_not_expr_node,b :: Array)
+             error("nous n'avons pas que des types expr")
+    end
 
 end  # module trait_expr_node

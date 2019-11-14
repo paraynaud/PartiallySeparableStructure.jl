@@ -5,6 +5,9 @@ module constants
 
     import  ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
 
+    import ..implementation_type_expr.t_type_expr_basic
+    import ..interface_expr_node._get_type_node
+
     mutable struct constant <: ab_ex_nd
         value :: Number
     end
@@ -23,6 +26,10 @@ module constants
     _node_is_variable(c :: constant) = false
 
     _node_is_constant(c :: constant) = true
+
+
+    _get_type_node(c :: constant) = t_type_expr_basic(0)
+
 
     export constant
 end

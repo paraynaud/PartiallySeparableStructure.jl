@@ -10,6 +10,7 @@ module interface_expr_node
 
     _node_is_constant() = ()
 
+    _get_type_node() = ()
 
 
 

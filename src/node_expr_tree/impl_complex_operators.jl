@@ -5,6 +5,11 @@ module operators
     import ..interface_expr_node._node_is_plus, ..interface_expr_node._node_is_minus, ..interface_expr_node._node_is_power, ..interface_expr_node._node_is_times
     import  ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
 
+
+    import ..implementation_type_expr.t_type_expr_basic
+    import ..trait_type_expr.type_product
+    import ..interface_expr_node._get_type_node
+
     mutable struct complex_operator <: ab_ex_nd
         op :: Symbol
         args :: Array
@@ -24,6 +29,10 @@ module operators
     _node_is_variable(op :: complex_operator ) = false
 
     _node_is_constant(op :: complex_operator ) = false
+
+    function _get_type_node(op :: complex_operator, type_ch :: Vector{t_type_expr_basic})
+        error("non fait")
+    end
 
 
     export operator

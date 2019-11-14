@@ -39,10 +39,12 @@ end  # module trait_expr_tree
 
 module algo_expr_tree
 
+    using ..trait_tree
     using ..trait_expr_tree
     using ..trait_expr_node
     using ..abstract_expr_tree
     using ..abstract_expr_node
+    using ..abstract_tree
 
 
     function transform_expr_tree(ex :: Expr)
@@ -65,7 +67,7 @@ module algo_expr_tree
     _delete_imbricated_plus(a, :: trait_expr_tree.type_not_expr_tree) = error(" This is not an expr tree")
     _delete_imbricated_plus(a, :: trait_expr_tree.type_expr_tree) = _delete_imbricated_plus(a)
 
-    function _delete_imbricated_plus( expr_tree)
+    function _delete_imbricated_plus( expr_tree )
         nd = trait_expr_tree.get_expr_node(expr_tree)
         if trait_expr_node.node_is_operator(nd)
             if trait_expr_node.node_is_plus(nd)
@@ -85,11 +87,35 @@ module algo_expr_tree
                     return vcat(vcat(res1...),vcat(res2...))
                 end
             else
-                return expr_tree
+                return [expr_tree]
             end
         else
-            return expr_tree
+            return [expr_tree]
         end
     end
+
+
+
+    get_type_tree(a :: Any) = _get_type_tree(a, trait_expr_tree.is_expr_tree(a))
+    _get_type_tree(a, :: trait_expr_tree.type_not_expr_tree) = error(" This is not an Expr tree")
+    _get_type_tree(a, :: trait_expr_tree.type_expr_tree) = _get_type_tree(a)
+
+    function _get_type_tree(expr_tree)
+        ch = trait_expr_tree.get_expr_children(expr_tree)
+        if isempty(ch)
+            nd =  trait_expr_tree.get_expr_node(expr_tree)
+            type_node = trait_expr_node.get_type_node(nd)
+            res_tree = abstract_tree.create_tree(type_node,[])
+            return res_tree
+        else
+            ch_type_tree = _get_type_tree.(ch)
+            ch_type_node = trait_tree.get_node.(ch_type_tree)
+            nd_op =  trait_expr_tree.get_expr_node(expr_tree)
+            type_node = trait_expr_node.get_type_node(nd_op, ch_type_node)
+            res_tree = abstract_tree.create_tree(type_node, ch_type_tree)
+            return res_tree
+        end
+    end
+
 
 end

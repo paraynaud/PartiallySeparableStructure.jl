@@ -6,6 +6,10 @@ module operators
     import  ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
 
 
+    import ..implementation_type_expr.t_type_expr_basic
+    import ..trait_type_expr.type_product
+    import ..interface_expr_node._get_type_node
+
     mutable struct simple_operator <: ab_ex_nd
         op :: Symbol
     end
@@ -24,6 +28,15 @@ module operators
     _node_is_variable(op :: simple_operator) = false
 
     _node_is_constant(op :: simple_operator) = false
+
+
+    function _get_type_node(op :: simple_operator, type_ch :: Vector{t_type_expr_basic})
+        if _node_is_plus(op) || _node_is_minus(op)
+            return max(type_ch...)
+        else
+            return foldl(type_product, type_ch)
+        end
+    end
 
     export operator
 end
