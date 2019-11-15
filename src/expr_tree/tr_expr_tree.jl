@@ -45,6 +45,8 @@ module algo_expr_tree
     using ..abstract_expr_tree
     using ..abstract_expr_node
     using ..abstract_tree
+    using ..implementation_tree
+    using ..implementation_type_expr
 
 
     function transform_expr_tree(ex :: Expr)
@@ -100,6 +102,23 @@ module algo_expr_tree
     _get_type_tree(a, :: trait_expr_tree.type_not_expr_tree) = error(" This is not an Expr tree")
     _get_type_tree(a, :: trait_expr_tree.type_expr_tree) = _get_type_tree(a)
 
+    # function _get_type_tree(expr_tree)
+    #     ch = trait_expr_tree.get_expr_children(expr_tree)
+    #     if isempty(ch)
+    #         nd =  trait_expr_tree.get_expr_node(expr_tree)
+    #         type_node = trait_expr_node.get_type_node(nd)
+    #         res_tree = abstract_tree.create_tree(type_node,[])
+    #         return res_tree
+    #     else
+    #         ch_type_tree = _get_type_tree.(ch)
+    #         ch_type_node = trait_tree.get_node.(ch_type_tree)
+    #         nd_op =  trait_expr_tree.get_expr_node(expr_tree)
+    #         type_node = trait_expr_node.get_type_node(nd_op, ch_type_node)
+    #         res_tree = abstract_tree.create_tree(type_node, ch_type_tree)
+    #         return res_tree
+    #     end
+    # end
+
     function _get_type_tree(expr_tree)
         ch = trait_expr_tree.get_expr_children(expr_tree)
         if isempty(ch)
@@ -107,9 +126,26 @@ module algo_expr_tree
             type_node = trait_expr_node.get_type_node(nd)
             res_tree = abstract_tree.create_tree(type_node,[])
             return res_tree
-        else
+        elseif length(ch) == 1
+            @show expr_tree
             ch_type_tree = _get_type_tree.(ch)
             ch_type_node = trait_tree.get_node.(ch_type_tree)
+            nd_op =  trait_expr_tree.get_expr_node(expr_tree)            
+            @show ch_type_node, nd_op
+            type_node = trait_expr_node.get_type_node(nd_op, ch_type_node)
+            @show "tadaa2"
+            res_tree = abstract_tree.create_tree(type_node, ch_type_tree)
+            return res_tree
+        else
+            n = length(ch)
+            ch_type_tree =  Vector{implementation_tree.type_node{implementation_type_expr.t_type_expr_basic}}(undef,n)
+            ch_type_node =  Vector{implementation_type_expr.t_type_expr_basic}(undef,n)
+            Threads.@threads for i in 1:n
+                ch_type_tree[i] = _get_type_tree(ch[i])
+            end
+            Threads.@threads for i in 1:length(ch_type_tree)
+                ch_type_node[i] = trait_tree.get_node(ch_type_tree[i])
+            end
             nd_op =  trait_expr_tree.get_expr_node(expr_tree)
             type_node = trait_expr_node.get_type_node(nd_op, ch_type_node)
             res_tree = abstract_tree.create_tree(type_node, ch_type_tree)

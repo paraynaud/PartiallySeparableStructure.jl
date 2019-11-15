@@ -57,13 +57,22 @@ module trait_expr_node
     _get_type_node(a, ::type_not_expr_node) = error("This node is not a expr node")
     get_type_node(a,b) = _get_type_node(a, is_expr_node(a), b)
     function _get_type_node(a, :: type_expr_node, b :: Array)
-         trait_array = trait_type_expr.is_trait_type_expr.(b)
-         preparation_cond = isa.(trait_array, trait_type_expr.type_type_expr)         
-         if foldl(&, preparation_cond) == true
-             _get_type_node(a,b)
-         else
-             error("nous n'avons pas que des types expr")
-         end
+        if length(b) == 1
+            if trait_type_expr.is_trait_type_expr(b[1]) == trait_type_expr.type_type_expr()
+                temp = _get_type_node(a,b)
+                return temp
+            else
+                error("erreur")
+            end
+        else
+             trait_array = trait_type_expr.is_trait_type_expr.(b)
+             preparation_cond = isa.(trait_array, trait_type_expr.type_type_expr)
+             if foldl(&, preparation_cond) == true
+                 return _get_type_node(a,b)
+             else
+                 error("nous n'avons pas que des types expr")
+             end
+        end
     end
     function _get_type_node(a, :: type_not_expr_node,b :: Array)
              error("nous n'avons pas que des types expr")

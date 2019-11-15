@@ -65,7 +65,7 @@ test_res_t_expr_7 = [ :(x[3]^2), :(x[5] * x[4]), :(-(x[1])), :(-(-(x[2])))]
 using MathOptInterface, JuMP
 
 m = Model()
-n_x = 1000000
+n_x = 1000
 # n_x = 5
 @variable(m, x[1:n_x])
 @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) )
@@ -75,8 +75,17 @@ obj = MathOptInterface.objective_expr(eval_test)
 t_obj =  algo_expr_tree.transform_expr_tree(obj)
 
 
+#compléxité linééaire par rapport aux nombre de variable (visuellement grâce à time)
 
-
-test_res = algo_expr_tree._get_type_tree(t_expr_4)
-@time test_res2 = algo_expr_tree._get_type_tree(t_obj)
+test_res = algo_expr_tree.get_type_tree(t_expr_4)
+@time test_res2 = algo_expr_tree.get_type_tree(t_obj)
 @show trait_tree.get_node(test_res2)
+
+t_expr_8 = abstract_expr_tree.create_expr_tree( :( (x[3]^3)+ (x[5] * x[4]) - (x[1] - x[2]) ) )
+t8 = algo_expr_tree.transform_expr_tree(t_expr_8)
+
+@time test_res3 =  algo_expr_tree.get_type_tree(t_expr_8)
+@time test_res_t3 =  algo_expr_tree.get_type_tree(t8)
+
+algo_tree.printer_tree(test_res3)
+algo_tree.printer_tree(test_res_t3)

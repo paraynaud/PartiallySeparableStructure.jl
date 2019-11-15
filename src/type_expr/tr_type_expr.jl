@@ -3,7 +3,7 @@ module trait_type_expr
     import ..implementation_type_expr.t_type_expr_basic
 
     import ..interface_type_expr._is_constant, ..interface_type_expr._is_linear, ..interface_type_expr._is_quadratic, ..interface_type_expr._is_more_than_quadratic
-    import ..interface_type_expr._type_product
+    import ..interface_type_expr._type_product, ..interface_type_expr._type_power
 
     struct type_type_expr end
     struct type_not_type_expr end
@@ -32,6 +32,9 @@ module trait_type_expr
     _type_product(a,b, :: Any, :: type_not_type_expr) = error("We don't have 2 type")
     _type_product(a,b, :: type_type_expr,:: type_type_expr) = _type_product(a,b)
 
+    type_power(a :: Number, b :: Any) = _type_power(a, b , is_trait_type_expr(b))
+    _type_power(a :: Number, b ,  :: type_not_type_expr) = error(" type_power not a tpye_expr")
+    _type_power(a :: Number, b ,  :: type_type_expr) = _type_power(a,b)
 
     export is_trait_type_expr, is_linear, is_constant, is_quadratic, _is_more_than_quadratic
 

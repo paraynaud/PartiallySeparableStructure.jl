@@ -7,7 +7,8 @@ module operators
 
 
     import ..implementation_type_expr.t_type_expr_basic
-    import ..trait_type_expr.type_product
+    import ..trait_type_expr.type_power
+
     import ..interface_expr_node._get_type_node
 
     mutable struct complex_operator <: ab_ex_nd
@@ -31,7 +32,14 @@ module operators
     _node_is_constant(op :: complex_operator ) = false
 
     function _get_type_node(op :: complex_operator, type_ch :: Vector{t_type_expr_basic})
-        error("non fait")
+        if _node_is_power(op)
+            index_power = op.args[1]
+            @show type_ch, index_power
+            return type_power(index_power, type_ch[1])
+        else
+            error("non fait pour le moment ")
+        end
+
     end
 
 
