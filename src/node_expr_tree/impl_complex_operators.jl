@@ -37,7 +37,7 @@ module operators
             @show type_ch, index_power
             return type_power(index_power, type_ch[1])
         else
-            error("non fait pour le moment ")
+            error("non fait pour le moment car uniquement pour la puissance actuellement ")
         end
 
     end

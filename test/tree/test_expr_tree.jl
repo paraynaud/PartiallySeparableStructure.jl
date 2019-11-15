@@ -87,5 +87,7 @@ t8 = algo_expr_tree.transform_expr_tree(t_expr_8)
 @time test_res3 =  algo_expr_tree.get_type_tree(t_expr_8)
 @time test_res_t3 =  algo_expr_tree.get_type_tree(t8)
 
+ # InteractiveUtils.@code_warntype   algo_expr_tree.get_type_tree(t8)
+ 
 algo_tree.printer_tree(test_res3)
 algo_tree.printer_tree(test_res_t3)

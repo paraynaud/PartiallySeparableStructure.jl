@@ -126,16 +126,6 @@ module algo_expr_tree
             type_node = trait_expr_node.get_type_node(nd)
             res_tree = abstract_tree.create_tree(type_node,[])
             return res_tree
-        elseif length(ch) == 1
-            @show expr_tree
-            ch_type_tree = _get_type_tree.(ch)
-            ch_type_node = trait_tree.get_node.(ch_type_tree)
-            nd_op =  trait_expr_tree.get_expr_node(expr_tree)            
-            @show ch_type_node, nd_op
-            type_node = trait_expr_node.get_type_node(nd_op, ch_type_node)
-            @show "tadaa2"
-            res_tree = abstract_tree.create_tree(type_node, ch_type_tree)
-            return res_tree
         else
             n = length(ch)
             ch_type_tree =  Vector{implementation_tree.type_node{implementation_type_expr.t_type_expr_basic}}(undef,n)
