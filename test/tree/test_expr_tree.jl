@@ -93,24 +93,6 @@ end
 
 @testset "get type of a expr tree" begin
 
-    m = Model()
-    n_x = 10
-    # n_x = 5
-    @variable(m, x[1:n_x])
-    @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) )
-    eval_test = JuMP.NLPEvaluator(m)
-    MathOptInterface.initialize(eval_test, [:ExprGraph])
-    obj = MathOptInterface.objective_expr(eval_test)
-    t_obj =  algo_expr_tree.transform_expr_tree(obj)
-
-
-
-
-    test_res_obj = algo_expr_tree.get_type_tree(t_obj)
-    @test trait_type_expr._is_quadratic(trait_tree.get_node(test_res_obj))
-    @test trait_type_expr._is_more_than_quadratic(trait_tree.get_node(test_res_obj)) == false
-
-
     t_expr_8 = abstract_expr_tree.create_expr_tree( :( (x[3]^3)+ (x[5] * x[4]) - (x[1] - x[2]) ) )
     t8 = algo_expr_tree.transform_expr_tree(t_expr_8)
 
@@ -119,8 +101,62 @@ end
     @test test_res8 == test_res_t8
     @test trait_type_expr._is_more_than_quadratic(trait_tree.get_node(test_res_t8) )
 
-    @time test_res4 =  algo_expr_tree.get_type_tree(t_obj)
-     # InteractiveUtils.@code_warntype   algo_expr_tree.get_type_tree(t8)
+    m = Model()
+    n_x = 100
+    # n_x = 5
+    @variable(m, x[1:n_x])
+    @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) )
+    eval_test = JuMP.NLPEvaluator(m)
+    MathOptInterface.initialize(eval_test, [:ExprGraph])
+    obj = MathOptInterface.objective_expr(eval_test)
+    t_obj =  algo_expr_tree.transform_expr_tree(obj)
 
-    
+    test_res_obj = algo_expr_tree.get_type_tree(t_obj)
+    @time @test trait_type_expr._is_quadratic(trait_tree.get_node(test_res_obj))
+    @test trait_type_expr._is_more_than_quadratic(trait_tree.get_node(test_res_obj)) == false
+
+
 end
+
+
+function expr_tree_factorielle_dif_node( n :: Integer)
+    if n == 0
+        constant_node = abstract_expr_node.create_node_expr(0)
+        new_leaf = abstract_expr_tree.create_expr_tree(constant_node)
+        return new_leaf
+    else
+        if n % 3 == 0
+            op_node = abstract_expr_node.create_node_expr(:+)
+            new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_dif_node.((n-1) * ones(Integer,n)) )
+            return new_node
+        elseif n % 3 == 1
+            op_node = abstract_expr_node.create_node_expr(:-)
+            new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_dif_node.((n-1) * ones(Integer,n)) )
+            return new_node
+        elseif n % 3 == 2
+            op_node = abstract_expr_node.create_node_expr(:*)
+            new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_dif_node.((n-1) * ones(Integer,n)) )
+            return new_node
+        end
+    end
+end
+
+
+function expr_tree_factorielle_plus( n :: Integer, op :: Symbol)
+    if n == 0
+        constant_node = abstract_expr_node.create_node_expr(0)
+        new_leaf = abstract_expr_tree.create_expr_tree(constant_node)
+        return new_leaf
+    else
+        op_node = abstract_expr_node.create_node_expr(op)
+        new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_plus.( (n-1) * ones(Integer,n), op) )
+        return new_node
+    end
+end
+
+test_fac_expr_tree = expr_tree_factorielle_dif_node(3)
+test_fac_expr_tree_plus = expr_tree_factorielle_plus(8, :+)
+
+# algo_tree.printer_tree(test_fac_expr_tree)
+# algo_tree.printer_tree(test_fac_expr_tree_plus)
+@time algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)

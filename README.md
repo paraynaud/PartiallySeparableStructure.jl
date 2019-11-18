@@ -18,10 +18,13 @@ Mon projet n'est donc pas structuré de la même manière que les projets julia 
   Pour finir si l'on veut utiliser l'outil il est nécessaire d'appeler les fichier dans le bon ordre, raison pour laquelle on retrouve dans chaque répertoire un fichier ordered_include.jl.
 
 
+
+
 # Points tricky:
 
-Pour récapituler mes structures de données possède une interface et sont coder dans des répertoires différents, cependant certaines d'entre elles sont dépendantes, il faut donc bien faire attention à comment appeler quel répertoire est appelé en premier, d'où le ordered_include.jl dans le répertoire src.
-J'ai aussi essayé de faire en sorte que chaque méthode dépendant de structure/interface particulière soit codé au plus près de la définition des structures/interfaces en question. Les algorithmes sont donc écris dans le même fichier que les traits mais dans un module différents qui possède également des import/using différents.
+- Pour récapituler mes structures de données possède une interface et sont coder dans des répertoires différents, cependant certaines d'entre elles sont dépendantes, il faut donc bien faire attention à comment appeler quel répertoire est appelé en premier, d'où le ordered_include.jl dans le répertoire src.
+- J'ai aussi essayé de faire en sorte que chaque méthode dépendant de structure/interface particulière soit codé au plus près de la définition des structures/interfaces en question. Les algorithmes sont donc écris dans le même fichier que les traits mais dans un module différents qui possède également des import/using différents.
+- J'avais des problèmes avec les includes classique, par rapport aux environnements. J'ai donc du utiliser des import ..<nom_de_module>, raison pour laquelle il est nécessaire que les modules en question soient bien à jour si ils sont modifié. Il est alors plus simple de lancer le oredered_include.jl du répertoire source ou alors de lancer les tests.
 
 
 # Similarités :

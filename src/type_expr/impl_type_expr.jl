@@ -5,21 +5,13 @@ module implementation_type_expr
 
     @enum t_type_expr_basic constant=0 linear=1 quadratic=2 more=3
 
-    function _is_constant(t :: t_type_expr_basic)
-        return t == constant
-    end
+    _is_constant(t :: t_type_expr_basic) = (t == constant)
 
-    function _is_linear(t :: t_type_expr_basic)
-        return t == linear
-    end
+    _is_linear(t :: t_type_expr_basic) = ( t == linear)
 
-    function _is_quadratic(t :: t_type_expr_basic)
-        return t == quadratic
-    end
+    _is_quadratic(t :: t_type_expr_basic) = (t == quadratic)
 
-    function _is_more_than_quadratic(t :: t_type_expr_basic)
-        return t == more
-    end
+    _is_more_than_quadratic(t :: t_type_expr_basic) = (t == more)
 
     function _type_product(a  :: t_type_expr_basic,b :: t_type_expr_basic)
         if _is_constant(a)
