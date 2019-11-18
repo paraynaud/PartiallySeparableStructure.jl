@@ -9,7 +9,7 @@ module variables
     import ..implementation_type_expr.t_type_expr_basic
     import ..interface_expr_node._get_type_node
 
-
+    import Base.(==)
 
     mutable struct variable <: ab_ex_nd
         name :: Symbol
@@ -35,6 +35,9 @@ module variables
     _node_is_constant(v :: variable) = false
 
     _get_type_node(v :: variable) = t_type_expr_basic(1)
+
+    (==)(a :: variable, b :: variable) =  (a.name == b.name) && (a.index == b.index)
+
 
     export variable
 end

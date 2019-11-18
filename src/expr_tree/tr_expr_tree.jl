@@ -5,6 +5,9 @@ module trait_expr_tree
     import ..interface_expr_tree._get_expr_node, ..interface_expr_tree._get_expr_children, ..interface_expr_tree._inverse_expr_tree
     import ..implementation_expr_tree.t_expr_tree
 
+    import Base.==
+    using Base.Threads
+
 
     struct type_expr_tree end
     struct type_not_expr_tree end
@@ -29,6 +32,34 @@ module trait_expr_tree
     inverse_expr_tree(a) = _inverse_expr_tree(a, is_expr_tree(a))
     _inverse_expr_tree(a, ::type_not_expr_tree) = error("This is not an expr tree")
     _inverse_expr_tree(a, ::type_expr_tree) = _inverse_expr_tree(a)
+
+
+    expr_tree_equal(a,b,eq :: Atomic{Bool}=Atomic{Bool}(true)) = hand_expr_tree_equal(a,b,is_expr_tree(a), is_expr_tree(b),eq)
+    hand_expr_tree_equal(a , b, :: type_not_expr_tree, :: Any, eq) = error("we can't compare if these two tree are not expr tree")
+    hand_expr_tree_equal(a , b, :: Any, :: type_not_expr_tree, eq) = error("we can't compare if these two tree are not expr tree")
+    function hand_expr_tree_equal(a , b, :: type_expr_tree,  :: type_expr_tree, eq :: Atomic{Bool})
+        if eq[]
+            if _get_expr_node(a) == _get_expr_node(b)
+                ch_a = _get_expr_children(a)
+                ch_b = _get_expr_children(b)
+                if length(ch_a) != length(ch_b)
+                    Threads.atomic_and!(eq, false )
+                elseif ch_a == []
+                else
+                    Threads.@threads for i in 1:length(ch_a)
+                        expr_tree_equal(ch_a[i],ch_b[i],eq)
+                    end
+                end
+            else
+                Threads.atomic_and!(eq, false )
+            end
+            return eq[]
+        end
+        return false
+    end
+
+
+
 
 
     export is_expr_tree, get_expr_node, get_expr_children, inverse_expr_tree
@@ -101,23 +132,6 @@ module algo_expr_tree
     get_type_tree(a :: Any) = _get_type_tree(a, trait_expr_tree.is_expr_tree(a))
     _get_type_tree(a, :: trait_expr_tree.type_not_expr_tree) = error(" This is not an Expr tree")
     _get_type_tree(a, :: trait_expr_tree.type_expr_tree) = _get_type_tree(a)
-
-    # function _get_type_tree(expr_tree)
-    #     ch = trait_expr_tree.get_expr_children(expr_tree)
-    #     if isempty(ch)
-    #         nd =  trait_expr_tree.get_expr_node(expr_tree)
-    #         type_node = trait_expr_node.get_type_node(nd)
-    #         res_tree = abstract_tree.create_tree(type_node,[])
-    #         return res_tree
-    #     else
-    #         ch_type_tree = _get_type_tree.(ch)
-    #         ch_type_node = trait_tree.get_node.(ch_type_tree)
-    #         nd_op =  trait_expr_tree.get_expr_node(expr_tree)
-    #         type_node = trait_expr_node.get_type_node(nd_op, ch_type_node)
-    #         res_tree = abstract_tree.create_tree(type_node, ch_type_tree)
-    #         return res_tree
-    #     end
-    # end
 
     function _get_type_tree(expr_tree)
         ch = trait_expr_tree.get_expr_children(expr_tree)

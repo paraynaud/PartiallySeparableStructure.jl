@@ -8,6 +8,8 @@ module constants
     import ..implementation_type_expr.t_type_expr_basic
     import ..interface_expr_node._get_type_node
 
+    import Base.==
+
     mutable struct constant <: ab_ex_nd
         value :: Number
     end
@@ -30,6 +32,7 @@ module constants
 
     _get_type_node(c :: constant) = t_type_expr_basic(0)
 
+    (==)(a :: constant, b :: constant) = (a.value == b.value)
 
     export constant
 end

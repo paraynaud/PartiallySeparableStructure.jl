@@ -1,7 +1,8 @@
 module implementation_expr_tree_Expr
 
     import ..abstract_expr_tree.create_expr_tree
-    import ..abstract_expr_node.create_node_expr
+    # import ..abstract_expr_node.create_node_expr
+    using ..abstract_expr_node
     import ..interface_expr_tree._get_expr_node, ..interface_expr_tree._get_expr_children, ..interface_expr_tree._inverse_expr_tree
 
     function create_expr_tree( ex :: Expr)

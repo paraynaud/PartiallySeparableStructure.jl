@@ -11,6 +11,8 @@ module operators
 
     import ..interface_expr_node._get_type_node
 
+    import Base.==
+
     mutable struct complex_operator <: ab_ex_nd
         op :: Symbol
         args :: Array
@@ -34,13 +36,14 @@ module operators
     function _get_type_node(op :: complex_operator, type_ch :: Vector{t_type_expr_basic})
         if _node_is_power(op)
             index_power = op.args[1]
-            @show type_ch, index_power
             return type_power(index_power, type_ch[1])
         else
             error("non fait pour le moment car uniquement pour la puissance actuellement ")
         end
 
     end
+
+    (==)(a :: complex_operator, b :: complex_operator) = ( (a.op == b.op ) && (a.args == b.args) )
 
 
     export operator

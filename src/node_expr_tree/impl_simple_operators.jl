@@ -10,6 +10,8 @@ module operators
     import ..trait_type_expr.type_product
     import ..interface_expr_node._get_type_node
 
+    import Base.==
+
     mutable struct simple_operator <: ab_ex_nd
         op :: Symbol
     end
@@ -37,6 +39,8 @@ module operators
             return foldl(type_product, type_ch)
         end
     end
+
+    (==)(a :: simple_operator, b :: simple_operator) = (a.op == b.op)
 
     export operator
 end
