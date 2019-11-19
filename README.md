@@ -1,3 +1,10 @@
+# Build & Code coverage
+
+https://travis-ci.com/paraynaud/PartiallySeparableStructure.jl.svg?branch=master
+
+[![Coverage Status](https://coveralls.io/repos/github/paraynaud/PartiallySeparableStructure.jl/badge.svg?branch=master)](https://coveralls.io/github/paraynaud/PartiallySeparableStructure.jl?branch=master)
+
+
 # PartiallySeparableStructure.jl
 package ayant pour but d'obtenir la structure partiellement séparable d'une Expr
 
