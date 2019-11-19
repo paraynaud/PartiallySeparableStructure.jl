@@ -1,6 +1,6 @@
 # Build & Code coverage
 
-https://travis-ci.com/paraynaud/PartiallySeparableStructure.jl.svg?branch=master
+[![Build Status](https://travis-ci.com/paraynaud/PartiallySeparableStructure.jl.svg?branch=master)](https://travis-ci.com/paraynaud/PartiallySeparableStructure.jl)
 
 [![Coverage Status](https://coveralls.io/repos/github/paraynaud/PartiallySeparableStructure.jl/badge.svg?branch=master)](https://coveralls.io/github/paraynaud/PartiallySeparableStructure.jl?branch=master)
 
