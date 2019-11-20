@@ -1,6 +1,6 @@
 language: julia
 coveralls: true
-codecov:
+codecov: true
 os:
   - linux
 
