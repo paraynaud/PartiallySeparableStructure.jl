@@ -4,7 +4,7 @@ module operators
 
     import ..interface_expr_node._node_is_plus, ..interface_expr_node._node_is_minus, ..interface_expr_node._node_is_power, ..interface_expr_node._node_is_times
     import  ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
-
+    import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
 
     import ..implementation_type_expr.t_type_expr_basic
     import ..trait_type_expr.type_power
@@ -28,6 +28,9 @@ module operators
     _node_is_minus(op :: complex_operator ) = (op.op == :-)
     _node_is_times(op :: complex_operator ) = (op.op == :*)
     _node_is_power(op :: complex_operator ) = (op.op == :^)
+    _node_is_sin(op :: complex_operator) = (op.op == :sin)
+    _node_is_cos(op :: complex_operator) = (op.op == :cos)
+    _node_is_tan(op :: complex_operator) = (op.op == :tan)
 
     _node_is_variable(op :: complex_operator ) = false
 

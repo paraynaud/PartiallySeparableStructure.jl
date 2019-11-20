@@ -115,6 +115,15 @@ end
     @time @test trait_type_expr._is_quadratic(trait_tree.get_node(test_res_obj))
     @test trait_type_expr._is_more_than_quadratic(trait_tree.get_node(test_res_obj)) == false
 
+    t_expr_9 = abstract_expr_tree.create_expr_tree( :( x[1] + sin(x[2])) )
+    res_t_expr_9 = algo_expr_tree.delete_imbricated_plus(t_expr_9)
+    # algo_tree.printer_tree.(res_t_expr_9)
+    # test_res9 =  algo_expr_tree.get_type_tree(t_expr_9)
+    algo_expr_tree.get_type_tree(t_expr_9)
+    # algo_tree.printer_tree(test_res9)
+    # @show trait_type_expr._is_more_than_quadratic( trait_tree.get_node(test_res9))
+    # @show trait_type_expr._is_linear( trait_tree.get_node(test_res9))
+
 
 end
 

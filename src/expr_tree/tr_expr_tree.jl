@@ -138,7 +138,7 @@ module algo_expr_tree
         if isempty(ch)
             nd =  trait_expr_tree.get_expr_node(expr_tree)
             type_node = trait_expr_node.get_type_node(nd)
-            res_tree = abstract_tree.create_tree(type_node,[])
+            res_tree = abstract_tree.create_tree(type_node,[])            
             return res_tree
         else
             n = length(ch)

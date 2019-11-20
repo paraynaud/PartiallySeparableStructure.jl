@@ -4,10 +4,10 @@ module operators
 
     import ..interface_expr_node._node_is_plus, ..interface_expr_node._node_is_minus, ..interface_expr_node._node_is_power, ..interface_expr_node._node_is_times
     import  ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
-
+    import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
 
     import ..implementation_type_expr.t_type_expr_basic
-    import ..trait_type_expr.type_product
+    using ..trait_type_expr
     import ..interface_expr_node._get_type_node
 
     import Base.==
@@ -26,6 +26,9 @@ module operators
     _node_is_minus(op :: simple_operator) = (op.op == :-)
     _node_is_times(op :: simple_operator) = (op.op == :*)
     _node_is_power(op :: simple_operator) = false
+    _node_is_sin(op :: simple_operator) = (op.op == :sin)
+    _node_is_cos(op :: simple_operator) = (op.op == :cos)
+    _node_is_tan(op :: simple_operator) = (op.op == :tan)
 
     _node_is_variable(op :: simple_operator) = false
 
@@ -35,8 +38,23 @@ module operators
     function _get_type_node(op :: simple_operator, type_ch :: Vector{t_type_expr_basic})
         if _node_is_plus(op) || _node_is_minus(op)
             return max(type_ch...)
+        elseif _node_is_times(op)
+            return foldl(trait_type_expr.type_product, type_ch)
+        elseif _node_is_tan(op) || _node_is_cos(op) || _node_is_sin(op)
+            if length(type_ch) == 1
+                t_child = type_ch[1]
+                @show _node_is_constant(t_child)
+                if _node_is_constant(t_child)
+                    return t_child
+                else
+                    @show "coucou"
+                    return t_type_expr_basic(3)
+                end
+            else
+                error("trigonometric function should have only one child")
+            end
         else
-            return foldl(type_product, type_ch)
+            error("operator undefined")
         end
     end
 

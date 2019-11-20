@@ -2,7 +2,8 @@ module trait_expr_node
     import ..abstract_expr_node.ab_ex_nd
 
     import ..interface_expr_node._node_is_plus, ..interface_expr_node._node_is_minus, ..interface_expr_node._node_is_power, ..interface_expr_node._node_is_times
-    import  ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
+    import ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
+    import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
     import ..interface_expr_node._get_type_node
 
     using ..implementation_type_expr
@@ -37,6 +38,17 @@ module trait_expr_node
     _node_is_power(a, ::type_expr_node) = _node_is_power(a)
     _node_is_power(a, ::type_not_expr_node) = error("This node is not a expr node")
 
+    node_is_sin(a) = _node_is_sin(a, is_expr_node(a))
+    _node_is_sin(a, ::type_expr_node) = _node_is_sin(a)
+    _node_is_sin(a, ::type_not_expr_node) = error("This node is not a expr node")
+
+    node_is_cos(a) = _node_is_cos(a, is_expr_node(a))
+    _node_is_cos(a, ::type_expr_node) = _node_is_cos(a)
+    _node_is_cos(a, ::type_not_expr_node) = error("This node is not a expr node")
+
+    node_is_tan(a) = _node_is_tan(a, is_expr_node(a))
+    _node_is_tan(a, ::type_expr_node) = _node_is_tan(a)
+    _node_is_tan(a, ::type_not_expr_node) = error("This node is not a expr node")
 
 """ partie sur les variables """
 

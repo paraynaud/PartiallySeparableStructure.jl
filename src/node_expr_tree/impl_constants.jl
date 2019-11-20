@@ -4,6 +4,7 @@ module constants
     import ..interface_expr_node._node_is_plus, ..interface_expr_node._node_is_minus, ..interface_expr_node._node_is_power, ..interface_expr_node._node_is_times
 
     import  ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
+    import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
 
     import ..implementation_type_expr.t_type_expr_basic
     import ..interface_expr_node._get_type_node
@@ -24,6 +25,9 @@ module constants
     _node_is_minus(c :: constant) = false
     _node_is_times(c :: constant) = false
     _node_is_power(c :: constant) = false
+    _node_is_sin(c :: constant) = false
+    _node_is_cos(c :: constant) = false
+    _node_is_tan(c :: constant) = false
 
     _node_is_variable(c :: constant) = false
 

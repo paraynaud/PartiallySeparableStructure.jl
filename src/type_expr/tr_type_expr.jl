@@ -19,11 +19,11 @@ module trait_type_expr
     _is_linear(a, ::type_not_type_expr ) = error("This is not a type of expr")
     _is_linear(a, ::type_type_expr ) = _is_linear(a)
 
-    is_quadratic(a :: Any ) = _is_quadratic(a, is_trait_type_expr(a))
+    is_quadratic(a :: Any ) = _is_quadratic(a, is_trait_type__expr(a))
     _is_quadratic(a, ::type_not_type_expr ) = error("This is not a type of expr")
     _is_quadratic(a, ::type_type_expr ) = _is_quadratic(a)
 
-    is_more_than(a :: Any ) = _is_more_than_quadratic(a, is_trait_type_expr(a))
+    is_more_than_quadratic(a :: Any ) = _is_more_than_quadratic(a, is_trait_type_expr(a))
     _is_more_than_quadratic(a, ::type_not_type_expr ) = error("This is not a type of expr")
     _is_more_than_quadratic(a, ::type_type_expr ) = _is_more_than_quadratic(a)
 
