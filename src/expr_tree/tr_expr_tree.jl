@@ -138,7 +138,7 @@ module algo_expr_tree
         if isempty(ch)
             nd =  trait_expr_tree.get_expr_node(expr_tree)
             type_node = trait_expr_node.get_type_node(nd)
-            res_tree = abstract_tree.create_tree(type_node,[])            
+            res_tree = abstract_tree.create_tree(type_node,[])
             return res_tree
         else
             n = length(ch)
@@ -150,6 +150,8 @@ module algo_expr_tree
             Threads.@threads for i in 1:length(ch_type_tree)
                 ch_type_node[i] = trait_tree.get_node(ch_type_tree[i])
             end
+            # ch_type_tree = _get_type_tree.(ch)
+            # ch_type_node = trait_tree.get_node.(ch_type_tree)
             nd_op =  trait_expr_tree.get_expr_node(expr_tree)
             type_node = trait_expr_node.get_type_node(nd_op, ch_type_node)
             res_tree = abstract_tree.create_tree(type_node, ch_type_tree)
