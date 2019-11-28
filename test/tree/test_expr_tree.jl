@@ -172,4 +172,3 @@ test_fac_expr_tree_plus = expr_tree_factorielle_plus(8, :+) :: implementation_ex
 @time algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
 @time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
 InteractiveUtils.@code_warntype  algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
->>>>>>> 0f1a6102cc65566ab6ac0544a22869427bb249e9
