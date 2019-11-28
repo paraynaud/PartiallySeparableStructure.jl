@@ -124,8 +124,6 @@ end
     @test trait_type_expr.is_linear(algo_tree.get_node(algo_expr_tree.get_type_tree(t_expr_9))) == false
     @test trait_type_expr.is_more_than_quadratic(algo_tree.get_node(algo_expr_tree.get_type_tree(t_expr_9)))
     # algo_tree.printer_tree(test_res9)
-    # @show trait_type_expr._is_more_than_quadratic( trait_tree.get_node(test_res9))
-    # @show trait_type_expr._is_linear( trait_tree.get_node(test_res9))
 
 
 end
@@ -166,9 +164,11 @@ function expr_tree_factorielle_plus( n :: Integer, op :: Symbol)
     end
 end
 
-test_fac_expr_tree = expr_tree_factorielle_dif_node(3)
-test_fac_expr_tree_plus = expr_tree_factorielle_plus(8, :+)
+test_fac_expr_tree = expr_tree_factorielle_dif_node(3) :: implementation_expr_tree.t_expr_tree
+test_fac_expr_tree_plus = expr_tree_factorielle_plus(8, :+) :: implementation_expr_tree.t_expr_tree
 
 # algo_tree.printer_tree(test_fac_expr_tree)
 # algo_tree.printer_tree(test_fac_expr_tree_plus)
 @time algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
+@time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
+InteractiveUtils.@code_warntype  algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)

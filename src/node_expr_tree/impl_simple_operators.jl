@@ -37,16 +37,19 @@ module operators
 
     function _get_type_node(op :: simple_operator, type_ch :: Vector{t_type_expr_basic})
         if _node_is_plus(op) || _node_is_minus(op)
-            return max(type_ch...)
+            if length(type_ch) == 1
+                return type_ch[1]
+            else
+                return max(type_ch...)
+            end
         elseif _node_is_times(op)
             return foldl(trait_type_expr.type_product, type_ch)
         elseif _node_is_tan(op) || _node_is_cos(op) || _node_is_sin(op)
             if length(type_ch) == 1
                 t_child = type_ch[1]
-                @show trait_type_expr._is_constant(t_child)
                 if trait_type_expr._is_constant(t_child)
                     return t_child
-                else                    
+                else
                     return t_type_expr_basic(3)
                 end
             else
