@@ -6,7 +6,7 @@ module constants
     import  ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
     import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
 
-    import ..implementation_type_expr.t_type_expr_basic
+    using ..implementation_type_expr
     import ..interface_expr_node._get_type_node
 
     import Base.==
@@ -34,7 +34,7 @@ module constants
     _node_is_constant(c :: constant) = true
 
 
-    _get_type_node(c :: constant) = t_type_expr_basic(0)
+    _get_type_node(c :: constant) = implementation_type_expr.return_constant()
 
     (==)(a :: constant, b :: constant) = (a.value == b.value)
 

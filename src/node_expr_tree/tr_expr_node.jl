@@ -77,9 +77,14 @@ module trait_expr_node
                 error("erreur")
             end
         else
+            # nous voulons vérifier que chaque élément du tableau vérifie bien le trait type_expr
+            # application de la fonction à chauqe élement vérifiant si ils satisfassent le trait.
              trait_array = trait_type_expr.is_trait_type_expr.(b)
+             #une fois cela fait, on vérifie qu'il satisfasse chacun le trait
              preparation_cond = isa.(trait_array, trait_type_expr.type_type_expr)
-             if foldl(&, preparation_cond) == true
+             # on réalise un ⋂ sur le tableau vérifiant leurs appartenance au trait
+             cond = foldl(&, preparation_cond) == true
+             if cond
                  return _get_type_node(a,b)
              else
                  error("nous n'avons pas que des types expr")

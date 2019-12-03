@@ -6,7 +6,7 @@ module operators
     import ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
     import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
 
-    import ..implementation_type_expr.t_type_expr_basic
+    using ..implementation_type_expr
     using ..trait_type_expr
     import ..interface_expr_node._get_type_node
 
@@ -35,7 +35,7 @@ module operators
     _node_is_constant(op :: simple_operator) = false
 
 
-    function _get_type_node(op :: simple_operator, type_ch :: Vector{t_type_expr_basic})
+    function _get_type_node(op :: simple_operator, type_ch :: Vector{implementation_type_expr.t_type_expr_basic})
         if _node_is_plus(op) || _node_is_minus(op)
             if length(type_ch) == 1
                 return type_ch[1]
@@ -50,7 +50,7 @@ module operators
                 if trait_type_expr._is_constant(t_child)
                     return t_child
                 else
-                    return t_type_expr_basic(3)
+                    return implementation_type_expr.return_more()
                 end
             else
                 error("trigonometric function should have only one child")

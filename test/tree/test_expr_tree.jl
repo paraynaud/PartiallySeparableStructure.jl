@@ -119,6 +119,7 @@ end
     res_t_expr_9 = algo_expr_tree.delete_imbricated_plus(t_expr_9)
     # algo_tree.printer_tree.(res_t_expr_9)
     # algo_tree.printer_tree(t_expr_9)
+    InteractiveUtils.@code_warntype algo_expr_tree.delete_imbricated_plus(t_expr_9)
 
     # test_res9 =  algo_expr_tree.get_type_tree(t_expr_9)
     @test trait_type_expr.is_linear(algo_tree.get_node(algo_expr_tree.get_type_tree(t_expr_9))) == false
@@ -164,12 +165,19 @@ function expr_tree_factorielle_plus( n :: Integer, op :: Symbol)
     end
 end
 
-test_fac_expr_tree = expr_tree_factorielle_dif_node(3) :: implementation_expr_tree.t_expr_tree
-test_fac_expr_tree_plus = expr_tree_factorielle_plus(8, :+) :: implementation_expr_tree.t_expr_tree
 
-# algo_tree.printer_tree(test_fac_expr_tree)
-# algo_tree.printer_tree(test_fac_expr_tree_plus)
-@time algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
-@time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
-InteractiveUtils.@code_warntype  algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
->>>>>>> 0f1a6102cc65566ab6ac0544a22869427bb249e9
+test_fac_expr_tree = expr_tree_factorielle_dif_node(3) :: implementation_expr_tree.t_expr_tree
+test_fac_expr_tree_plus = expr_tree_factorielle_plus(9, :+) :: implementation_expr_tree.t_expr_tree
+
+@testset "test arbres factorielle désimbriqué les +" begin
+    # algo_tree.printer_tree(test_fac_expr_tree)
+    # algo_tree.printer_tree(test_fac_expr_tree_plus)
+    @time test_fac_expr_tree_plus_no_plus = algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
+    # @time algo_expr_tree.get_type_tree.(test_fac_expr_tree_plus_no_plus) # ca ne semble pas être une bonne idée ou alors encore parralélisé
+    # algo_tree.printer_tree.(test_fac_expr_tree_plus_no_plus)
+    # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
+end
+
+@testset "test arbres factorielle get type" begin
+    @time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
+end

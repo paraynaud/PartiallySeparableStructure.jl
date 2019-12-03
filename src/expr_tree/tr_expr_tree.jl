@@ -100,12 +100,17 @@ module algo_expr_tree
     _delete_imbricated_plus(a, :: trait_expr_tree.type_not_expr_tree) = error(" This is not an expr tree")
     _delete_imbricated_plus(a, :: trait_expr_tree.type_expr_tree) = _delete_imbricated_plus(a)
 
-    function _delete_imbricated_plus( expr_tree )
+    function _delete_imbricated_plus( expr_tree :: T ) where T
         nd = trait_expr_tree.get_expr_node(expr_tree)
         if trait_expr_node.node_is_operator(nd)
             if trait_expr_node.node_is_plus(nd)
                 ch = trait_expr_tree.get_expr_children(expr_tree)
-                res = delete_imbricated_plus.(ch)
+                n = length(ch)
+                res = Vector{}(undef,n)
+                Threads.@threads for i in 1:n
+                    res[i] = delete_imbricated_plus(ch[i])
+                end
+                # res = delete_imbricated_plus.(ch)
                 return vcat(res...)
             elseif trait_expr_node.node_is_minus(nd)
                 ch = trait_expr_tree.get_expr_children(expr_tree)
