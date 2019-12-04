@@ -99,7 +99,7 @@ end
     test_res8 =  algo_expr_tree.get_type_tree(t_expr_8)
     test_res_t8 =  algo_expr_tree.get_type_tree(t8)
     @test test_res8 == test_res_t8
-    @test trait_type_expr._is_more_than_quadratic(trait_tree.get_node(test_res_t8) )
+    @test trait_type_expr._is_more_than_quadratic(test_res_t8)
 
     m = Model()
     n_x = 100
@@ -112,19 +112,16 @@ end
     t_obj =  algo_expr_tree.transform_expr_tree(obj)
 
     test_res_obj = algo_expr_tree.get_type_tree(t_obj)
-    @time @test trait_type_expr._is_quadratic(trait_tree.get_node(test_res_obj))
-    @test trait_type_expr._is_more_than_quadratic(trait_tree.get_node(test_res_obj)) == false
+    @test trait_type_expr._is_quadratic(test_res_obj)
+    @test trait_type_expr._is_more_than_quadratic(test_res_obj) == false
 
     t_expr_9 = abstract_expr_tree.create_expr_tree( :( x[1] + sin(x[2])) )
     res_t_expr_9 = algo_expr_tree.delete_imbricated_plus(t_expr_9)
-    # algo_tree.printer_tree.(res_t_expr_9)
-    # algo_tree.printer_tree(t_expr_9)
+
     InteractiveUtils.@code_warntype algo_expr_tree.delete_imbricated_plus(t_expr_9)
 
-    # test_res9 =  algo_expr_tree.get_type_tree(t_expr_9)
-    @test trait_type_expr.is_linear(algo_tree.get_node(algo_expr_tree.get_type_tree(t_expr_9))) == false
-    @test trait_type_expr.is_more_than_quadratic(algo_tree.get_node(algo_expr_tree.get_type_tree(t_expr_9)))
-    # algo_tree.printer_tree(test_res9)
+    @test trait_type_expr.is_linear(algo_expr_tree.get_type_tree(t_expr_9)) == false
+    @test trait_type_expr.is_more_than_quadratic(algo_expr_tree.get_type_tree(t_expr_9))
 
 
 end
@@ -132,7 +129,7 @@ end
 
 function expr_tree_factorielle_dif_node( n :: Integer)
     if n == 0
-        constant_node = abstract_expr_node.create_node_expr(0)
+        constant_node = abstract_expr_node.create_node_expr(:x,1)
         new_leaf = abstract_expr_tree.create_expr_tree(constant_node)
         return new_leaf
     else
@@ -158,16 +155,18 @@ function expr_tree_factorielle_plus( n :: Integer, op :: Symbol)
         constant_node = abstract_expr_node.create_node_expr(0)
         new_leaf = abstract_expr_tree.create_expr_tree(constant_node)
         return new_leaf
+        # return abstract_expr_tree.create_expr_tree(abstract_expr_node.create_node_expr(0))
     else
         op_node = abstract_expr_node.create_node_expr(op)
         new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_plus.( (n-1) * ones(Integer,n), op) )
         return new_node
+        # return abstract_expr_tree.create_expr_tree(abstract_expr_node.create_node_expr(op), expr_tree_factorielle_plus.( (n-1) * ones(Integer,n), op) )
     end
 end
 
 
 test_fac_expr_tree = expr_tree_factorielle_dif_node(3) :: implementation_expr_tree.t_expr_tree
-test_fac_expr_tree_plus = expr_tree_factorielle_plus(9, :+) :: implementation_expr_tree.t_expr_tree
+@time test_fac_expr_tree_plus = expr_tree_factorielle_plus(9, :+) :: implementation_expr_tree.t_expr_tree
 
 @testset "test arbres factorielle désimbriqué les +" begin
     # algo_tree.printer_tree(test_fac_expr_tree)
@@ -181,3 +180,6 @@ end
 @testset "test arbres factorielle get type" begin
     @time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
 end
+
+# InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
+# InteractiveUtils.@code_warntype algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)

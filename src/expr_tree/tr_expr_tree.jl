@@ -110,7 +110,6 @@ module algo_expr_tree
                 Threads.@threads for i in 1:n
                     res[i] = delete_imbricated_plus(ch[i])
                 end
-                # res = delete_imbricated_plus.(ch)
                 return vcat(res...)
             elseif trait_expr_node.node_is_minus(nd)
                 ch = trait_expr_tree.get_expr_children(expr_tree)
@@ -137,32 +136,54 @@ module algo_expr_tree
     get_type_tree(a :: Any) = _get_type_tree(a, trait_expr_tree.is_expr_tree(a))
     _get_type_tree(a, :: trait_expr_tree.type_not_expr_tree) = error(" This is not an Expr tree")
     _get_type_tree(a, :: trait_expr_tree.type_expr_tree) = _get_type_tree(a)
-
     function _get_type_tree(expr_tree)
         ch = trait_expr_tree.get_expr_children(expr_tree)
         if isempty(ch)
             nd =  trait_expr_tree.get_expr_node(expr_tree)
             type_node = trait_expr_node.get_type_node(nd)
-            res_tree = abstract_tree.create_tree(type_node,[])
-            return res_tree
+            return type_node
         else
             n = length(ch)
-            ch_type_tree =  Vector{implementation_tree.type_node{implementation_type_expr.t_type_expr_basic}}(undef,n)
-            ch_type_node =  Vector{implementation_type_expr.t_type_expr_basic}(undef,n)
+            ch_type =  Vector{implementation_type_expr.t_type_expr_basic}(undef,n)
             Threads.@threads for i in 1:n
-                ch_type_tree[i] = _get_type_tree(ch[i])
+                ch_type[i] = _get_type_tree(ch[i])
             end
-            Threads.@threads for i in 1:length(ch_type_tree)
-                ch_type_node[i] = trait_tree.get_node(ch_type_tree[i])
-            end
-            # ch_type_tree = _get_type_tree.(ch)
-            # ch_type_node = trait_tree.get_node.(ch_type_tree)
             nd_op =  trait_expr_tree.get_expr_node(expr_tree)
-            type_node = trait_expr_node.get_type_node(nd_op, ch_type_node)
-            res_tree = abstract_tree.create_tree(type_node, ch_type_tree)
-            return res_tree
+            type_node = trait_expr_node.get_type_node(nd_op, ch_type)
+            return type_node
         end
     end
 
 
+
 end
+
+
+
+""" Old version of functions"""
+
+    # function _get_type_tree(expr_tree)
+    #     ch = trait_expr_tree.get_expr_children(expr_tree)
+    #     if isempty(ch)
+    #         nd =  trait_expr_tree.get_expr_node(expr_tree)
+    #         type_node = trait_expr_node.get_type_node(nd)
+    #         res_tree = abstract_tree.create_tree(type_node,[])
+    #         return res_tree
+    #     else
+    #         n = length(ch)
+    #         ch_type_tree =  Vector{implementation_tree.type_node{implementation_type_expr.t_type_expr_basic}}(undef,n)
+    #         ch_type_node =  Vector{implementation_type_expr.t_type_expr_basic}(undef,n)
+    #         # Threads.@threads for i in 1:n
+    #         #     ch_type_tree[i] = _get_type_tree(ch[i])
+    #         # end
+    #         # Threads.@threads for i in 1:length(ch_type_tree)
+    #         #     ch_type_node[i] = trait_tree.get_node(ch_type_tree[i])
+    #         # end
+    #         ch_type_tree = _get_type_tree.(ch)
+    #         ch_type_node = trait_tree.get_node.(ch_type_tree)
+    #         nd_op =  trait_expr_tree.get_expr_node(expr_tree)
+    #         type_node = trait_expr_node.get_type_node(nd_op, ch_type_node)
+    #         res_tree = abstract_tree.create_tree(type_node, ch_type_tree)
+    #         return res_tree
+    #     end
+    # end
