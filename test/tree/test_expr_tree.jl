@@ -16,7 +16,7 @@ using .algo_tree
     expr_1 = :(x[1] + x[2] )
     t_expr_1 = abstract_expr_tree.create_expr_tree(expr_1)
     @test t_expr_1 == expr_1
-    @test  trait_expr_tree.expr_tree_equal(t_expr_1, expr_1)
+    @test trait_expr_tree.expr_tree_equal(t_expr_1, expr_1)
 
     t1 = algo_expr_tree.transform_expr_tree(t_expr_1)
     @test trait_expr_tree.expr_tree_equal(t1, t_expr_1)
