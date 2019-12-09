@@ -78,6 +78,7 @@ module implementation_type_expr
         end
     end
 
-
+    export t_type_expr_basic, _is_constant, _is_linear, _is_quadratic, _is_more_than_quadratic,
+    _is_cubic, return_constant, return_linear, return_quadratic, return_cubic, return_more
 
 end  # module implementation_type_expr

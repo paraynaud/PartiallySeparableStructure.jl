@@ -1,6 +1,6 @@
 module trait_type_expr
 
-    import ..implementation_type_expr.t_type_expr_basic
+    using ..implementation_type_expr
 
     import ..interface_type_expr._is_constant, ..interface_type_expr._is_linear, ..interface_type_expr._is_quadratic,
     ..interface_type_expr._is_more_than_quadratic, ..interface_type_expr._is_cubic
@@ -10,7 +10,7 @@ module trait_type_expr
     struct type_not_type_expr end
 
     is_trait_type_expr(a :: Any) = type_not_type_expr()
-    is_trait_type_expr(a :: t_type_expr_basic) = type_type_expr()
+    is_trait_type_expr(a :: implementation_type_expr.t_type_expr_basic) = type_type_expr()
 
     is_constant(a :: Any ) = _is_constant(a, is_trait_type_expr(a))
     _is_constant(a, ::type_not_type_expr ) = error("This is not a type of expr")
@@ -41,6 +41,6 @@ module trait_type_expr
     _type_power(a :: Number, b ,  :: type_not_type_expr) = error(" type_power not a tpye_expr")
     _type_power(a :: Number, b ,  :: type_type_expr) = _type_power(a,b)
 
-    export is_trait_type_expr, is_linear, is_constant, is_quadratic, _is_more_than_quadratic
+    export is_trait_type_expr, is_linear, is_constant, is_quadratic, is_cubic, is_more_than_quadratic
 
 end
