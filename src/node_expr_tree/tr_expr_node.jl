@@ -95,7 +95,7 @@ module trait_expr_node
     end
 
 
-    function _get_type_node(a, :: type_not_expr_node,b :: Array)
+    function _get_type_node(a, :: type_not_expr_node, b :: Array)
              error("nous n'avons pas que des types expr")
     end
 

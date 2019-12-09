@@ -96,10 +96,25 @@ module algo_expr_tree
     end
 
 
+
+"""
+    delete_imbricated_plus(t)
+
+    t must be a type which satisfies the trait_expr_tree. In that case if
+    t represent a function, delete_imbricated_plus(t) will split that function
+    into element function if it is possible.
+
+    delete_imbricated_plus(:(x[1] + x[2] + x[3]*x[4] ) )
+    [
+    x[1],
+    x[2],
+    x[3] * x[4]
+    ]
+
+"""
     delete_imbricated_plus(a :: Any) = _delete_imbricated_plus(a, trait_expr_tree.is_expr_tree(a))
     _delete_imbricated_plus(a, :: trait_expr_tree.type_not_expr_tree) = error(" This is not an expr tree")
     _delete_imbricated_plus(a, :: trait_expr_tree.type_expr_tree) = _delete_imbricated_plus(a)
-
     function _delete_imbricated_plus( expr_tree :: T ) where T
         nd = trait_expr_tree.get_expr_node(expr_tree)
         if trait_expr_node.node_is_operator(nd)
@@ -132,7 +147,16 @@ module algo_expr_tree
     end
 
 
+"""
+    get_type_tree(t)
 
+    Return the type of the expression tree t, whose the type is inside the trait_expr_tree
+
+    get_type_tree( :(5+4)) = constant
+    get_type_tree( :(x[1])) = linear
+    get_type_tree( :(x[1]* x[2])) = quadratic
+
+"""
     get_type_tree(a :: Any) = _get_type_tree(a, trait_expr_tree.is_expr_tree(a))
     _get_type_tree(a, :: trait_expr_tree.type_not_expr_tree) = error(" This is not an Expr tree")
     _get_type_tree(a, :: trait_expr_tree.type_expr_tree) = _get_type_tree(a)
