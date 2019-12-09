@@ -99,16 +99,24 @@ end
     test_res8 =  algo_expr_tree.get_type_tree(t_expr_8)
     test_res_t8 =  algo_expr_tree.get_type_tree(t8)
     @test test_res8 == test_res_t8
-    @test trait_type_expr._is_more_than_quadratic(test_res_t8)
+    @test trait_type_expr.is_more(test_res_t8)
 
 
-    t_expr_8_cubic = abstract_expr_tree.create_expr_tree( :( (x[3]^3)+ (x[5] * x[4]) - (x[1] - x[2]) ) )
-    t8_cubic = algo_expr_tree.transform_expr_tree(t_expr_8_cubic)
+    t_expr_cubic = abstract_expr_tree.create_expr_tree( :( (x[3]^3)+ (x[5] * x[4]) - (x[1] - x[2]) ) )
+    t_cubic = algo_expr_tree.transform_expr_tree(t_expr_cubic)
 
-    test_res8_cubic =  algo_expr_tree.get_type_tree(t_expr_8_cubic)
-    test_res_t8_cubic =  algo_expr_tree.get_type_tree(t8_cubic)
-    @test test_res8_cubic == test_res_t8_cubic
-    @test trait_type_expr._is_cubic(test_res_t8_cubic)
+    res_cubic =  algo_expr_tree.get_type_tree(t_expr_cubic)
+    res_t_cubic =  algo_expr_tree.get_type_tree(t_cubic)
+    @test res_cubic == res_t_cubic
+    @test trait_type_expr._is_cubic(res_t_cubic)
+
+    t_expr_sin = abstract_expr_tree.create_expr_tree( :( (x[3]^3)+ sin(x[5] * x[4]) - (x[1] - x[2]) ) )
+    t_sin = algo_expr_tree.transform_expr_tree(t_expr_sin)
+
+    res_sin =  algo_expr_tree.get_type_tree(t_expr_sin)
+    res_t_sin =  algo_expr_tree.get_type_tree(t_sin)
+    @test res_sin == res_t_sin
+    @test trait_type_expr.is_more(res_t_sin)
 
 
 
@@ -124,7 +132,7 @@ end
 
     test_res_obj = algo_expr_tree.get_type_tree(t_obj)
     @test trait_type_expr._is_quadratic(test_res_obj)
-    @test trait_type_expr._is_more_than_quadratic(test_res_obj) == false
+    @test trait_type_expr.is_more(test_res_obj) == false
 
     t_expr_9 = abstract_expr_tree.create_expr_tree( :( x[1] + sin(x[2])) )
     res_t_expr_9 = algo_expr_tree.delete_imbricated_plus(t_expr_9)
@@ -132,7 +140,7 @@ end
     # InteractiveUtils.@code_warntype algo_expr_tree.delete_imbricated_plus(t_expr_9)
 
     @test trait_type_expr.is_linear(algo_expr_tree.get_type_tree(t_expr_9)) == false
-    @test trait_type_expr.is_more_than_quadratic(algo_expr_tree.get_type_tree(t_expr_9))
+    @test trait_type_expr.is_more(algo_expr_tree.get_type_tree(t_expr_9))
 
 
 end

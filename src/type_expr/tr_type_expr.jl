@@ -3,7 +3,7 @@ module trait_type_expr
     using ..implementation_type_expr
 
     import ..interface_type_expr._is_constant, ..interface_type_expr._is_linear, ..interface_type_expr._is_quadratic,
-    ..interface_type_expr._is_more_than_quadratic, ..interface_type_expr._is_cubic
+    ..interface_type_expr._is_more, ..interface_type_expr._is_cubic
     import ..interface_type_expr._type_product, ..interface_type_expr._type_power
 
     struct type_type_expr end
@@ -28,9 +28,9 @@ module trait_type_expr
     _is_cubic(a, ::type_not_type_expr ) = error("This is not a type of expr")
     _is_cubic(a, ::type_type_expr ) = _is_cubic(a)
 
-    is_more_than_quadratic(a :: Any ) = _is_more_than_quadratic(a, is_trait_type_expr(a))
-    _is_more_than_quadratic(a, ::type_not_type_expr ) = error("This is not a type of expr")
-    _is_more_than_quadratic(a, ::type_type_expr ) = _is_more_than_quadratic(a)
+    is_more(a :: Any ) = _is_more(a, is_trait_type_expr(a))
+    _is_more(a, ::type_not_type_expr ) = error("This is not a type of expr")
+    _is_more(a, ::type_type_expr ) = _is_more(a)
 
     type_product(a :: Any, b ::Any) = _type_product(a,b, is_trait_type_expr(a), is_trait_type_expr(b))
     _type_product(a,b, :: type_not_type_expr, :: Any) = error("We don't have 2 type")

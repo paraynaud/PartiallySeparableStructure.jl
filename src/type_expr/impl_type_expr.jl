@@ -1,7 +1,7 @@
 module implementation_type_expr
 
     import ..interface_type_expr._is_constant, ..interface_type_expr._is_linear, ..interface_type_expr._is_quadratic,
-    ..interface_type_expr._is_more_than_quadratic, ..interface_type_expr._is_cubic
+    ..interface_type_expr._is_more, ..interface_type_expr._is_cubic
     import ..interface_type_expr._type_product, ..interface_type_expr._type_power
 
 
@@ -16,9 +16,9 @@ module implementation_type_expr
 
     _is_quadratic(t :: t_type_expr_basic) = (t == quadratic)
 
-    _is_more_than_quadratic(t :: t_type_expr_basic) = (t == more)
-
     _is_cubic(t :: t_type_expr_basic) = (t == cubic)
+
+    _is_more(t :: t_type_expr_basic) = (t == more)
 
     return_constant() = t_type_expr_basic(0)
 
@@ -53,6 +53,7 @@ module implementation_type_expr
             else
                 return more
             end
+        elseif _is_more(b)
         end
     end
 
