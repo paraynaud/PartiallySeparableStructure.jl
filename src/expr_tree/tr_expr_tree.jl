@@ -180,6 +180,38 @@ module algo_expr_tree
 
 
 
+    get_elemental_variable(a :: Any) = _get_elemental_variable(a, trait_expr_tree.is_expr_tree(a))
+    _get_elemental_variable(a, :: trait_expr_tree.type_not_expr_tree) = error(" This is not an Expr tree")
+    _get_elemental_variable(a, :: trait_expr_tree.type_expr_tree) = _get_elemental_variable(a)
+    function _get_elemental_variable(expr_tree)
+        nd =  trait_expr_tree.get_expr_node(expr_tree)
+        if trait_expr_node.node_is_operator(nd)
+            ch = trait_expr_tree.get_expr_children(expr_tree)
+            n = length(ch)
+            list_var =  Vector{Vector{Int64}}(undef,n)
+            # Threads.@threads
+            for i in 1:n
+                list_var[i] = get_elemental_variable(ch[i])
+            end
+
+            # list_var = get_elemental_variable.(ch)
+            res = unique!(vcat(list_var...))
+            return res :: Vector{Int64}
+        elseif trait_expr_node.node_is_variable(nd)
+            return [trait_expr_node.get_var_index(nd)] :: Vector{Int64}
+        elseif trait_expr_node.node_is_constant(nd)
+            return  Vector{Int64}([])
+        else
+            error("the node is neither operator/variable or constant")
+        end
+    end
+
+
+    # function get_elemental_variable(expr_tree :: Expr )
+    #     println("nous avons une Expr")
+    # end
+
+
 end
 
 

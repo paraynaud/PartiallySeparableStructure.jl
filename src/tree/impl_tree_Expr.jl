@@ -42,7 +42,7 @@ module implementation_tree_Expr
         end
     end
 
-    _get_children(ex :: Number) = ex
+    _get_children(ex :: Number) = []
 
 
 

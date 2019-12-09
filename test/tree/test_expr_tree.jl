@@ -110,6 +110,14 @@ end
     @test res_cubic == res_t_cubic
     @test trait_type_expr._is_cubic(res_t_cubic)
 
+    t_expr_cubic2 = abstract_expr_tree.create_expr_tree( :( (x[3]^3)+ (x[5] * x[4]) - (x[1] - x[2]) + sin(5)) )
+    t_cubic2 = algo_expr_tree.transform_expr_tree(t_expr_cubic2)
+
+    res_cubic2 =  algo_expr_tree.get_type_tree(t_expr_cubic2)
+    res_t_cubic2 =  algo_expr_tree.get_type_tree(t_cubic2)
+    @test res_cubic2 == res_t_cubic2
+    @test trait_type_expr._is_cubic(res_t_cubic2)
+
     t_expr_sin = abstract_expr_tree.create_expr_tree( :( (x[3]^3)+ sin(x[5] * x[4]) - (x[1] - x[2]) ) )
     t_sin = algo_expr_tree.transform_expr_tree(t_expr_sin)
 
@@ -184,21 +192,22 @@ function expr_tree_factorielle_plus( n :: Integer, op :: Symbol)
 end
 
 
-test_fac_expr_tree = expr_tree_factorielle_dif_node(3) :: implementation_expr_tree.t_expr_tree
-@time test_fac_expr_tree_plus = expr_tree_factorielle_plus(9, :+) :: implementation_expr_tree.t_expr_tree
-
-@testset "test arbres factorielle désimbriqué les +" begin
+@testset "test arbres factorielle désimbriqué les + et get_type " begin
+    @time test_fac_expr_tree_plus = expr_tree_factorielle_plus(9, :+) :: implementation_expr_tree.t_expr_tree
+    # test_fac_expr_tree = expr_tree_factorielle_dif_node(3) :: implementation_expr_tree.t_expr_tree
     # algo_tree.printer_tree(test_fac_expr_tree)
     # algo_tree.printer_tree(test_fac_expr_tree_plus)
-    @time test_fac_expr_tree_plus_no_plus = algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
     # @time algo_expr_tree.get_type_tree.(test_fac_expr_tree_plus_no_plus) # ca ne semble pas être une bonne idée ou alors encore parralélisé
     # algo_tree.printer_tree.(test_fac_expr_tree_plus_no_plus)
     # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
-end
-
-@testset "test arbres factorielle get type" begin
+    @time test_fac_expr_tree_plus_no_plus = algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
     @time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
+    @time res3 = algo_expr_tree.get_elemental_variable(test_fac_expr_tree_plus)
+    # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
+    # InteractiveUtils.@code_warntype algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
 end
-
-# InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
-# InteractiveUtils.@code_warntype algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
+t_expr_var = abstract_expr_tree.create_expr_tree( :( (x[1]^3)+ sin(x[1] * x[2]) - (x[3] - x[2]) ) )
+t_var = algo_expr_tree.transform_expr_tree(t_expr_var)
+@time res = algo_expr_tree.get_elemental_variable(t_var)
+@time res2 = algo_expr_tree.get_elemental_variable(t_expr_var)
+@test res == res2

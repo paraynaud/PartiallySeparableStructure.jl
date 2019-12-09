@@ -10,6 +10,7 @@ module interface_expr_node
     _node_is_tan() = ()
 
     _node_is_variable() = ()
+    _get_var_index() = ()
 
     _node_is_constant() = ()
 

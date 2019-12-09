@@ -9,7 +9,7 @@ module variables
 
 
     import ..implementation_type_expr.t_type_expr_basic
-    import ..interface_expr_node._get_type_node
+    import ..interface_expr_node._get_type_node, ..interface_expr_node._get_var_index
     using ..implementation_type_expr
 
     import Base.(==)
@@ -41,6 +41,8 @@ module variables
     _node_is_constant(v :: variable) = false
 
     _get_type_node(v :: variable) = implementation_type_expr.return_linear()
+
+    _get_var_index(v :: variable) = v.index :: Int64
 
     (==)(a :: variable, b :: variable) =  (a.name == b.name) && (a.index == b.index)
 
