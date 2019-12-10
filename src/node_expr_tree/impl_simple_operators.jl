@@ -76,13 +76,13 @@ module operators
         elseif _node_is_times(op)
             return foldl(*, value_ch) :: Number
         elseif _node_is_cos(op)
-            length(value_ch)==1 || error("more than one argument for cos")
+            length(value_ch) == 1 || error("more than one argument for cos")
             return cos(value_ch[1]) :: Number
         elseif _node_is_sin(op)
-            length(value_ch)==1 || error("more than one argument for sin")
+            length(value_ch) == 1 || error("more than one argument for sin")
             return sin(value_ch[1]) :: Number
         elseif _node_is_tan(op)
-            length(value_ch)==1 || error("more than one argument for tan")
+            length(value_ch) == 1 || error("more than one argument for tan")
             return tan(value_ch[1]) :: Number
         else
             error("non traité pour le moment impl_simple_operator.jl/_eval_node")

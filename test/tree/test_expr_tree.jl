@@ -224,12 +224,13 @@ end
 end
 
 
-# @testset "test complet à partir d'un modèle JuMP" begin
+@testset "test complet à partir d'un modèle JuMP" begin
     m = Model()
     n_x = 10
     # n_x = 5
     @variable(m, x[1:n_x])
     @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]) + x[n_x-1]^3 + 5)
+    # @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]))
     eval_test = JuMP.NLPEvaluator(m)
     MathOptInterface.initialize(eval_test, [:ExprGraph])
     obj = MathOptInterface.objective_expr(eval_test)
@@ -246,6 +247,10 @@ end
     @test foldl(&,trait_expr_tree.expr_tree_equal.(elmt_fun, t_elmt_fun) )
     @test type_elmt_fun == t_type_elmt_fun
     @test U == t_U
-    x = ones(n_x)
-    @test algo_expr_tree.evaluate_function_test1(obj, x) 
-# end
+    x = ones(Float32, n_x)
+    res =  algo_expr_tree.evaluate_function_test1(obj, x)
+    # IMPORTANT La fonction evaluate evaluate_function_test1 garde le type des variables,
+    # Il faut cependant veiller à modifier les constantes dans les expressions pour qu'elles
+    # n'augmentent pas le type
+    @show typeof(res)
+end
