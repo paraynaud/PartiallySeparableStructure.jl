@@ -206,8 +206,43 @@ end
     # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
     # InteractiveUtils.@code_warntype algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
 end
-t_expr_var = abstract_expr_tree.create_expr_tree( :( (x[1]^3)+ sin(x[1] * x[2]) - (x[3] - x[2]) ) )
-t_var = algo_expr_tree.transform_expr_tree(t_expr_var)
-@time res = algo_expr_tree.get_elemental_variable(t_var)
-@time res2 = algo_expr_tree.get_elemental_variable(t_expr_var)
-@test res == res2
+
+@testset "test de la récupération des variable élementaires" begin
+    t_expr_var = abstract_expr_tree.create_expr_tree( :( (x[1]^3)+ sin(x[1] * x[2]) - (x[3] - x[2]) ) )
+    t_var = algo_expr_tree.transform_expr_tree(t_expr_var)
+    res = algo_expr_tree.get_elemental_variable(t_var)
+    res2 = algo_expr_tree.get_elemental_variable(t_expr_var)
+    @test res == res2
+    @test res == [1,2,3]
+    t_expr_var1= abstract_expr_tree.create_expr_tree( :( (x[1]^3) ) )
+    t_var1 = algo_expr_tree.transform_expr_tree(t_expr_var1)
+    res_expr_var1 = algo_expr_tree.get_elemental_variable(t_expr_var1)
+    res_var1 = algo_expr_tree.get_elemental_variable(t_var1)
+    @test res_var1 == res_expr_var1
+    @test res_var1 == [1]
+end
+
+
+# @testset "test complet à partir d'un modèle JuMP" begin
+    m = Model()
+    n_x = 10
+    # n_x = 5
+    @variable(m, x[1:n_x])
+    @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]) + x[n_x-1]^3 + 5)
+    eval_test = JuMP.NLPEvaluator(m)
+    MathOptInterface.initialize(eval_test, [:ExprGraph])
+    obj = MathOptInterface.objective_expr(eval_test)
+    t_obj =  algo_expr_tree.transform_expr_tree(obj)
+
+    elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
+    type_elmt_fun = algo_expr_tree.get_type_tree.(elmt_fun)
+    U = algo_expr_tree.get_elemental_variable.(elmt_fun)
+    t_elmt_fun = algo_expr_tree.delete_imbricated_plus(t_obj)
+    t_type_elmt_fun = algo_expr_tree.get_type_tree.(t_elmt_fun)
+    t_U = algo_expr_tree.get_elemental_variable.(t_elmt_fun)
+
+    # @test elmt_fun == t_elmt_fun # car type initiaux différents
+    @test foldl(&,trait_expr_tree.expr_tree_equal.(elmt_fun, t_elmt_fun) )
+    @test type_elmt_fun == t_type_elmt_fun
+    @test U == t_U
+# end

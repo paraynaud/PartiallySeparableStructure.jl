@@ -79,6 +79,8 @@ module algo_expr_tree
     using ..implementation_tree
     using ..implementation_type_expr
 
+    using SparseArrays
+
 
     function transform_expr_tree(ex :: Expr)
         n_node = trait_expr_tree.get_expr_node(ex)
@@ -207,11 +209,18 @@ module algo_expr_tree
     end
 
 
-    # function get_elemental_variable(expr_tree :: Expr )
-    #     println("nous avons une Expr")
-    # end
+    function get_Ui(index_vars :: Vector{Int64}, n :: Int64)
+        U = sparse(index_vars, ones(Int64,length(index_vars)), n) :: SparseVecotr{Int64,Int64}
+        return U
+    end
 
 
+    evaluate_function_test1(a :: Any, x) = _evaluate_function_test1(a, trait_expr_tree.is_expr_tree(a), x)
+    _evaluate_function_test1(a, :: trait_expr_tree.type_not_expr_tree, x) = error(" This is not an Expr tree")
+    _evaluate_function_test1(a, :: trait_expr_tree.type_expr_tree, x) = _evaluate_function_test1(a, x)
+    function _evaluate_function_test1(expre_tree, x)
+
+    end
 end
 
 
