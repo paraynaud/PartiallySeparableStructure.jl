@@ -193,7 +193,7 @@ end
 
 
 @testset "test arbres factorielle désimbriqué les + et get_type " begin
-    @time test_fac_expr_tree_plus = expr_tree_factorielle_plus(9, :+) :: implementation_expr_tree.t_expr_tree
+    @time test_fac_expr_tree_plus = expr_tree_factorielle_plus(8, :+) :: implementation_expr_tree.t_expr_tree
     # test_fac_expr_tree = expr_tree_factorielle_dif_node(3) :: implementation_expr_tree.t_expr_tree
     # algo_tree.printer_tree(test_fac_expr_tree)
     # algo_tree.printer_tree(test_fac_expr_tree_plus)
@@ -203,6 +203,7 @@ end
     @time test_fac_expr_tree_plus_no_plus = algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
     @time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
     @time res3 = algo_expr_tree.get_elemental_variable(test_fac_expr_tree_plus)
+    @time algo_expr_tree.evaluate_function_test1(test_fac_expr_tree_plus,ones(5))
     # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
     # InteractiveUtils.@code_warntype algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
 end
@@ -245,4 +246,6 @@ end
     @test foldl(&,trait_expr_tree.expr_tree_equal.(elmt_fun, t_elmt_fun) )
     @test type_elmt_fun == t_type_elmt_fun
     @test U == t_U
+    x = ones(n_x)
+    @test algo_expr_tree.evaluate_function_test1(obj, x) 
 # end

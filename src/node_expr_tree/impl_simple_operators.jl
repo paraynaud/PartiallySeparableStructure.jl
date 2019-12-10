@@ -6,11 +6,13 @@ module operators
     import ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
     import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
 
-    using ..implementation_type_expr
-    using ..trait_type_expr
-    import ..interface_expr_node._get_type_node
+    import ..interface_expr_node._get_type_node, ..interface_expr_node._evaluate_node
 
     import Base.==
+
+    using ..implementation_type_expr
+    using ..trait_type_expr
+
 
     mutable struct simple_operator <: ab_ex_nd
         op :: Symbol
@@ -61,6 +63,32 @@ module operators
     end
 
     (==)(a :: simple_operator, b :: simple_operator) = (a.op == b.op)
+
+    function _evaluate_node(op :: simple_operator, value_ch :: Vector{})
+        if _node_is_plus(op)
+            return sum(value_ch) :: Number
+        elseif _node_is_minus(op)
+            if length(ch) == 1
+                return -value_ch[1] :: Number
+            else
+                return value_ch[1] - value_ch[2] :: Number
+            end
+        elseif _node_is_times(op)
+            return foldl(*, value_ch) :: Number
+        elseif _node_is_cos(op)
+            length(value_ch)==1 || error("more than one argument for cos")
+            return cos(value_ch[1]) :: Number
+        elseif _node_is_sin(op)
+            length(value_ch)==1 || error("more than one argument for sin")
+            return sin(value_ch[1]) :: Number
+        elseif _node_is_tan(op)
+            length(value_ch)==1 || error("more than one argument for tan")
+            return tan(value_ch[1]) :: Number
+        else
+            error("non traité pour le moment impl_simple_operator.jl/_eval_node")
+        end
+    end
+
 
     export operator
 end

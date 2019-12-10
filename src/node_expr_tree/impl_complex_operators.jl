@@ -9,7 +9,7 @@ module operators
     import ..implementation_type_expr.t_type_expr_basic
     import ..trait_type_expr.type_power
 
-    import ..interface_expr_node._get_type_node
+    import ..interface_expr_node._get_type_node, ..interface_expr_node._evaluate_node
 
     import Base.==
 
@@ -43,10 +43,19 @@ module operators
         else
             error("non fait pour le moment car uniquement pour la puissance actuellement ")
         end
-
     end
 
     (==)(a :: complex_operator, b :: complex_operator) = ( (a.op == b.op ) && (a.args == b.args) )
+
+    function _evaluate_node(op :: complex_operator, value_ch :: Vector{})
+        if _node_is_power(op)
+            length(value_ch) == 1 || error("power has more than one argument")
+            return value_ch[1]^(op.args[1]) :: Number
+        else
+            error("non traité pour le moment impl_complex_operator/_evaluate_node")
+        end
+    end
+
 
 
     export operator

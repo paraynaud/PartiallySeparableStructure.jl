@@ -16,6 +16,7 @@ module interface_expr_node
 
     _get_type_node() = ()
 
+    _evaluate_node() = ()
 
 
 

@@ -7,7 +7,7 @@ module constants
     import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
 
     using ..implementation_type_expr
-    import ..interface_expr_node._get_type_node
+    import ..interface_expr_node._get_type_node, ..interface_expr_node._evaluate_node
 
     import Base.==
 
@@ -37,6 +37,10 @@ module constants
     _get_type_node(c :: constant) = implementation_type_expr.return_constant()
 
     (==)(a :: constant, b :: constant) = (a.value == b.value)
+
+    function _evaluate_node(c :: constant, x :: Vector{})
+        return c.value :: Number
+    end
 
     export constant
 end

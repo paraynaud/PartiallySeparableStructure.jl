@@ -10,6 +10,9 @@ module variables
 
     import ..implementation_type_expr.t_type_expr_basic
     import ..interface_expr_node._get_type_node, ..interface_expr_node._get_var_index
+    import  ..interface_expr_node._evaluate_node
+
+
     using ..implementation_type_expr
 
     import Base.(==)
@@ -45,6 +48,11 @@ module variables
     _get_var_index(v :: variable) = v.index :: Int64
 
     (==)(a :: variable, b :: variable) =  (a.name == b.name) && (a.index == b.index)
+
+
+    function _evaluate_node(v :: variable, x :: Vector{})
+        return x[v.index] :: Number
+    end
 
 
     export variable

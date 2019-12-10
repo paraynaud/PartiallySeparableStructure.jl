@@ -5,6 +5,7 @@ module trait_expr_node
     import ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
     import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
     import ..interface_expr_node._get_type_node, ..interface_expr_node._get_var_index
+    import ..interface_expr_node._evaluate_node
 
     using ..implementation_type_expr
     using ..trait_type_expr
@@ -71,8 +72,8 @@ module trait_expr_node
     get_type_node(a) = _get_type_node(a, is_expr_node(a))
     _get_type_node(a, ::type_expr_node) = _get_type_node(a)
     _get_type_node(a, ::type_not_expr_node) = error("This node is not a expr node")
+    _get_type_node(a, :: type_not_expr_node, b :: Array) = error("nous n'avons pas que des types expr")
     get_type_node(a,b) = _get_type_node(a, is_expr_node(a), b)
-
     function _get_type_node(a, :: type_expr_node, b :: Array)
         if length(b) == 1
             if trait_type_expr.is_trait_type_expr(b[1]) == trait_type_expr.type_type_expr()
@@ -99,9 +100,10 @@ module trait_expr_node
     end
 
 
-    function _get_type_node(a, :: type_not_expr_node, b :: Array)
-             error("nous n'avons pas que des types expr")
-    end
+
+    evaluate_node(a, x :: Vector{}) = _evaluate_node(a, is_expr_node(a), x)
+    _evaluate_node(a, ::type_expr_node, x:: Vector{}) = _evaluate_node(a, x)
+    _evaluate_node(a, ::type_not_expr_node, x :: Vector{}) = error("This node is not a expr node")
 
 end  # module trait_expr_node
 

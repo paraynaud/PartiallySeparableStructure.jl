@@ -206,6 +206,7 @@ module algo_expr_tree
         else
             error("the node is neither operator/variable or constant")
         end
+# @testset "test complet à
     end
 
 
@@ -215,11 +216,26 @@ module algo_expr_tree
     end
 
 
-    evaluate_function_test1(a :: Any, x) = _evaluate_function_test1(a, trait_expr_tree.is_expr_tree(a), x)
-    _evaluate_function_test1(a, :: trait_expr_tree.type_not_expr_tree, x) = error(" This is not an Expr tree")
-    _evaluate_function_test1(a, :: trait_expr_tree.type_expr_tree, x) = _evaluate_function_test1(a, x)
-    function _evaluate_function_test1(expre_tree, x)
-
+    evaluate_function_test1(a :: Any, x :: Vector{}) = _evaluate_function_test1(a, trait_expr_tree.is_expr_tree(a), x)
+    _evaluate_function_test1(a, :: trait_expr_tree.type_not_expr_tree, x :: Vector{}) = error(" This is not an Expr tree")
+    _evaluate_function_test1(a, :: trait_expr_tree.type_expr_tree, x :: Vector{}) = _evaluate_function_test1(a, x)
+    function _evaluate_function_test1(expr_tree, x :: Vector{})
+        nd = trait_expr_tree._get_expr_node(expr_tree)
+        ch = trait_expr_tree._get_expr_children(expr_tree)
+        if isempty(ch)
+            res = trait_expr_node.evaluate_node(nd, x) :: Number
+            return res
+        else
+            # @show nd, ch, evaluate_function_test1(ch[1],x), evaluate_function_test1(ch[2],x)
+            # temp = evaluate_function_test1.(ch,x)
+            n = length(ch)
+            temp = Vector{Number}(undef,n)
+            for i in 1:n
+                temp[i] =  evaluate_function_test1(ch[i],x)
+            end
+            res = trait_expr_node.evaluate_node(nd, temp) #:: Vector{Number}
+            return res
+        end
     end
 end
 
@@ -230,6 +246,7 @@ end
     # function _get_type_tree(expr_tree)
     #     ch = trait_expr_tree.get_expr_children(expr_tree)
     #     if isempty(ch)
+# @testset "test complet à
     #         nd =  trait_expr_tree.get_expr_node(expr_tree)
     #         type_node = trait_expr_node.get_type_node(nd)
     #         res_tree = abstract_tree.create_tree(type_node,[])
@@ -245,6 +262,7 @@ end
     #         #     ch_type_node[i] = trait_tree.get_node(ch_type_tree[i])
     #         # end
     #         ch_type_tree = _get_type_tree.(ch)
+# @testset "test complet à
     #         ch_type_node = trait_tree.get_node.(ch_type_tree)
     #         nd_op =  trait_expr_tree.get_expr_node(expr_tree)
     #         type_node = trait_expr_node.get_type_node(nd_op, ch_type_node)
