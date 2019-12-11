@@ -275,7 +275,7 @@ end
 
 
 @testset "test arbres factorielle désimbriqué les + et get_type " begin
-    n = 9
+    n = 7
     @time test_fac_expr_tree_plus = expr_tree_factorielle_plus(n, :+) :: implementation_expr_tree.t_expr_tree
     # test_fac_expr_tree = expr_tree_factorielle_dif_node(3) :: implementation_expr_tree.t_expr_tree
     # algo_tree.printer_tree(test_fac_expr_tree)
@@ -306,3 +306,5 @@ MathOptInterface.initialize(eval_test, [:ExprGraph])
 obj = MathOptInterface.objective_expr(eval_test)
 x = (x -> 3*x).(ones(n_x))
 @show g = algo_expr_tree.calcul_gradient_expr_tree(obj,x)
+@show g2 = algo_expr_tree.calcul_gradient_expr_tree(:(sin(x[1])), [3.14])
+@show H = algo_expr_tree.calcul_Hessian_expr_tree(obj, x)

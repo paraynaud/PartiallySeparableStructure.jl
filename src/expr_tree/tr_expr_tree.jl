@@ -277,12 +277,21 @@ module algo_expr_tree
     end
 
     using ForwardDiff
+
     calcul_gradient_expr_tree(a :: Any, x :: Vector{}) = _calcul_gradient_expr_tree(a, is_expr_tree(a), x )
     _calcul_gradient_expr_tree(a :: Any,:: trait_expr_tree.type_not_expr_tree, x :: Vector{}) = error("ce n'est pas un arbre d'expression")
     _calcul_gradient_expr_tree(a :: Any,:: trait_expr_tree.type_expr_tree, x :: Vector{}) = _calcul_gradient_expr_tree(a, x)
     function _calcul_gradient_expr_tree(expr_tree, x :: Vector{})
-        g = ForwardDiff.gradient(evaluate_expr_tree(expr_tree), x)
+        g = ForwardDiff.gradient( evaluate_expr_tree(expr_tree), x)
         return g
+    end
+
+    calcul_Hessian_expr_tree(a :: Any, x :: Vector{}) = _calcul_Hessian_expr_tree(a, is_expr_tree(a), x )
+    _calcul_Hessian_expr_tree(a :: Any,:: trait_expr_tree.type_not_expr_tree, x :: Vector{}) = error("ce n'est pas un arbre d'expression")
+    _calcul_Hessian_expr_tree(a :: Any,:: trait_expr_tree.type_expr_tree, x :: Vector{}) = _calcul_Hessian_expr_tree(a, x)
+    function _calcul_Hessian_expr_tree(expr_tree, x :: Vector{})
+        H = ForwardDiff.hessian( evaluate_expr_tree(expr_tree), x)
+        return H
     end
 
 
