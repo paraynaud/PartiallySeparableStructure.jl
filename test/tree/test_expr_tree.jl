@@ -1,4 +1,4 @@
-using Test
+using Test, Revise
 using InteractiveUtils
 using MathOptInterface, JuMP
 
@@ -154,60 +154,6 @@ end
 end
 
 
-function expr_tree_factorielle_dif_node( n :: Integer)
-    if n == 0
-        constant_node = abstract_expr_node.create_node_expr(:x,1)
-        new_leaf = abstract_expr_tree.create_expr_tree(constant_node)
-        return new_leaf
-    else
-        if n % 3 == 0
-            op_node = abstract_expr_node.create_node_expr(:+)
-            new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_dif_node.((n-1) * ones(Integer,n)) )
-            return new_node
-        elseif n % 3 == 1
-            op_node = abstract_expr_node.create_node_expr(:-)
-            new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_dif_node.((n-1) * ones(Integer,n)) )
-            return new_node
-        elseif n % 3 == 2
-            op_node = abstract_expr_node.create_node_expr(:*)
-            new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_dif_node.((n-1) * ones(Integer,n)) )
-            return new_node
-        end
-    end
-end
-
-
-function expr_tree_factorielle_plus( n :: Integer, op :: Symbol)
-    if n == 0
-        constant_node = abstract_expr_node.create_node_expr(0)
-        new_leaf = abstract_expr_tree.create_expr_tree(constant_node)
-        return new_leaf
-        # return abstract_expr_tree.create_expr_tree(abstract_expr_node.create_node_expr(0))
-    else
-        op_node = abstract_expr_node.create_node_expr(op)
-        new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_plus.( (n-1) * ones(Integer,n), op) )
-        return new_node
-        # return abstract_expr_tree.create_expr_tree(abstract_expr_node.create_node_expr(op), expr_tree_factorielle_plus.( (n-1) * ones(Integer,n), op) )
-    end
-end
-
-
-@testset "test arbres factorielle désimbriqué les + et get_type " begin
-    # @time test_fac_expr_tree_plus = expr_tree_factorielle_plus(7, :+) :: implementation_expr_tree.t_expr_tree
-    # test_fac_expr_tree = expr_tree_factorielle_dif_node(3) :: implementation_expr_tree.t_expr_tree
-    # algo_tree.printer_tree(test_fac_expr_tree)
-    # algo_tree.printer_tree(test_fac_expr_tree_plus)
-    # @time algo_expr_tree.get_type_tree.(test_fac_expr_tree_plus_no_plus) # ca ne semble pas être une bonne idée ou alors encore parralélisé
-    # algo_tree.printer_tree.(test_fac_expr_tree_plus_no_plus)
-    # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
-    # @time test_fac_expr_tree_plus_no_plus = algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
-    # @time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
-    # @time res3 = algo_expr_tree.get_elemental_variable(test_fac_expr_tree_plus)
-    # @time algo_expr_tree.evaluate_expr_tree(test_fac_expr_tree_plus,ones(5))
-    # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
-    # InteractiveUtils.@code_warntype algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
-end
-
 @testset "test de la récupération des variable élementaires" begin
     t_expr_var = abstract_expr_tree.create_expr_tree( :( (x[1]^3)+ sin(x[1] * x[2]) - (x[3] - x[2]) ) )
     t_var = algo_expr_tree.transform_expr_tree(t_expr_var)
@@ -258,6 +204,8 @@ end
         @test U == res_elemental_variable
 
     # TEST SUR LES EVALUATIONS
+        # @time res = algo_expr_tree.evaluate_expr_tree(obj, x)
+        # @time t_res = algo_expr_tree.evaluate_expr_tree(t_obj, x)
         res = algo_expr_tree.evaluate_expr_tree(obj, x)
         t_res = algo_expr_tree.evaluate_expr_tree(t_obj, x)
         @test res == t_res
@@ -265,6 +213,7 @@ end
     # TEST SUR LES EVALUATIONS DE FONCTIONS ELEMENTS
         n_element = length(elmt_fun)
         res_p = Vector{Number}(undef, n_element)
+
         for i in 1:n_element
             res_p[i] = algo_expr_tree.evaluate_element_expr_tree(elmt_fun[i], x, U[i])
             # InteractiveUtils.@code_warntype res_p[i] = algo_expr_tree.evaluate_element_expr_tree(elmt_fun[i], x, U[i])
@@ -275,3 +224,85 @@ end
 
     # @show typeof(res),U, res
 end
+
+
+
+
+
+
+
+
+
+
+
+
+function expr_tree_factorielle_dif_node( n :: Integer)
+    if n == 0
+        constant_node = abstract_expr_node.create_node_expr(:x,1)
+        new_leaf = abstract_expr_tree.create_expr_tree(constant_node)
+        return new_leaf
+    else
+        if n % 3 == 0
+            op_node = abstract_expr_node.create_node_expr(:+)
+            new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_dif_node.((n-1) * ones(Integer,n)) )
+            return new_node
+        elseif n % 3 == 1
+            op_node = abstract_expr_node.create_node_expr(:-)
+            new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_dif_node.((n-1) * ones(Integer,n)) )
+            return new_node
+        elseif n % 3 == 2
+            op_node = abstract_expr_node.create_node_expr(:*)
+            new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_dif_node.((n-1) * ones(Integer,n)) )
+            return new_node
+        end
+    end
+end
+
+
+function expr_tree_factorielle_plus( n :: Integer, op :: Symbol)
+    if n == 0
+        constant_node = abstract_expr_node.create_node_expr(1)
+        new_leaf = abstract_expr_tree.create_expr_tree(constant_node)
+        return new_leaf
+        # return abstract_expr_tree.create_expr_tree(abstract_expr_node.create_node_expr(0))
+    else
+        op_node = abstract_expr_node.create_node_expr(op)
+        new_node = abstract_expr_tree.create_expr_tree(op_node, expr_tree_factorielle_plus.( (n-1) * ones(Integer,n), op) )
+        return new_node
+        # return abstract_expr_tree.create_expr_tree(abstract_expr_node.create_node_expr(op), expr_tree_factorielle_plus.( (n-1) * ones(Integer,n), op) )
+    end
+end
+
+
+@testset "test arbres factorielle désimbriqué les + et get_type " begin
+    n = 9
+    @time test_fac_expr_tree_plus = expr_tree_factorielle_plus(n, :+) :: implementation_expr_tree.t_expr_tree
+    # test_fac_expr_tree = expr_tree_factorielle_dif_node(3) :: implementation_expr_tree.t_expr_tree
+    # algo_tree.printer_tree(test_fac_expr_tree)
+    # algo_tree.printer_tree(test_fac_expr_tree_plus)
+    # @time algo_expr_tree.get_type_tree.(test_fac_expr_tree_plus_no_plus) # ca ne semble pas être une bonne idée ou alors encore parralélisé
+    # algo_tree.printer_tree.(test_fac_expr_tree_plus_no_plus)
+    # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
+    @time test_fac_expr_tree_plus_no_plus = algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
+    @time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
+    @time res3 = algo_expr_tree.get_elemental_variable(test_fac_expr_tree_plus)
+    @time res = algo_expr_tree.evaluate_expr_tree(test_fac_expr_tree_plus,ones(5))
+    @test res == factorial(n)
+
+    # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
+    # InteractiveUtils.@code_warntype algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
+end
+
+
+println("test gradient ")
+
+m = Model()
+n_x = 3
+@variable(m, x[1:n_x])
+@NLobjective(m, Min, sum( x[j]^2 * x[j+1] for j in 1:n_x-1 ) )
+# @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]))
+eval_test = JuMP.NLPEvaluator(m)
+MathOptInterface.initialize(eval_test, [:ExprGraph])
+obj = MathOptInterface.objective_expr(eval_test)
+x = (x -> 3*x).(ones(n_x))
+@show g = algo_expr_tree.calcul_gradient_expr_tree(obj,x)

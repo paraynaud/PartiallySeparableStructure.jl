@@ -2,7 +2,7 @@ module PartiallySeparableStructure
 
     using ..implementation_type_expr
     using ..algo_expr_tree
-
+    using ForwardDiff
 
     struct element_function
         fun
@@ -16,5 +16,6 @@ module PartiallySeparableStructure
     end
 
     
+
 
 end # module
