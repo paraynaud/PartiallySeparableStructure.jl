@@ -191,8 +191,8 @@ module algo_expr_tree
             ch = trait_expr_tree.get_expr_children(expr_tree)
             n = length(ch)
             list_var =  Vector{Vector{Int64}}(undef,n)
-            # Threads.@threads
-            for i in 1:n
+
+            Threads.@threads for i in 1:n
                 list_var[i] = get_elemental_variable(ch[i])
             end
 
@@ -215,28 +215,65 @@ module algo_expr_tree
         return U
     end
 
-
-    evaluate_function_test1(a :: Any, x :: Vector{}) = _evaluate_function_test1(a, trait_expr_tree.is_expr_tree(a), x)
-    _evaluate_function_test1(a, :: trait_expr_tree.type_not_expr_tree, x :: Vector{}) = error(" This is not an Expr tree")
-    _evaluate_function_test1(a, :: trait_expr_tree.type_expr_tree, x :: Vector{}) = _evaluate_function_test1(a, x)
-    function _evaluate_function_test1(expr_tree, x :: Vector{})
+    # IMPORTANT La fonction evaluate_expr_tree garde le type des variables,
+    # Il faut cependant veiller à modifier les constantes dans les expressions pour qu'elles
+    # n'augmentent pas le type
+    evaluate_expr_tree(a :: Any, x :: Vector{}) = _evaluate_expr_tree(a, trait_expr_tree.is_expr_tree(a), x)
+    _evaluate_expr_tree(a, :: trait_expr_tree.type_not_expr_tree, x :: Vector{}) = error(" This is not an Expr tree")
+    _evaluate_expr_tree(a, :: trait_expr_tree.type_expr_tree, x :: Vector{}) = _evaluate_expr_tree(a, x)
+    function _evaluate_expr_tree(expr_tree, x :: Vector{})
         nd = trait_expr_tree._get_expr_node(expr_tree)
         ch = trait_expr_tree._get_expr_children(expr_tree)
         if isempty(ch)
             res = trait_expr_node.evaluate_node(nd, x) :: Number
             return res
         else
-            # @show nd, ch, evaluate_function_test1(ch[1],x), evaluate_function_test1(ch[2],x)
-            # temp = evaluate_function_test1.(ch,x)
             n = length(ch)
             temp = Vector{Number}(undef,n)
-            for i in 1:n
-                temp[i] =  evaluate_function_test1(ch[i],x)
+            Threads.@threads for i in 1:n
+                temp[i] = evaluate_expr_tree(ch[i],x) :: Number
             end
             res = trait_expr_node.evaluate_node(nd, temp) #:: Vector{Number}
             return res
         end
     end
+
+    evaluate_element_expr_tree(a :: Any, x :: Vector{}, elmt_var :: Vector{Int64}) = _evaluate_element_expr_tree(a, trait_expr_tree.is_expr_tree(a), x, elmt_var )
+    evaluate_element_expr_tree(a :: Any, elmt_var :: Dict{Int64,T where T <: Number}) =  _evaluate_element_expr_tree(a, trait_expr_tree.is_expr_tree(a), elmt_var )
+    _evaluate_element_expr_tree(a, :: trait_expr_tree.type_not_expr_tree, x :: Vector{}, elmt_var :: Vector{Int64}) = error(" This is not an Expr tree")
+    _evaluate_element_expr_tree(a, :: trait_expr_tree.type_expr_tree, x :: Vector{}, elmt_var :: Vector{Int64}) = _evaluate_element_expr_tree(a, x, elmt_var )
+    _evaluate_element_expr_tree(a, :: trait_expr_tree.type_expr_tree, elmt_var :: Dict{Int64,T where T <: Number}) = _evaluate_element_expr_tree(a, elmt_var)
+    #La fonction du premier appel
+    function _evaluate_element_expr_tree(expr_tree, x :: Vector{}, elmt_var :: Vector{Int64})
+        function transition_array(elemental_var :: Vector{Int64})
+            dic_var_value = Dict{Int64,T where T <: Number}()
+            for i in 1:length(elemental_var)
+                dic_var_value[(elemental_var[i])] = x[i]
+            end
+            return dic_var_value
+        end
+        dic_var_value = transition_array(elmt_var)
+        return _evaluate_element_expr_tree(expr_tree, dic_var_value)
+    end
+
+    function _evaluate_element_expr_tree(expr_tree, dic_var_value :: Dict{Int64,T where T <: Number})
+        nd = trait_expr_tree._get_expr_node(expr_tree)
+        ch = trait_expr_tree._get_expr_children(expr_tree)
+        if isempty(ch)
+            res = trait_expr_node.evaluate_node(nd, dic_var_value) :: Number
+            return res
+        else
+            n = length(ch)
+            temp = Vector{Number}(undef,n)
+            for i in 1:n
+                temp[i] = evaluate_element_expr_tree(ch[i],dic_var_value) :: Number
+            end
+            res = trait_expr_node.evaluate_node(nd, temp) #:: Vector{Number}
+            return res
+        end
+    end
+
+
 end
 
 

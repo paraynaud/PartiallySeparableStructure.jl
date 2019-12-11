@@ -42,5 +42,10 @@ module constants
         return c.value :: Number
     end
 
+    function _evaluate_node(c :: constant, dic :: Dict{Int64, T where T <: Number})
+        return c.value :: Number
+    end
+
+
     export constant
 end

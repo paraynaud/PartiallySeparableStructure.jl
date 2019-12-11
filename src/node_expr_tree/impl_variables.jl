@@ -54,6 +54,9 @@ module variables
         return x[v.index] :: Number
     end
 
+    function _evaluate_node(v :: variable, dic :: Dict{Int64,Number})
+        return dic[v.index] :: Number
+    end
 
     export variable
 end

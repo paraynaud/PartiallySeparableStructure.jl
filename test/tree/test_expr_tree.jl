@@ -193,17 +193,17 @@ end
 
 
 @testset "test arbres factorielle désimbriqué les + et get_type " begin
-    @time test_fac_expr_tree_plus = expr_tree_factorielle_plus(8, :+) :: implementation_expr_tree.t_expr_tree
+    # @time test_fac_expr_tree_plus = expr_tree_factorielle_plus(7, :+) :: implementation_expr_tree.t_expr_tree
     # test_fac_expr_tree = expr_tree_factorielle_dif_node(3) :: implementation_expr_tree.t_expr_tree
     # algo_tree.printer_tree(test_fac_expr_tree)
     # algo_tree.printer_tree(test_fac_expr_tree_plus)
     # @time algo_expr_tree.get_type_tree.(test_fac_expr_tree_plus_no_plus) # ca ne semble pas être une bonne idée ou alors encore parralélisé
     # algo_tree.printer_tree.(test_fac_expr_tree_plus_no_plus)
     # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
-    @time test_fac_expr_tree_plus_no_plus = algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
-    @time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
-    @time res3 = algo_expr_tree.get_elemental_variable(test_fac_expr_tree_plus)
-    @time algo_expr_tree.evaluate_function_test1(test_fac_expr_tree_plus,ones(5))
+    # @time test_fac_expr_tree_plus_no_plus = algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
+    # @time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
+    # @time res3 = algo_expr_tree.get_elemental_variable(test_fac_expr_tree_plus)
+    # @time algo_expr_tree.evaluate_expr_tree(test_fac_expr_tree_plus,ones(5))
     # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
     # InteractiveUtils.@code_warntype algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
 end
@@ -229,28 +229,49 @@ end
     n_x = 10
     # n_x = 5
     @variable(m, x[1:n_x])
-    @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]) + x[n_x-1]^3 + 5)
+    @NLobjective(m, Min, sum( x[j] * x[j+1] for j in 1:n_x-1 ) + (sin(x[1]))^2 + x[n_x-1]^3  + 5 )
     # @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]))
     eval_test = JuMP.NLPEvaluator(m)
     MathOptInterface.initialize(eval_test, [:ExprGraph])
     obj = MathOptInterface.objective_expr(eval_test)
     t_obj =  algo_expr_tree.transform_expr_tree(obj)
-
+    # DEFINITION DES OBJETS A TESTER
     elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
     type_elmt_fun = algo_expr_tree.get_type_tree.(elmt_fun)
     U = algo_expr_tree.get_elemental_variable.(elmt_fun)
+
     t_elmt_fun = algo_expr_tree.delete_imbricated_plus(t_obj)
     t_type_elmt_fun = algo_expr_tree.get_type_tree.(t_elmt_fun)
     t_U = algo_expr_tree.get_elemental_variable.(t_elmt_fun)
 
-    # @test elmt_fun == t_elmt_fun # car type initiaux différents
-    @test foldl(&,trait_expr_tree.expr_tree_equal.(elmt_fun, t_elmt_fun) )
-    @test type_elmt_fun == t_type_elmt_fun
-    @test U == t_U
+    #DEBUT DES TESTS
     x = ones(Float32, n_x)
-    res =  algo_expr_tree.evaluate_function_test1(obj, x)
-    # IMPORTANT La fonction evaluate evaluate_function_test1 garde le type des variables,
-    # Il faut cependant veiller à modifier les constantes dans les expressions pour qu'elles
-    # n'augmentent pas le type
-    @show typeof(res)
+    eval_ones = 15.708073371141893
+    # TEST SUR LES FONCTIONS ELEMENTS
+        # @test elmt_fun == t_elmt_fun # car type initiaux différents
+        @test foldl(&,trait_expr_tree.expr_tree_equal.(elmt_fun, t_elmt_fun) )
+        @test type_elmt_fun == t_type_elmt_fun
+
+    # TEST SUR LES VARIABLES ELEMENTAIRE
+        res_elemental_variable = Array{Int64,1}[[1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [1], [9], []]
+        @test U == t_U
+        @test U == res_elemental_variable
+
+    # TEST SUR LES EVALUATIONS
+        res = algo_expr_tree.evaluate_expr_tree(obj, x)
+        t_res = algo_expr_tree.evaluate_expr_tree(t_obj, x)
+        @test res == t_res
+        @test res == eval_ones
+    # TEST SUR LES EVALUATIONS DE FONCTIONS ELEMENTS
+        n_element = length(elmt_fun)
+        res_p = Vector{Number}(undef, n_element)
+        for i in 1:n_element
+            res_p[i] = algo_expr_tree.evaluate_element_expr_tree(elmt_fun[i], x, U[i])
+            # InteractiveUtils.@code_warntype res_p[i] = algo_expr_tree.evaluate_element_expr_tree(elmt_fun[i], x, U[i])
+        end
+        res_total = sum(res_p)
+        @test res_total == res
+        @show res_total, elmt_fun[length(elmt_fun)]
+
+    # @show typeof(res),U, res
 end

@@ -104,6 +104,9 @@ module trait_expr_node
     evaluate_node(a, x :: Vector{}) = _evaluate_node(a, is_expr_node(a), x)
     _evaluate_node(a, ::type_expr_node, x:: Vector{}) = _evaluate_node(a, x)
     _evaluate_node(a, ::type_not_expr_node, x :: Vector{}) = error("This node is not a expr node")
+    evaluate_node(a, x :: Dict{Int64,Number}) = _evaluate_node(a, is_expr_node(a), x)
+    _evaluate_node(a, ::type_expr_node, x:: Dict{Int64,Number}) = _evaluate_node(a, x)
+    _evaluate_node(a, ::type_not_expr_node, x :: Dict{Int64,Number}) = error("This node is not a expr node")
 
 end  # module trait_expr_node
 
