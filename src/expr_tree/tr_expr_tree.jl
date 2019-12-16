@@ -209,12 +209,25 @@ module algo_expr_tree
 # @testset "test complet à
     end
 
-
+"""
+    get_Ui(index_new_var, n)
+Create a the matrix U associated to the variable appearing in index_new_var.
+This function create a sparse matrix of size length(index_new_var)×n.
+"""
     function get_Ui(index_vars :: Vector{Int64}, n :: Int64)
-        U = sparse(index_vars, ones(Int64,length(index_vars)), n) :: SparseVecotr{Int64,Int64}
+        m = length(index_vars)
+        U = sparse( [1:m;] ::Vector{Int64}, index_vars,  ones(Int64,length(index_vars)), m, n) :: SparseMatrixCSC{Int64,Int64}
+        # :: SparseVector{Int64,Int64}
         return U
     end
 
+"""
+    element_fun_from_N_to_Ni!(expr_tree, vector)
+Transform the tree expr_tree, which represent a function from Rⁿ ⇢ R, to an element
+function from Rⁱ → R .
+This function rename the variable of expr_tree to x₁,x₂,... instead of x₇,x₉ for example
+        
+"""
     element_fun_from_N_to_Ni!(expr_tree, a :: Vector{Int64}) = _element_fun_from_N_to_Ni!(expr_tree, trait_expr_tree.is_expr_tree(expr_tree),a)
     _element_fun_from_N_to_Ni!(expr_tree, :: trait_expr_tree.type_not_expr_tree, a :: Vector{Int64}) = error(" This is not an Expr tree")
     _element_fun_from_N_to_Ni!(expr_tree, :: trait_expr_tree.type_expr_tree, a :: Vector{Int64}) = _element_fun_from_N_to_Ni!(expr_tree,a)
@@ -237,8 +250,6 @@ module algo_expr_tree
         ch = trait_expr_tree.get_expr_children(expr_tree)
         if isempty(ch) # on est alors dans une feuille
             nd =  trait_expr_tree.get_expr_node(expr_tree)
-            @show nd, expr_tree
-            # trait_expr_node.change_from_N_to_Ni(nd, dic_new_var)
             trait_expr_node.change_from_N_to_Ni!(expr_tree, dic_new_var)
         else
             n = length(ch)

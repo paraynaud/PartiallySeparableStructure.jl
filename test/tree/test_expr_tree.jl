@@ -1,8 +1,7 @@
 using Test, Revise
 using InteractiveUtils
 using MathOptInterface, JuMP
-
-include("../../src/expr_tree/ordered_include.jl")
+using BenchmarkTools
 
 using .trait_expr_tree
 using .abstract_expr_tree
@@ -300,26 +299,41 @@ end
 println("test gradient ")
 
 m = Model()
-n_x = 5
+n_x = 1000
 @variable(m, x[1:n_x])
-@NLobjective(m, Min, sum( x[j]^2 * x[j+1] for j in 1:n_x-1 ) +5 )
+@NLobjective(m, Min, sum( x[j]^2 * x[j+1] for j in 1:n_x-1 ) + x[1]*5 )
 # @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]))
 eval_test = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(eval_test, [:ExprGraph])
 obj_o = MathOptInterface.objective_expr(eval_test)
 obj = copy(obj_o)
 x = (x -> 3*x).(ones(n_x))
-@show g = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj,x)
-@show g2 = M_evaluation_expr_tree.calcul_gradient_expr_tree(:(sin(x[1])), [3.14])
-@show H = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj, x)
+# @time g = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj,x)
+# @time H = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj, x)
 println("\n\nmaintenant les fonction elements\n\n")
-@show elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
-@show U_i = algo_expr_tree.get_elemental_variable.(elmt_fun)
-elmt_g = Vector{Vector{}}(undef,length(elmt_fun))
-for i in 1:length(elmt_fun)
-    elmt_g[i] = M_evaluation_expr_tree.calcul_gradient_expr_tree(elmt_fun[i],x,U_i[i])
-end
-@show elmt_g
+# elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
+# U_i = algo_expr_tree.get_elemental_variable.(elmt_fun)
+# algo_expr_tree.element_fun_from_N_to_Ni!.(elmt_fun, U_i)
+# elmt_g = Vector{Vector{}}(undef,length(elmt_fun))
+# @time (@Threads.threads for i in 1:length(elmt_fun)
+#     elmt_g[i] = M_evaluation_expr_tree.calcul_gradient_expr_tree(elmt_fun[i], Array(view(x,U_i[i])) )
+# end)
+# elmt_H = Vector{Array{}}(undef,length(elmt_fun))
+# @time (@Threads.threads for i in 1:length(elmt_fun)
+#     elmt_H[i] = M_evaluation_expr_tree.calcul_Hessian_expr_tree(elmt_fun[i], Array(view(x,U_i[i])) )
+# end)
+
+# algo_expr_tree.element_fun_from_N_to_Ni!.(elmt_fun,U_i)
+
+println("test du module PartiallySeparableStructure")
+using ..PartiallySeparableStructure
 
 
-algo_expr_tree.element_fun_from_N_to_Ni!.(elmt_fun,U_i)
+# @benchmark PartiallySeparableStructure.deduct_partially_separable_structure(obj_o, n_x)
+S_test = PartiallySeparableStructure.deduct_partially_separable_structure(obj_o, n_x)
+@time res_test =  PartiallySeparableStructure.evaluate_SPS(S_test, x)
+@time res_test2 = M_evaluation_expr_tree.evaluate_expr_tree(obj,x)
+@test res_test == res_test2
+
+g_test = PartiallySeparableStructure.evalutate_gradient(S_test, x )
+# poursuivre ce g_test
