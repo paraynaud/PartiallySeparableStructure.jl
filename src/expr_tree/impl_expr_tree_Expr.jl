@@ -23,7 +23,7 @@ module implementation_expr_tree_Expr
         elseif hd == :ref
             name_variable = args[1]
             index_variable = args[2]
-            return create_node_expr(name_variable,index_variable)
+            return create_node_expr(name_variable, index_variable)
         else
             error("partie non traite des Expr pour le moment ")
         end

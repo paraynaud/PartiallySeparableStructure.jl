@@ -18,6 +18,8 @@ module interface_expr_node
 
     _evaluate_node() = ()
 
+    _change_from_N_to_Ni!() = ()
+
 
 
 end

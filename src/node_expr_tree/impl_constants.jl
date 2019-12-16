@@ -7,7 +7,7 @@ module constants
     import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
 
     using ..implementation_type_expr
-    import ..interface_expr_node._get_type_node, ..interface_expr_node._evaluate_node
+    import ..interface_expr_node._get_type_node, ..interface_expr_node._evaluate_node, ..interface_expr_node._change_from_N_to_Ni!
 
     import Base.==
 
@@ -45,6 +45,8 @@ module constants
     function _evaluate_node(c :: constant, dic :: Dict{Int64, T where T <: Number})
         return c.value :: Number
     end
+
+    _change_from_N_to_Ni!(v :: Number, dic_new_var :: Dict{Int64,Int64}) = ()
 
 
     export constant

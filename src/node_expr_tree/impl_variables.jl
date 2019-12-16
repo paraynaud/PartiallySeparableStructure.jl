@@ -10,7 +10,7 @@ module variables
 
     import ..implementation_type_expr.t_type_expr_basic
     import ..interface_expr_node._get_type_node, ..interface_expr_node._get_var_index
-    import  ..interface_expr_node._evaluate_node
+    import  ..interface_expr_node._evaluate_node, ..interface_expr_node._change_from_N_to_Ni!
 
 
     using ..implementation_type_expr
@@ -57,6 +57,27 @@ module variables
     function _evaluate_node(v :: variable, dic :: Dict{Int64,Number})
         return dic[v.index] :: Number
     end
+    function _change_from_N_to_Ni!(v :: variable, dic_new_var :: Dict{Int64,Int64})
+        v.index = dic_new_var[v.index]
+    end
+
+    function _change_from_N_to_Ni!(v :: Expr, dic_new_var :: Dict{Int64,Int64})
+        hd =v.head
+        if hd != :ref
+            error("on ne traite pas une variable")
+        else
+            new_index = change_index(v.args[2], dic_new_var)
+            v.args[2] = new_index
+        end
+    end
+
+    function change_index( x :: Int64, dic_new_var :: Dict{Int64,Int64})
+        return dic_new_var[x]
+    end
+    function change_index( x :: MathOptInterface.VariableIndex, dic_new_var :: Dict{Int64,Int64})
+        return MathOptInterface.VariableIndex(dic_new_var[x.value])
+    end
+
 
     export variable
 end

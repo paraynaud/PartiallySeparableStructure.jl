@@ -5,7 +5,7 @@ module trait_expr_node
     import ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
     import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
     import ..interface_expr_node._get_type_node, ..interface_expr_node._get_var_index
-    import ..interface_expr_node._evaluate_node
+    import ..interface_expr_node._evaluate_node, ..interface_expr_node._change_from_N_to_Ni!
 
     using ..implementation_type_expr
     using ..trait_type_expr
@@ -17,6 +17,8 @@ module trait_expr_node
 """ partie sur les opérateurs """
 
     is_expr_node(a :: ab_ex_nd) = type_expr_node()
+    is_expr_node(a :: Expr) = type_expr_node()
+    is_expr_node(a :: Number) = type_expr_node()
     is_expr_node(a :: Any) = type_not_expr_node()
 
     node_is_operator(a) = _node_is_operator(a, is_expr_node(a))
@@ -107,6 +109,10 @@ module trait_expr_node
     evaluate_node(a, x :: Dict{Int64,Number}) = _evaluate_node(a, is_expr_node(a), x)
     _evaluate_node(a, ::type_expr_node, x:: Dict{Int64,Number}) = _evaluate_node(a, x)
     _evaluate_node(a, ::type_not_expr_node, x :: Dict{Int64,Number}) = error("This node is not a expr node")
+
+    change_from_N_to_Ni!(a, dic_new_var :: Dict{Int64,Int64}) = _change_from_N_to_Ni!(a, is_expr_node(a), dic_new_var)
+    _change_from_N_to_Ni!(a, ::type_expr_node, dic_new_var :: Dict{Int64,Int64}) = _change_from_N_to_Ni!(a, dic_new_var)
+    _change_from_N_to_Ni!(a, ::type_not_expr_node, dic_new_var :: Dict{Int64,Int64}) = error("This node is not a expr node")
 
 end  # module trait_expr_node
 

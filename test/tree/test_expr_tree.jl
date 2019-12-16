@@ -172,8 +172,8 @@ end
 
 @testset "test complet à partir d'un modèle JuMP" begin
     m = Model()
+    # n_x = 50000
     n_x = 10
-    # n_x = 5
     @variable(m, x[1:n_x])
     @NLobjective(m, Min, sum( x[j] * x[j+1] for j in 1:n_x-1 ) + (sin(x[1]))^2 + x[n_x-1]^3  + 5 )
     # @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]))
@@ -206,8 +206,10 @@ end
     # TEST SUR LES EVALUATIONS
         # @time res = algo_expr_tree.evaluate_expr_tree(obj, x)
         # @time t_res = algo_expr_tree.evaluate_expr_tree(t_obj, x)
-        res = algo_expr_tree.evaluate_expr_tree(obj, x)
-        t_res = algo_expr_tree.evaluate_expr_tree(t_obj, x)
+        # @time res = algo_expr_tree.evaluate_expr_tree(obj, x)
+        # @time t_res = algo_expr_tree.evaluate_expr_tree(t_obj, x)
+        res = M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
+        t_res = M_evaluation_expr_tree.evaluate_expr_tree(t_obj, x)
         @test res == t_res
         @test res == eval_ones
     # TEST SUR LES EVALUATIONS DE FONCTIONS ELEMENTS
@@ -215,14 +217,15 @@ end
         res_p = Vector{Number}(undef, n_element)
 
         for i in 1:n_element
-            res_p[i] = algo_expr_tree.evaluate_element_expr_tree(elmt_fun[i], x, U[i])
+            res_p[i] = M_evaluation_expr_tree.evaluate_element_expr_tree(elmt_fun[i], x, U[i])
             # InteractiveUtils.@code_warntype res_p[i] = algo_expr_tree.evaluate_element_expr_tree(elmt_fun[i], x, U[i])
         end
+        # @time (Threads.@threads for i in 1:n_element
+        #     res_p[i] = algo_expr_tree.evaluate_element_expr_tree(elmt_fun[i], x, U[i])
+        #     # InteractiveUtils.@code_warntype res_p[i] = algo_expr_tree.evaluate_element_expr_tree(elmt_fun[i], x, U[i])
+        # end)
         res_total = sum(res_p)
         @test res_total == res
-        @show res_total, elmt_fun[length(elmt_fun)]
-
-    # @show typeof(res),U, res
 end
 
 
@@ -286,7 +289,7 @@ end
     @time test_fac_expr_tree_plus_no_plus = algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
     @time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
     @time res3 = algo_expr_tree.get_elemental_variable(test_fac_expr_tree_plus)
-    @time res = algo_expr_tree.evaluate_expr_tree(test_fac_expr_tree_plus,ones(5))
+    @time res = M_evaluation_expr_tree.evaluate_expr_tree(test_fac_expr_tree_plus,ones(5))
     @test res == factorial(n)
 
     # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
@@ -297,14 +300,26 @@ end
 println("test gradient ")
 
 m = Model()
-n_x = 3
+n_x = 5
 @variable(m, x[1:n_x])
-@NLobjective(m, Min, sum( x[j]^2 * x[j+1] for j in 1:n_x-1 ) )
+@NLobjective(m, Min, sum( x[j]^2 * x[j+1] for j in 1:n_x-1 ) +5 )
 # @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]))
 eval_test = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(eval_test, [:ExprGraph])
-obj = MathOptInterface.objective_expr(eval_test)
+obj_o = MathOptInterface.objective_expr(eval_test)
+obj = copy(obj_o)
 x = (x -> 3*x).(ones(n_x))
-@show g = algo_expr_tree.calcul_gradient_expr_tree(obj,x)
-@show g2 = algo_expr_tree.calcul_gradient_expr_tree(:(sin(x[1])), [3.14])
-@show H = algo_expr_tree.calcul_Hessian_expr_tree(obj, x)
+@show g = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj,x)
+@show g2 = M_evaluation_expr_tree.calcul_gradient_expr_tree(:(sin(x[1])), [3.14])
+@show H = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj, x)
+println("\n\nmaintenant les fonction elements\n\n")
+@show elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
+@show U_i = algo_expr_tree.get_elemental_variable.(elmt_fun)
+elmt_g = Vector{Vector{}}(undef,length(elmt_fun))
+for i in 1:length(elmt_fun)
+    elmt_g[i] = M_evaluation_expr_tree.calcul_gradient_expr_tree(elmt_fun[i],x,U_i[i])
+end
+@show elmt_g
+
+
+algo_expr_tree.element_fun_from_N_to_Ni!.(elmt_fun,U_i)
