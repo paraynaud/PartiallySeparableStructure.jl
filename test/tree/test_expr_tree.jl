@@ -299,7 +299,7 @@ println("test du module PartiallySeparableStructure")
 using ..PartiallySeparableStructure
 
 println("test gradient ")
-@testset "test gradient/hessian SPS" begin
+# @testset "test gradient/hessian SPS" begin
 
     m = Model()
     n_x = 100
@@ -341,7 +341,14 @@ println("test gradient ")
     @time H_test = PartiallySeparableStructure.evaluate_hessian(S_test, x )
     @time H_test2 = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj, x)
     @test Array(H_test) == H_test2
-end
+
+    @time B = PartiallySeparableStructure.struct_hessian(S_test, x )
+    x2 = ones(n_x)
+    @time PartiallySeparableStructure.product_matrix_sps(S_test,B,x2)
+    id = zeros(n_x)
+    id[1] = 1
+    PartiallySeparableStructure.product_matrix_sps(S_test,B,id)
+# end
 
 """ COMPARAISON evnluation du gradient avec et sans structure partiellement séparable
 model jump :

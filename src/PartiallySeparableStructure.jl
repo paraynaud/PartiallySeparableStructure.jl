@@ -18,14 +18,13 @@ module PartiallySeparableStructure
         n_var :: Int64
     end
 
-    # mutable struct
-    #     elmt_hess ::
-    #     used_var ::
-    # end
-    #
-    # mutable struct Hess_matrix
-    #
-    # end
+    mutable struct element_hessian{T <: Number}
+        elmt_hess :: Array{T,2}
+    end
+
+    mutable struct Hess_matrix{T <: Number}
+        arr :: Vector{element_hessian{T}}
+    end
 
 
 """
@@ -38,7 +37,6 @@ n is the number of the variable.It is needed.
     _deduct_partially_separable_structure(a, :: trait_expr_tree.type_expr_tree, n :: Int64) = _deduct_partially_separable_structure(a, n )
     function _deduct_partially_separable_structure(expr_tree :: T , n :: Int64) where T
         work_expr_tree = copy(expr_tree)
-
         elmt_fun = algo_expr_tree.delete_imbricated_plus(work_expr_tree) :: Vector{T}
         m_i = length(elmt_fun)
 
@@ -125,14 +123,48 @@ at the point x. Return the sparse matrix of the hessian.
         return G
     end
 
-
     function evaluate_element_hessian(elmt_fun :: element_function{T}, x :: Vector{Y}) where T where Y <: Number
-        # (rown, column, value) = findnz(elmt_fun.U)
         temp = ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun), x )
         temp_sparse = sparse(temp)
         G = elmt_fun.U'*temp_sparse*elmt_fun.U
         return findnz(G)
     end
+
+
+
+"""
+    evaluate_hessian(sps,x)
+evalutate the hessian of the partially separable function, stored in the sps structure
+at the point x. Return the result as a Hess_matrix.
+"""
+    function struct_hessian(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
+        l_elmt_fun = length(sps.structure)
+        elmt_hess = Vector{Tuple{Vector{Int64},Vector{Int64},Vector{Float64}}}(undef, l_elmt_fun)
+        temp = Vector{element_hessian{Y}}(undef, l_elmt_fun)
+        @Threads.threads for i in 1:l_elmt_fun # a voir si je laisse le array(view()) la ou non
+            temp[i] = element_hessian{Y}(ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable)) ) )
+        end
+        G = Hess_matrix{Y}(temp)
+        return G
+    end
+
+
+    function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Z}, x :: Vector{Y}) where T where Z <: Number where Y <: Number
+        l_elmt_fun = length(sps.structure)
+        vector_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).(Vector{Int8}(undef,sps.n_var)) )
+         # @Threads.threads for i in 1:l_elmt_fun
+         for i in 1:l_elmt_fun
+            (rown, column, value) = findnz(sps.structure[i].U)
+            temp = B.arr[i].elmt_hess * Array(view(x, sps.structure[i].used_variable))
+            atomic_add!.(vector_prl[column], temp)
+        end
+        vector_res = (x -> x[]).(vector_prl) :: Vector{Y}
+        return vector_res
+    end
+
+
+
+
 
 end # module
 
