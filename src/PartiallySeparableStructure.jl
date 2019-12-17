@@ -18,12 +18,24 @@ module PartiallySeparableStructure
         n_var :: Int64
     end
 
+    # mutable struct
+    #     elmt_hess ::
+    #     used_var ::
+    # end
+    #
+    # mutable struct Hess_matrix
+    #
+    # end
 
+
+"""
+    deduct_partially_separable_structure(expr_tree, n)
+Find the partially separable structure of the expression tree expr_tree.
+n is the number of the variable.It is needed.
+"""
     deduct_partially_separable_structure(a :: Any, n :: Int64) = _deduct_partially_separable_structure(a, trait_expr_tree.is_expr_tree(a), n)
     _deduct_partially_separable_structure(a, :: trait_expr_tree.type_not_expr_tree, n :: Int64) = error("l'entrée de la fonction n'est pas un arbre d'expression")
     _deduct_partially_separable_structure(a, :: trait_expr_tree.type_expr_tree, n :: Int64) = _deduct_partially_separable_structure(a, n )
-
-
     function _deduct_partially_separable_structure(expr_tree :: T , n :: Int64) where T
         work_expr_tree = copy(expr_tree)
 
@@ -63,34 +75,63 @@ module PartiallySeparableStructure
         return SPS{T}(Sps, length_vec[], n)
     end
 
+"""
+    evaluate_SPS(sps,x)
+evalutate the partially separable function, stored in the sps structure
+at the point x
+"""
     function evaluate_SPS(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
         res = Vector{Y}(undef, l_elmt_fun)
-        # @Threads.threads for i in 1:l_elmt_fun
         @Threads.threads for i in 1:l_elmt_fun
-            # @show sps.structure[i].fun, Array(view(x, sps[i].used_variable))
             res[i] = M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun, Array(view(x, sps.structure[i].used_variable)) )
         end
         return sum(res)
     end
 
-    function evalutate_gradient(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
+"""
+    evaluate_gradient(sps,x)
+evalutate the gradient of the partially separable function, stored in the sps structure
+at the point x, return a vector of size n (the number of variable) which is the gradient.
+"""
+    function evaluate_gradient(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
-        res = Vector{Tuple{Vector{Y},Vector{Int64}}}(undef, l_elmt_fun)
-        gradient = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).(Vector{Int8}(undef,sps.n_var)) )
-
-        # @Threads.threads for i in 1:l_elmt_fun
-         for i in 1:l_elmt_fun
+        gradient_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).(Vector{Int8}(undef,sps.n_var)) )
+         @Threads.threads for i in 1:l_elmt_fun
             (rown, column, value) = findnz(sps.structure[i].U)
-            # res[i] = ( ForwardDiff.gradient(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable)) ), column)
             temp = ForwardDiff.gradient(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable))  )
-            atomic_add!.(gradient[column], temp)
+            atomic_add!.(gradient_prl[column], temp)
         end
-        # for i in 1:l_elmt_fun
-        #     atomic_add!(gradient[])
-        # end
-        # return (x -> x[]).gradient
+        gradient = (x -> x[]).(gradient_prl) :: Vector{Y}
         return gradient
+    end
+
+"""
+    evaluate_hessian(sps,x)
+evalutate the hessian of the partially separable function, stored in the sps structure
+at the point x. Return the sparse matrix of the hessian.
+"""
+    function evaluate_hessian(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
+        l_elmt_fun = length(sps.structure)
+        elmt_hess = Vector{Tuple{Vector{Int64},Vector{Int64},Vector{Float64}}}(undef, l_elmt_fun)
+         # @Threads.threads for i in 1:l_elmt_fun # a voir si je laisse le array(view()) la ou non
+        @Threads.threads for i in 1:l_elmt_fun # a voir si je laisse le array(view()) la ou non
+            elmt_hess[i] = evaluate_element_hessian(sps.structure[i], Array(view(x, sps.structure[i].used_variable)))
+        end
+        row = [x[1] for x in elmt_hess] :: Vector{Vector{Int64}}
+        column = [x[2] for x in elmt_hess]:: Vector{Vector{Int64}}
+        values = [x[3] for x in elmt_hess] :: Vector{Vector{Y}}
+        G = sparse(vcat(row...),vcat(column...),vcat(values...))
+        return G
+    end
+
+
+    function evaluate_element_hessian(elmt_fun :: element_function{T}, x :: Vector{Y}) where T where Y <: Number
+        # (rown, column, value) = findnz(elmt_fun.U)
+        temp = ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun), x )
+        temp_sparse = sparse(temp)
+        G = elmt_fun.U'*temp_sparse*elmt_fun.U
+        return findnz(G)
     end
 
 end # module

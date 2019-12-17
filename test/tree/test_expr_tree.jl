@@ -295,45 +295,97 @@ end
     # InteractiveUtils.@code_warntype algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
 end
 
-
-println("test gradient ")
-
-m = Model()
-n_x = 1000
-@variable(m, x[1:n_x])
-@NLobjective(m, Min, sum( x[j]^2 * x[j+1] for j in 1:n_x-1 ) + x[1]*5 )
-# @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]))
-eval_test = JuMP.NLPEvaluator(m)
-MathOptInterface.initialize(eval_test, [:ExprGraph])
-obj_o = MathOptInterface.objective_expr(eval_test)
-obj = copy(obj_o)
-x = (x -> 3*x).(ones(n_x))
-# @time g = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj,x)
-# @time H = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj, x)
-println("\n\nmaintenant les fonction elements\n\n")
-# elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
-# U_i = algo_expr_tree.get_elemental_variable.(elmt_fun)
-# algo_expr_tree.element_fun_from_N_to_Ni!.(elmt_fun, U_i)
-# elmt_g = Vector{Vector{}}(undef,length(elmt_fun))
-# @time (@Threads.threads for i in 1:length(elmt_fun)
-#     elmt_g[i] = M_evaluation_expr_tree.calcul_gradient_expr_tree(elmt_fun[i], Array(view(x,U_i[i])) )
-# end)
-# elmt_H = Vector{Array{}}(undef,length(elmt_fun))
-# @time (@Threads.threads for i in 1:length(elmt_fun)
-#     elmt_H[i] = M_evaluation_expr_tree.calcul_Hessian_expr_tree(elmt_fun[i], Array(view(x,U_i[i])) )
-# end)
-
-# algo_expr_tree.element_fun_from_N_to_Ni!.(elmt_fun,U_i)
-
 println("test du module PartiallySeparableStructure")
 using ..PartiallySeparableStructure
 
+println("test gradient ")
+@testset "test gradient/hessian SPS" begin
 
-# @benchmark PartiallySeparableStructure.deduct_partially_separable_structure(obj_o, n_x)
-S_test = PartiallySeparableStructure.deduct_partially_separable_structure(obj_o, n_x)
-@time res_test =  PartiallySeparableStructure.evaluate_SPS(S_test, x)
-@time res_test2 = M_evaluation_expr_tree.evaluate_expr_tree(obj,x)
-@test res_test == res_test2
+    m = Model()
+    n_x = 100
+    @variable(m, x[1:n_x])
+    @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n_x-1 ) + x[1]*5 )
+    # @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]))
+    eval_test = JuMP.NLPEvaluator(m)
+    MathOptInterface.initialize(eval_test, [:ExprGraph])
+    obj_o = MathOptInterface.objective_expr(eval_test)
+    obj = copy(obj_o)
+    x = (x -> 3*x).(ones(n_x))
+    # @time g = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj,x)
+    # @time H = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj, x)
+    # println("\n\nmaintenant les fonction elements\n\n")
+    # elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
+    # U_i = algo_expr_tree.get_elemental_variable.(elmt_fun)
+    # algo_expr_tree.element_fun_from_N_to_Ni!.(elmt_fun, U_i)
+    # elmt_g = Vector{Vector{}}(undef,length(elmt_fun))
+    # @Threads.threads for i in 1:length(elmt_fun)
+    #     elmt_g[i] = M_evaluation_expr_tree.calcul_gradient_expr_tree(elmt_fun[i], Array(view(x,U_i[i])) )
+    # end
+    # elmt_H = Vector{Array{}}(undef,length(elmt_fun))
+    # @Threads.threads for i in 1:length(elmt_fun)
+    #     elmt_H[i] = M_evaluation_expr_tree.calcul_Hessian_expr_tree(elmt_fun[i], Array(view(x,U_i[i])) )
+    # end
 
-g_test = PartiallySeparableStructure.evalutate_gradient(S_test, x )
-# poursuivre ce g_test
+    # @benchmark PartiallySeparableStructure.deduct_partially_separable_structure(obj_o, n_x)
+    S_test = PartiallySeparableStructure.deduct_partially_separable_structure(obj_o, n_x)
+    res_test =  PartiallySeparableStructure.evaluate_SPS(S_test, x)
+    res_test2 = M_evaluation_expr_tree.evaluate_expr_tree(obj,x)
+    @test res_test == res_test2
+
+    @time g_test = PartiallySeparableStructure.evaluate_gradient(S_test, x )
+    @time g_test2 = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj,x)
+    # @benchmark PartiallySeparableStructure.evalutate_gradient(S_test, x )
+    # @benchmark M_evaluation_expr_tree.calcul_gradient_expr_tree(obj,x)
+    @test g_test == g_test2
+
+    @time H_test = PartiallySeparableStructure.evaluate_hessian(S_test, x )
+    @time H_test2 = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj, x)
+    @test Array(H_test) == H_test2
+end
+
+""" COMPARAISON evnluation du gradient avec et sans structure partiellement séparable
+model jump :
+n_x = 1000
+@variable(m, x[1:n_x])
+@NLobjective(m, Min, sum( x[j]^2 * x[j+1] for j in 1:n_x-1 ) + x[1]*5 )
+
+sans :
+  memory estimate:  210.70 MiB
+  allocs estimate:  2812868
+  --------------
+  minimum time:     368.598 ms (0.00% GC)
+  median time:      529.942 ms (0.00% GC)
+  mean time:        596.869 ms (15.94% GC)
+  maximum time:     1.349 s (63.47% GC)
+  --------------
+  samples:          9
+  evals/sample:     1
+
+avec :
+  memory estimate:  1.41 MiB
+  allocs estimate:  30899
+  --------------
+  minimum time:     3.497 ms (0.00% GC)
+  median time:      5.446 ms (0.00% GC)
+  mean time:        5.306 ms (0.00% GC)
+  maximum time:     8.398 ms (0.00% GC)
+  --------------
+  samples:          941
+  evals/sample:     1
+"""
+
+@testset "test max performance" begin
+    m = Model()
+    n_x = 10000
+    @variable(m, x[1:n_x])
+    @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n_x-1 ) + x[1]*5 )
+    # @NLobjective(m, Min, sum( (x[j] * x[j+1]  @time  for j in 1:n_x-1  ) ) + sin(x[1]))
+    eval_test = JuMP.NLPEvaluator(m)
+    MathOptInterface.initialize(eval_test, [:ExprGraph])
+    obj_o = MathOptInterface.objective_expr(eval_test)
+    obj = copy(obj_o)
+    x = (x -> 3*x).(ones(n_x))
+
+    @time S_test = PartiallySeparableStructure.deduct_partially_separable_structure(obj_o, n_x)
+    @time H_test = PartiallySeparableStructure.evaluate_hessian(S_test, x )
+end
