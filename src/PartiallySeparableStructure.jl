@@ -152,8 +152,8 @@ at the point x. Return the result as a Hess_matrix.
     function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Z}, x :: Vector{Y}) where T where Z <: Number where Y <: Number
         l_elmt_fun = length(sps.structure)
         vector_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).(Vector{Int8}(undef,sps.n_var)) )
-         # @Threads.threads for i in 1:l_elmt_fun
-         for i in 1:l_elmt_fun
+         @Threads.threads for i in 1:l_elmt_fun
+         # for i in 1:l_elmt_fun
             (rown, column, value) = findnz(sps.structure[i].U)
             temp = B.arr[i].elmt_hess * Array(view(x, sps.structure[i].used_variable))
             atomic_add!.(vector_prl[column], temp)

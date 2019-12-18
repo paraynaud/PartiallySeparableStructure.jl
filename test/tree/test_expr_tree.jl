@@ -342,9 +342,32 @@ println("test gradient ")
     @time H_test2 = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj, x)
     @test Array(H_test) == H_test2
 
-    @time B = PartiallySeparableStructure.struct_hessian(S_test, x )
+    B = PartiallySeparableStructure.struct_hessian(S_test, x )
     x2 = ones(n_x)
-    @time PartiallySeparableStructure.product_matrix_sps(S_test,B,x2)
+    PartiallySeparableStructure.product_matrix_sps(S_test,B,x2)
+    @benchmark PartiallySeparableStructure.product_matrix_sps(S_test,B,x2)
+  # memory estimate:  27.38 KiB
+  # allocs estimate:  518
+  # --------------
+  # minimum time:     61.065 μs (0.00% GC)
+  # median time:      73.543 μs (0.00% GC)
+  # mean time:        73.789 μs (0.00% GC)
+  # maximum time:     760.961 μs (0.00% GC)
+  # --------------
+  # samples:          10000
+  # evals/sample:     1
+    @benchmark H_test2*x2
+    # BenchmarkTools.Trial:
+      # memory estimate:  896 bytes
+      # allocs estimate:  1
+      # --------------
+      # minimum time:     4.038 μs (0.00% GC)
+      # median time:      5.524 μs (0.00% GC)
+      # mean time:        7.476 μs (0.00% GC)
+      # maximum time:     4.272 ms (0.00% GC)
+      # --------------
+      # samples:          10000
+      # evals/sample:     7
     id = zeros(n_x)
     id[1] = 1
     PartiallySeparableStructure.product_matrix_sps(S_test,B,id)
@@ -381,18 +404,18 @@ avec :
   evals/sample:     1
 """
 
-@testset "test max performance" begin
-    m = Model()
-    n_x = 10000
-    @variable(m, x[1:n_x])
-    @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n_x-1 ) + x[1]*5 )
-    # @NLobjective(m, Min, sum( (x[j] * x[j+1]  @time  for j in 1:n_x-1  ) ) + sin(x[1]))
-    eval_test = JuMP.NLPEvaluator(m)
-    MathOptInterface.initialize(eval_test, [:ExprGraph])
-    obj_o = MathOptInterface.objective_expr(eval_test)
-    obj = copy(obj_o)
-    x = (x -> 3*x).(ones(n_x))
-
-    @time S_test = PartiallySeparableStructure.deduct_partially_separable_structure(obj_o, n_x)
-    @time H_test = PartiallySeparableStructure.evaluate_hessian(S_test, x )
-end
+# @testset "test max performance" begin
+#     m = Model()
+#     n_x = 10000
+#     @variable(m, x[1:n_x])
+#     @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n_x-1 ) + x[1]*5 )
+#     # @NLobjective(m, Min, sum( (x[j] * x[j+1]  @time  for j in 1:n_x-1  ) ) + sin(x[1]))
+#     eval_test = JuMP.NLPEvaluator(m)
+#     MathOptInterface.initialize(eval_test, [:ExprGraph])
+#     obj_o = MathOptInterface.objective_expr(eval_test)
+#     obj = copy(obj_o)
+#     x = (x -> 3*x).(ones(n_x))
+#
+#     @time S_test = PartiallySeparableStructure.deduct_partially_separable_structure(obj_o, n_x)
+#     @time H_test = PartiallySeparableStructure.evaluate_hessian(S_test, x )
+# end
