@@ -26,11 +26,25 @@ module PartiallySeparableStructure
         arr :: Vector{element_hessian{T}}
     end
 
+    mutable struct element_gradient{ T <: Number}
+        g_i :: Vector{T}
+    end
+
+    mutable struct grad_vector{ T <: Number}
+        arr :: Vector{element_gradient{T}}
+    end
+
+    mutable struct struct_algo{T,Y <: Number}
+        sps :: SPS{T}
+        B :: Hess_matrix{Y}
+        g :: grad_vector{Y}
+    end
 
 """
     deduct_partially_separable_structure(expr_tree, n)
-Find the partially separable structure of the expression tree expr_tree.
-n is the number of the variable.It is needed.
+Find the partially separable structure of a function f stored as an expression tree expr_tree.
+To define properly the size of sparse matrix we need the size of the problem : n.
+At the end, we get the partially separable structure of f, f(x) = ∑fᵢ(xᵢ)
 """
     deduct_partially_separable_structure(a :: Any, n :: Int64) = _deduct_partially_separable_structure(a, trait_expr_tree.is_expr_tree(a), n)
     _deduct_partially_separable_structure(a, :: trait_expr_tree.type_not_expr_tree, n :: Int64) = error("l'entrée de la fonction n'est pas un arbre d'expression")
@@ -75,8 +89,8 @@ n is the number of the variable.It is needed.
 
 """
     evaluate_SPS(sps,x)
-evalutate the partially separable function, stored in the sps structure
-at the point x
+evalutate the partially separable function f = ∑fᵢ, stored in the sps structure at the point x.
+f(x) = ∑fᵢ(xᵢ), so we compute independently each fᵢ(xᵢ) and we return the sum.
 """
     function evaluate_SPS(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
@@ -89,12 +103,12 @@ at the point x
 
 """
     evaluate_gradient(sps,x)
-evalutate the gradient of the partially separable function, stored in the sps structure
+evalutate the gradient of the partially separable function f = ∑ fι, stored in the sps structure
 at the point x, return a vector of size n (the number of variable) which is the gradient.
 """
     function evaluate_gradient(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
-        gradient_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).(Vector{Int8}(undef,sps.n_var)) )
+        gradient_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).([1:sps.n_var;]) )
          @Threads.threads for i in 1:l_elmt_fun
             (rown, column, value) = findnz(sps.structure[i].U)
             temp = ForwardDiff.gradient(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable))  )
@@ -106,28 +120,33 @@ at the point x, return a vector of size n (the number of variable) which is the 
 
 """
     evaluate_hessian(sps,x)
-evalutate the hessian of the partially separable function, stored in the sps structure
-at the point x. Return the sparse matrix of the hessian.
+evalutate the hessian of the partially separable function f = ∑ fᵢ, stored in the sps structure
+at the point x. Return the sparse matrix of the hessian of size n × n.
 """
     function evaluate_hessian(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
-        elmt_hess = Vector{Tuple{Vector{Int64},Vector{Int64},Vector{Float64}}}(undef, l_elmt_fun)
-         # @Threads.threads for i in 1:l_elmt_fun # a voir si je laisse le array(view()) la ou non
-        @Threads.threads for i in 1:l_elmt_fun # a voir si je laisse le array(view()) la ou non
-            elmt_hess[i] = evaluate_element_hessian(sps.structure[i], Array(view(x, sps.structure[i].used_variable)))
+        elmt_hess = Vector{Tuple{Vector{Int64},Vector{Int64},Vector{Y}}}(undef, l_elmt_fun)
+        # @Threads.threads for i in 1:l_elmt_fun # déterminer l'impact sur les performances de array(view())
+        for i in 1:l_elmt_fun
+            elmt_hess[i] = evaluate_element_hessian(sps.structure[i], Array(view(x, sps.structure[i].used_variable))) :: Tuple{Vector{Int64},Vector{Int64},Vector{Y}}
         end
-        row = [x[1] for x in elmt_hess] :: Vector{Vector{Int64}}
-        column = [x[2] for x in elmt_hess]:: Vector{Vector{Int64}}
+        row = [x[1]  for x in elmt_hess] :: Vector{Vector{Int64}}
+        column = [x[2] for x in elmt_hess] :: Vector{Vector{Int64}}
         values = [x[3] for x in elmt_hess] :: Vector{Vector{Y}}
-        G = sparse(vcat(row...),vcat(column...),vcat(values...))
+        G = sparse(vcat(row...) :: Vector{Int64} , vcat(column...) :: Vector{Int64}, vcat(values...) :: Vector{Y}) :: SparseMatrixCSC{Y,Int64}
         return G
     end
 
+"""
+    evaluate_element_hessian(fᵢ,xᵢ)
+Compute the Hessian of the elemental function fᵢ : Gᵢ a n × n matrix. So xᵢ a vector of size nᵢ.
+The result of the function is the triplet of the sparse matrix Gᵢ.
+"""
     function evaluate_element_hessian(elmt_fun :: element_function{T}, x :: Vector{Y}) where T where Y <: Number
-        temp = ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun), x )
-        temp_sparse = sparse(temp)
-        G = elmt_fun.U'*temp_sparse*elmt_fun.U
-        return findnz(G)
+        temp = ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun), x ) :: Array{Y,2}
+        temp_sparse = sparse(temp) :: SparseMatrixCSC{Y,Int64}
+        G = SparseMatrixCSC{Y,Int64}(elmt_fun.U'*temp_sparse*elmt_fun.U)
+        return findnz(G) :: Tuple{Vector{Int64}, Vector{Int64}, Vector{Y}}
     end
 
 
@@ -139,7 +158,7 @@ at the point x. Return the result as a Hess_matrix.
 """
     function struct_hessian(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
-        elmt_hess = Vector{Tuple{Vector{Int64},Vector{Int64},Vector{Float64}}}(undef, l_elmt_fun)
+        elmt_hess = Vector{Tuple{Vector{Int64},Vector{Int64},Vector{Y}}}(undef, l_elmt_fun)
         temp = Vector{element_hessian{Y}}(undef, l_elmt_fun)
         @Threads.threads for i in 1:l_elmt_fun # a voir si je laisse le array(view()) la ou non
             temp[i] = element_hessian{Y}(ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable)) ) )
@@ -148,22 +167,51 @@ at the point x. Return the result as a Hess_matrix.
         return G
     end
 
-
+"""
+    product_matrix_sps(sps,B,x)
+This function make the product of the structure B which represent a symetric matrix and the vector x.
+We need the structure sps for the variable used in each B[i], to replace B[i]*x[i] in the result vector.
+"""
+    product_matrix_sps(s_a :: struct_algo{T, Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number = product_matrix_sps(s_a.sps, s_a.B, x)
     function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Z}, x :: Vector{Y}) where T where Z <: Number where Y <: Number
         l_elmt_fun = length(sps.structure)
-        vector_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).(Vector{Int8}(undef,sps.n_var)) )
+        vector_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).([1:sps.n_var;]) )
          @Threads.threads for i in 1:l_elmt_fun
-         # for i in 1:l_elmt_fun
             (rown, column, value) = findnz(sps.structure[i].U)
-            temp = B.arr[i].elmt_hess * Array(view(x, sps.structure[i].used_variable))
+            temp = B.arr[i].elmt_hess * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
             atomic_add!.(vector_prl[column], temp)
         end
         vector_res = (x -> x[]).(vector_prl) :: Vector{Y}
         return vector_res
     end
 
+"""
+    product_vector_sps(sps, g, x)
+compute the product g⊤ x = ∑ Uᵢ⊤ gᵢ⊤ xᵢ. So we need the sps structure to get the Uᵢ.
+"""
+    product_vector_sps(s_a :: struct_algo{T, Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number = product_vector_sps(s_a.sps, s_a.g, x)
+    function product_vector_sps(sps :: SPS{T}, g :: grad_vector{Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number
+        l_elmt_fun = length(sps.structure)
+        res = Vector{Y}(undef,l_elmt_fun) #vecteur stockant le résultat des gradient élémentaire g_i * x_i
+        # à voir si on ne passe pas sur un résultat direct avec des opérations atomique
+        for i in 1:l_elmt_fun
+            res[i] = g.arr[i]' * Array(view(x, sps.structure[i].used_variable))
+        end
+        return sum(res)
+    end
 
 
+    function approx_B_SR1(sps :: SPS{T}, B :: Hess_matrix{Y}, y :: Vector{Y}, s :: Vector{Z}) where T where Y <: Number where Z <: Number
+        l_elmt_fun = length(sps.structure)
+        vector_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).([1:sps.n_var;]) )
+         # @Threads.threads for i in 1:l_elmt_fun
+         for i in 1:l_elmt_fun
+            (rown, column, value) = findnz(sps.structure[i].U)
+            temp = B.arr[i].elmt_hess * Array(view(x, sps.structure[i].used_variable))
+        end
+        vector_res = (x -> x[]).(vector_prl) :: Vector{Y}
+        return vector_res
+    end
 
 
 end # module
