@@ -42,50 +42,51 @@ module PartiallySeparableStructure
 
 """
     deduct_partially_separable_structure(expr_tree, n)
+
 Find the partially separable structure of a function f stored as an expression tree expr_tree.
 To define properly the size of sparse matrix we need the size of the problem : n.
 At the end, we get the partially separable structure of f, f(x) = ∑fᵢ(xᵢ)
 """
-    deduct_partially_separable_structure(a :: Any, n :: Int) = _deduct_partially_separable_structure(a, trait_expr_tree.is_expr_tree(a), n)
-    _deduct_partially_separable_structure(a, :: trait_expr_tree.type_not_expr_tree, n :: Int) = error("l'entrée de la fonction n'est pas un arbre d'expression")
-    _deduct_partially_separable_structure(a, :: trait_expr_tree.type_expr_tree, n :: Int) = _deduct_partially_separable_structure(a, n )
-    function _deduct_partially_separable_structure(expr_tree :: T , n :: Int) where T
-        work_expr_tree = copy(expr_tree)
-        elmt_fun = algo_expr_tree.delete_imbricated_plus(work_expr_tree) :: Vector{T}
-        m_i = length(elmt_fun)
+deduct_partially_separable_structure(a :: Any, n :: Int) = _deduct_partially_separable_structure(a, trait_expr_tree.is_expr_tree(a), n)
+_deduct_partially_separable_structure(a, :: trait_expr_tree.type_not_expr_tree, n :: Int) = error("l'entrée de la fonction n'est pas un arbre d'expression")
+_deduct_partially_separable_structure(a, :: trait_expr_tree.type_expr_tree, n :: Int) = _deduct_partially_separable_structure(a, n )
+function _deduct_partially_separable_structure(expr_tree :: T , n :: Int) where T
+    work_expr_tree = copy(expr_tree)
+    elmt_fun = algo_expr_tree.delete_imbricated_plus(work_expr_tree) :: Vector{T}
+    m_i = length(elmt_fun)
 
-        type_i = Vector{trait_type_expr.t_type_expr_basic}(undef, m_i)
-        # type_i = algo_expr_tree._get_type_tree.(elmt_fun) :: Vector{trait_type_expr.t_type_expr_basic}
-        Threads.@threads for i in 1:m_i
-            type_i[i] = algo_expr_tree.get_type_tree(elmt_fun[i])
-        end
-
-        # elmt_var_i = algo_expr_tree.get_elemental_variable.(elmt_fun) :: Vector{ Vector{Int}}
-        elmt_var_i =  Vector{ Vector{Int}}(undef,m_i)
-        length_vec = Threads.Atomic{Int}(0)
-        Threads.@threads for i in 1:m_i
-            elmt_var_i[i] = algo_expr_tree.get_elemental_variable(elmt_fun[i])
-            atomic_add!(length_vec, length(elmt_var_i[i]))
-        end
-
-        # U_i = algo_expr_tree.get_Ui.(elmt_var_i, n) :: Vector{SparseMatrixCSC{Int,Int}}
-        U_i = Vector{SparseMatrixCSC{Int,Int}}(undef,m_i)
-        Threads.@threads for i in 1:m_i
-            U_i[i] = algo_expr_tree.get_Ui(elmt_var_i[i], n)
-        end
-
-        # algo_expr_tree.element_fun_from_N_to_Ni!.(elmt_fun,elmt_var_i)
-        Threads.@threads for i in 1:m_i
-            algo_expr_tree.element_fun_from_N_to_Ni!(elmt_fun[i],elmt_var_i[i])
-        end
-
-        Sps = Vector{element_function{T}}(undef,m_i)
-        Threads.@threads for i in 1:m_i
-            Sps[i] = element_function{T}(elmt_fun[i], type_i[i], elmt_var_i[i], U_i[i])
-        end
-
-        return SPS{T}(Sps, length_vec[], n)
+    type_i = Vector{trait_type_expr.t_type_expr_basic}(undef, m_i)
+    # type_i = algo_expr_tree._get_type_tree.(elmt_fun) :: Vector{trait_type_expr.t_type_expr_basic}
+    Threads.@threads for i in 1:m_i
+        type_i[i] = algo_expr_tree.get_type_tree(elmt_fun[i])
     end
+
+    # elmt_var_i = algo_expr_tree.get_elemental_variable.(elmt_fun) :: Vector{ Vector{Int}}
+    elmt_var_i =  Vector{ Vector{Int}}(undef,m_i)
+    length_vec = Threads.Atomic{Int}(0)
+    Threads.@threads for i in 1:m_i
+        elmt_var_i[i] = algo_expr_tree.get_elemental_variable(elmt_fun[i])
+        atomic_add!(length_vec, length(elmt_var_i[i]))
+    end
+
+    # U_i = algo_expr_tree.get_Ui.(elmt_var_i, n) :: Vector{SparseMatrixCSC{Int,Int}}
+    U_i = Vector{SparseMatrixCSC{Int,Int}}(undef,m_i)
+    Threads.@threads for i in 1:m_i
+        U_i[i] = algo_expr_tree.get_Ui(elmt_var_i[i], n)
+    end
+
+    # algo_expr_tree.element_fun_from_N_to_Ni!.(elmt_fun,elmt_var_i)
+    Threads.@threads for i in 1:m_i
+        algo_expr_tree.element_fun_from_N_to_Ni!(elmt_fun[i],elmt_var_i[i])
+    end
+
+    Sps = Vector{element_function{T}}(undef,m_i)
+    Threads.@threads for i in 1:m_i
+        Sps[i] = element_function{T}(elmt_fun[i], type_i[i], elmt_var_i[i], U_i[i])
+    end
+
+    return SPS{T}(Sps, length_vec[], n)
+end
 
 """
     evaluate_SPS(sps,x)
@@ -213,6 +214,7 @@ compute the product g⊤ x = ∑ Uᵢ⊤ gᵢ⊤ xᵢ. So we need the sps struct
         return vector_res
     end
 
+    export deduct_partially_separable_structure
 
 end # module
 

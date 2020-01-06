@@ -1,5 +1,15 @@
 # PartiallySeparable.jl Documentation
 
-```@docs
-get_elemental_variable()
+
+
+```@meta
+CurrentModule = PartiallySeparableStructure
+DocTestSetup = quote
+    using .PartiallySeparableStructure
+end
+```
+
+
+```@autodocs
+Modules = [PartiallySeparableStructure]
 ```
