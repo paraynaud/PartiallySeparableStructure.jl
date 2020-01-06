@@ -31,7 +31,7 @@ using .PartiallySeparableStructure
     # algo_tree.printer_tree(obj)
     # séparation en fonction partiellement séparable
     elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
-
+    elmt_fun2 = algo_expr_tree.delete_imbricated_plus(obj_o)
     # on détermine le type
     type = algo_expr_tree.get_type_tree(obj_o)
     type_i = algo_expr_tree.get_type_tree.(elmt_fun)
@@ -61,6 +61,7 @@ using .PartiallySeparableStructure
     eval_test2 = JuMP.NLPEvaluator(m2)
     MathOptInterface.initialize(eval_test2, [:ExprGraph])
     obj_perf = MathOptInterface.objective_expr(eval_test2)
+
     x2 = ones(Float64,n_x2)
     S_perf = PartiallySeparableStructure.deduct_partially_separable_structure(obj_perf, n_x2)
 
