@@ -8,14 +8,14 @@ module PartiallySeparableStructure
     mutable struct element_function{T}
         fun :: T
         type :: implementation_type_expr.t_type_expr_basic
-        used_variable :: Vector{Int64}
-        U :: SparseMatrixCSC{Int64,Int64}
+        used_variable :: Vector{Int}
+        U :: SparseMatrixCSC{Int,Int}
     end
 
     mutable struct SPS{T}
         structure :: Vector{element_function{T}}
-        vec_length :: Int64
-        n_var :: Int64
+        vec_length :: Int
+        n_var :: Int
     end
 
     mutable struct element_hessian{T <: Number}
@@ -46,10 +46,10 @@ Find the partially separable structure of a function f stored as an expression t
 To define properly the size of sparse matrix we need the size of the problem : n.
 At the end, we get the partially separable structure of f, f(x) = ∑fᵢ(xᵢ)
 """
-    deduct_partially_separable_structure(a :: Any, n :: Int64) = _deduct_partially_separable_structure(a, trait_expr_tree.is_expr_tree(a), n)
-    _deduct_partially_separable_structure(a, :: trait_expr_tree.type_not_expr_tree, n :: Int64) = error("l'entrée de la fonction n'est pas un arbre d'expression")
-    _deduct_partially_separable_structure(a, :: trait_expr_tree.type_expr_tree, n :: Int64) = _deduct_partially_separable_structure(a, n )
-    function _deduct_partially_separable_structure(expr_tree :: T , n :: Int64) where T
+    deduct_partially_separable_structure(a :: Any, n :: Int) = _deduct_partially_separable_structure(a, trait_expr_tree.is_expr_tree(a), n)
+    _deduct_partially_separable_structure(a, :: trait_expr_tree.type_not_expr_tree, n :: Int) = error("l'entrée de la fonction n'est pas un arbre d'expression")
+    _deduct_partially_separable_structure(a, :: trait_expr_tree.type_expr_tree, n :: Int) = _deduct_partially_separable_structure(a, n )
+    function _deduct_partially_separable_structure(expr_tree :: T , n :: Int) where T
         work_expr_tree = copy(expr_tree)
         elmt_fun = algo_expr_tree.delete_imbricated_plus(work_expr_tree) :: Vector{T}
         m_i = length(elmt_fun)
@@ -60,16 +60,16 @@ At the end, we get the partially separable structure of f, f(x) = ∑fᵢ(xᵢ)
             type_i[i] = algo_expr_tree.get_type_tree(elmt_fun[i])
         end
 
-        # elmt_var_i = algo_expr_tree.get_elemental_variable.(elmt_fun) :: Vector{ Vector{Int64}}
-        elmt_var_i =  Vector{ Vector{Int64}}(undef,m_i)
-        length_vec = Threads.Atomic{Int64}(0)
+        # elmt_var_i = algo_expr_tree.get_elemental_variable.(elmt_fun) :: Vector{ Vector{Int}}
+        elmt_var_i =  Vector{ Vector{Int}}(undef,m_i)
+        length_vec = Threads.Atomic{Int}(0)
         Threads.@threads for i in 1:m_i
             elmt_var_i[i] = algo_expr_tree.get_elemental_variable(elmt_fun[i])
             atomic_add!(length_vec, length(elmt_var_i[i]))
         end
 
-        # U_i = algo_expr_tree.get_Ui.(elmt_var_i, n) :: Vector{SparseMatrixCSC{Int64,Int64}}
-        U_i = Vector{SparseMatrixCSC{Int64,Int64}}(undef,m_i)
+        # U_i = algo_expr_tree.get_Ui.(elmt_var_i, n) :: Vector{SparseMatrixCSC{Int,Int}}
+        U_i = Vector{SparseMatrixCSC{Int,Int}}(undef,m_i)
         Threads.@threads for i in 1:m_i
             U_i[i] = algo_expr_tree.get_Ui(elmt_var_i[i], n)
         end
@@ -125,15 +125,15 @@ at the point x. Return the sparse matrix of the hessian of size n × n.
 """
     function evaluate_hessian(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
-        elmt_hess = Vector{Tuple{Vector{Int64},Vector{Int64},Vector{Y}}}(undef, l_elmt_fun)
+        elmt_hess = Vector{Tuple{Vector{Int},Vector{Int},Vector{Y}}}(undef, l_elmt_fun)
         # @Threads.threads for i in 1:l_elmt_fun # déterminer l'impact sur les performances de array(view())
         for i in 1:l_elmt_fun
-            elmt_hess[i] = evaluate_element_hessian(sps.structure[i], Array(view(x, sps.structure[i].used_variable))) :: Tuple{Vector{Int64},Vector{Int64},Vector{Y}}
+            elmt_hess[i] = evaluate_element_hessian(sps.structure[i], Array(view(x, sps.structure[i].used_variable))) :: Tuple{Vector{Int},Vector{Int},Vector{Y}}
         end
-        row = [x[1]  for x in elmt_hess] :: Vector{Vector{Int64}}
-        column = [x[2] for x in elmt_hess] :: Vector{Vector{Int64}}
+        row = [x[1]  for x in elmt_hess] :: Vector{Vector{Int}}
+        column = [x[2] for x in elmt_hess] :: Vector{Vector{Int}}
         values = [x[3] for x in elmt_hess] :: Vector{Vector{Y}}
-        G = sparse(vcat(row...) :: Vector{Int64} , vcat(column...) :: Vector{Int64}, vcat(values...) :: Vector{Y}) :: SparseMatrixCSC{Y,Int64}
+        G = sparse(vcat(row...) :: Vector{Int} , vcat(column...) :: Vector{Int}, vcat(values...) :: Vector{Y}) :: SparseMatrixCSC{Y,Int}
         return G
     end
 
@@ -144,9 +144,9 @@ The result of the function is the triplet of the sparse matrix Gᵢ.
 """
     function evaluate_element_hessian(elmt_fun :: element_function{T}, x :: Vector{Y}) where T where Y <: Number
         temp = ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun), x ) :: Array{Y,2}
-        temp_sparse = sparse(temp) :: SparseMatrixCSC{Y,Int64}
-        G = SparseMatrixCSC{Y,Int64}(elmt_fun.U'*temp_sparse*elmt_fun.U)
-        return findnz(G) :: Tuple{Vector{Int64}, Vector{Int64}, Vector{Y}}
+        temp_sparse = sparse(temp) :: SparseMatrixCSC{Y,Int}
+        G = SparseMatrixCSC{Y,Int}(elmt_fun.U'*temp_sparse*elmt_fun.U)
+        return findnz(G) :: Tuple{Vector{Int}, Vector{Int}, Vector{Y}}
     end
 
 
@@ -158,7 +158,7 @@ at the point x. Return the result as a Hess_matrix.
 """
     function struct_hessian(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
-        elmt_hess = Vector{Tuple{Vector{Int64},Vector{Int64},Vector{Y}}}(undef, l_elmt_fun)
+        elmt_hess = Vector{Tuple{Vector{Int},Vector{Int},Vector{Y}}}(undef, l_elmt_fun)
         temp = Vector{element_hessian{Y}}(undef, l_elmt_fun)
         @Threads.threads for i in 1:l_elmt_fun # a voir si je laisse le array(view()) la ou non
             temp[i] = element_hessian{Y}(ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable)) ) )

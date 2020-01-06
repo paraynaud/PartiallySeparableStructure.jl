@@ -106,13 +106,13 @@ module trait_expr_node
     evaluate_node(a, x :: Vector{}) = _evaluate_node(a, is_expr_node(a), x)
     _evaluate_node(a, ::type_expr_node, x:: Vector{}) = _evaluate_node(a, x)
     _evaluate_node(a, ::type_not_expr_node, x :: Vector{}) = error("This node is not a expr node")
-    evaluate_node(a, x :: Dict{Int64,Number}) = _evaluate_node(a, is_expr_node(a), x)
-    _evaluate_node(a, ::type_expr_node, x:: Dict{Int64,Number}) = _evaluate_node(a, x)
-    _evaluate_node(a, ::type_not_expr_node, x :: Dict{Int64,Number}) = error("This node is not a expr node")
+    evaluate_node(a, x :: Dict{Int,Number}) = _evaluate_node(a, is_expr_node(a), x)
+    _evaluate_node(a, ::type_expr_node, x:: Dict{Int,Number}) = _evaluate_node(a, x)
+    _evaluate_node(a, ::type_not_expr_node, x :: Dict{Int,Number}) = error("This node is not a expr node")
 
-    change_from_N_to_Ni!(a, dic_new_var :: Dict{Int64,Int64}) = _change_from_N_to_Ni!(a, is_expr_node(a), dic_new_var)
-    _change_from_N_to_Ni!(a, ::type_expr_node, dic_new_var :: Dict{Int64,Int64}) = _change_from_N_to_Ni!(a, dic_new_var)
-    _change_from_N_to_Ni!(a, ::type_not_expr_node, dic_new_var :: Dict{Int64,Int64}) = error("This node is not a expr node")
+    change_from_N_to_Ni!(a, dic_new_var :: Dict{Int,Int}) = _change_from_N_to_Ni!(a, is_expr_node(a), dic_new_var)
+    _change_from_N_to_Ni!(a, ::type_expr_node, dic_new_var :: Dict{Int,Int}) = _change_from_N_to_Ni!(a, dic_new_var)
+    _change_from_N_to_Ni!(a, ::type_not_expr_node, dic_new_var :: Dict{Int,Int}) = error("This node is not a expr node")
 
 end  # module trait_expr_node
 

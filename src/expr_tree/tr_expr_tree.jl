@@ -181,7 +181,16 @@ module algo_expr_tree
     end
 
 
+"""
+    get_elemental_variable(expr_tree)
 
+    Return the index of the variable appearing in the expression tree
+
+    get_elemental_variable( :(x[1] + x[3]) )
+    > [1, 3]
+    get_elemental_variable( :(x[1]^2 + x[6] + x[2]) )
+    > [1, 6, 2]
+"""
     get_elemental_variable(a :: Any) = _get_elemental_variable(a, trait_expr_tree.is_expr_tree(a))
     _get_elemental_variable(a, :: trait_expr_tree.type_not_expr_tree) = error(" This is not an Expr tree")
     _get_elemental_variable(a, :: trait_expr_tree.type_expr_tree) = _get_elemental_variable(a)
@@ -190,7 +199,7 @@ module algo_expr_tree
         if trait_expr_node.node_is_operator(nd)
             ch = trait_expr_tree.get_expr_children(expr_tree)
             n = length(ch)
-            list_var =  Vector{Vector{Int64}}(undef,n)
+            list_var =  Vector{Vector{Int}}(undef,n)
 
             Threads.@threads for i in 1:n
                 list_var[i] = get_elemental_variable(ch[i])
@@ -198,11 +207,11 @@ module algo_expr_tree
 
             # list_var = get_elemental_variable.(ch)
             res = unique!(vcat(list_var...))
-            return res :: Vector{Int64}
+            return res :: Vector{Int}
         elseif trait_expr_node.node_is_variable(nd)
-            return [trait_expr_node.get_var_index(nd)] :: Vector{Int64}
+            return [trait_expr_node.get_var_index(nd)] :: Vector{Int}
         elseif trait_expr_node.node_is_constant(nd)
-            return  Vector{Int64}([])
+            return  Vector{Int}([])
         else
             error("the node is neither operator/variable or constant")
         end
@@ -214,10 +223,10 @@ module algo_expr_tree
 Create a the matrix U associated to the variable appearing in index_new_var.
 This function create a sparse matrix of size length(index_new_var)×n.
 """
-    function get_Ui(index_vars :: Vector{Int64}, n :: Int64)
+    function get_Ui(index_vars :: Vector{Int}, n :: Int)
         m = length(index_vars)
-        U = sparse( [1:m;] ::Vector{Int64}, index_vars,  ones(Int64,length(index_vars)), m, n) :: SparseMatrixCSC{Int64,Int64}
-        # :: SparseVector{Int64,Int64}
+        U = sparse( [1:m;] ::Vector{Int}, index_vars,  ones(Int,length(index_vars)), m, n) :: SparseMatrixCSC{Int,Int}
+        # :: SparseVector{Int,Int}
         return U
     end
 
@@ -226,17 +235,17 @@ This function create a sparse matrix of size length(index_new_var)×n.
 Transform the tree expr_tree, which represent a function from Rⁿ ⇢ R, to an element
 function from Rⁱ → R .
 This function rename the variable of expr_tree to x₁,x₂,... instead of x₇,x₉ for example
-        
+
 """
-    element_fun_from_N_to_Ni!(expr_tree, a :: Vector{Int64}) = _element_fun_from_N_to_Ni!(expr_tree, trait_expr_tree.is_expr_tree(expr_tree),a)
-    _element_fun_from_N_to_Ni!(expr_tree, :: trait_expr_tree.type_not_expr_tree, a :: Vector{Int64}) = error(" This is not an Expr tree")
-    _element_fun_from_N_to_Ni!(expr_tree, :: trait_expr_tree.type_expr_tree, a :: Vector{Int64}) = _element_fun_from_N_to_Ni!(expr_tree,a)
-    element_fun_from_N_to_Ni!(expr_tree, a :: Dict{Int64,Int64}) = _element_fun_from_N_to_Ni!(expr_tree, trait_expr_tree.is_expr_tree(expr_tree),a)
-    _element_fun_from_N_to_Ni!(expr_tree, :: trait_expr_tree.type_not_expr_tree, a :: Dict{Int64,Int64}) = error(" This is not an Expr tree")
-    _element_fun_from_N_to_Ni!(expr_tree, :: trait_expr_tree.type_expr_tree, a :: Dict{Int64,Int64}) = _element_fun_from_N_to_Ni!(expr_tree,a)
-    function _element_fun_from_N_to_Ni!(expr_tree, elmt_var :: Vector{Int64})
-        function N_to_Ni(elemental_var :: Vector{Int64})
-            dic_var_value = Dict{Int64,Int64}()
+    element_fun_from_N_to_Ni!(expr_tree, a :: Vector{Int}) = _element_fun_from_N_to_Ni!(expr_tree, trait_expr_tree.is_expr_tree(expr_tree),a)
+    _element_fun_from_N_to_Ni!(expr_tree, :: trait_expr_tree.type_not_expr_tree, a :: Vector{Int}) = error(" This is not an Expr tree")
+    _element_fun_from_N_to_Ni!(expr_tree, :: trait_expr_tree.type_expr_tree, a :: Vector{Int}) = _element_fun_from_N_to_Ni!(expr_tree,a)
+    element_fun_from_N_to_Ni!(expr_tree, a :: Dict{Int,Int}) = _element_fun_from_N_to_Ni!(expr_tree, trait_expr_tree.is_expr_tree(expr_tree),a)
+    _element_fun_from_N_to_Ni!(expr_tree, :: trait_expr_tree.type_not_expr_tree, a :: Dict{Int,Int}) = error(" This is not an Expr tree")
+    _element_fun_from_N_to_Ni!(expr_tree, :: trait_expr_tree.type_expr_tree, a :: Dict{Int,Int}) = _element_fun_from_N_to_Ni!(expr_tree,a)
+    function _element_fun_from_N_to_Ni!(expr_tree, elmt_var :: Vector{Int})
+        function N_to_Ni(elemental_var :: Vector{Int})
+            dic_var_value = Dict{Int,Int}()
             for i in 1:length(elemental_var)
                 dic_var_value[elemental_var[i]] = i
             end
@@ -246,7 +255,7 @@ This function rename the variable of expr_tree to x₁,x₂,... instead of x₇,
         element_fun_from_N_to_Ni!(expr_tree, new_var)
     end
 
-    function _element_fun_from_N_to_Ni!(expr_tree, dic_new_var :: Dict{Int64,Int64})
+    function _element_fun_from_N_to_Ni!(expr_tree, dic_new_var :: Dict{Int,Int})
         ch = trait_expr_tree.get_expr_children(expr_tree)
         if isempty(ch) # on est alors dans une feuille
             nd =  trait_expr_tree.get_expr_node(expr_tree)

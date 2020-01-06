@@ -1,5 +1,5 @@
 # PartiallySeparable.jl Documentation
 
 ```@docs
-greet()
+get_elemental_variable()
 ```

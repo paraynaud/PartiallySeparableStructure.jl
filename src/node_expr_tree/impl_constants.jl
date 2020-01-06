@@ -42,11 +42,11 @@ module constants
         return c.value :: Number
     end
 
-    function _evaluate_node(c :: constant, dic :: Dict{Int64, T where T <: Number})
+    function _evaluate_node(c :: constant, dic :: Dict{Int, T where T <: Number})
         return c.value :: Number
     end
 
-    _change_from_N_to_Ni!(v :: Number, dic_new_var :: Dict{Int64,Int64}) = ()
+    _change_from_N_to_Ni!(v :: Number, dic_new_var :: Dict{Int,Int}) = ()
 
 
     export constant

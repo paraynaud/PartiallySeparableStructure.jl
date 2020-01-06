@@ -29,16 +29,16 @@ module M_evaluation_expr_tree
     end
 
 
-    evaluate_element_expr_tree(a :: Any, elmt_var :: Vector{Int64}) = ( x :: Vector{} -> evaluate_element_expr_tree(a, x, elmt_var) )
-    evaluate_element_expr_tree(a :: Any, x :: Vector{}, elmt_var :: Vector{Int64}) = _evaluate_element_expr_tree(a, trait_expr_tree.is_expr_tree(a), x, elmt_var )
-    evaluate_element_expr_tree(a :: Any, elmt_var :: Dict{Int64,T where T <: Number}) =  _evaluate_element_expr_tree(a, trait_expr_tree.is_expr_tree(a), elmt_var )
-    _evaluate_element_expr_tree(a, :: trait_expr_tree.type_not_expr_tree, x :: Vector{}, elmt_var :: Vector{Int64}) = error(" This is not an Expr tree")
-    _evaluate_element_expr_tree(a, :: trait_expr_tree.type_expr_tree, x :: Vector{}, elmt_var :: Vector{Int64}) = _evaluate_element_expr_tree(a, x, elmt_var )
-    _evaluate_element_expr_tree(a, :: trait_expr_tree.type_expr_tree, elmt_var :: Dict{Int64,T where T <: Number}) = _evaluate_element_expr_tree(a, elmt_var)
+    evaluate_element_expr_tree(a :: Any, elmt_var :: Vector{Int}) = ( x :: Vector{} -> evaluate_element_expr_tree(a, x, elmt_var) )
+    evaluate_element_expr_tree(a :: Any, x :: Vector{}, elmt_var :: Vector{Int}) = _evaluate_element_expr_tree(a, trait_expr_tree.is_expr_tree(a), x, elmt_var )
+    evaluate_element_expr_tree(a :: Any, elmt_var :: Dict{Int,T where T <: Number}) =  _evaluate_element_expr_tree(a, trait_expr_tree.is_expr_tree(a), elmt_var )
+    _evaluate_element_expr_tree(a, :: trait_expr_tree.type_not_expr_tree, x :: Vector{}, elmt_var :: Vector{Int}) = error(" This is not an Expr tree")
+    _evaluate_element_expr_tree(a, :: trait_expr_tree.type_expr_tree, x :: Vector{}, elmt_var :: Vector{Int}) = _evaluate_element_expr_tree(a, x, elmt_var )
+    _evaluate_element_expr_tree(a, :: trait_expr_tree.type_expr_tree, elmt_var :: Dict{Int,T where T <: Number}) = _evaluate_element_expr_tree(a, elmt_var)
     #La fonction du premier appel
-    function _evaluate_element_expr_tree(expr_tree, x :: Vector{}, elmt_var :: Vector{Int64})
-        function transition_array(elemental_var :: Vector{Int64}, x :: Vector{})
-            dic_var_value = Dict{Int64,T where T <: Number}()
+    function _evaluate_element_expr_tree(expr_tree, x :: Vector{}, elmt_var :: Vector{Int})
+        function transition_array(elemental_var :: Vector{Int}, x :: Vector{})
+            dic_var_value = Dict{Int,T where T <: Number}()
             for i in 1:length(elemental_var)
                 dic_var_value[(elemental_var[i])] = x[i]
             end
@@ -48,7 +48,7 @@ module M_evaluation_expr_tree
         return _evaluate_element_expr_tree(expr_tree, dic_var_value)
     end
 
-    function _evaluate_element_expr_tree(expr_tree, dic_var_value :: Dict{Int64,T where T <: Number})
+    function _evaluate_element_expr_tree(expr_tree, dic_var_value :: Dict{Int,T where T <: Number})
         nd = trait_expr_tree._get_expr_node(expr_tree)
         ch = trait_expr_tree._get_expr_children(expr_tree)
         if isempty(ch)
@@ -67,17 +67,17 @@ module M_evaluation_expr_tree
 
 
 
-    calcul_gradient_expr_tree(a :: Any, x :: Vector{}, elmt_var :: Vector{Int64}) = _calcul_gradient_expr_tree(a, is_expr_tree(a), x, elmt_var)
+    calcul_gradient_expr_tree(a :: Any, x :: Vector{}, elmt_var :: Vector{Int}) = _calcul_gradient_expr_tree(a, is_expr_tree(a), x, elmt_var)
     calcul_gradient_expr_tree(a :: Any, x :: Vector{}) = _calcul_gradient_expr_tree(a, is_expr_tree(a), x )
     _calcul_gradient_expr_tree(a :: Any,:: trait_expr_tree.type_not_expr_tree, x :: Vector{}) = error("ce n'est pas un arbre d'expression")
     _calcul_gradient_expr_tree(a :: Any,:: trait_expr_tree.type_expr_tree, x :: Vector{}) = _calcul_gradient_expr_tree(a, x)
-    _calcul_gradient_expr_tree(a :: Any,:: trait_expr_tree.type_not_expr_tree, x :: Vector{}, elmt_var :: Vector{Int64}) = error("ce n'est pas un arbre d'expression")
-    _calcul_gradient_expr_tree(a :: Any,:: trait_expr_tree.type_expr_tree, x :: Vector{}, elmt_var :: Vector{Int64}) = _calcul_gradient_expr_tree(a, x, elmt_var)
+    _calcul_gradient_expr_tree(a :: Any,:: trait_expr_tree.type_not_expr_tree, x :: Vector{}, elmt_var :: Vector{Int}) = error("ce n'est pas un arbre d'expression")
+    _calcul_gradient_expr_tree(a :: Any,:: trait_expr_tree.type_expr_tree, x :: Vector{}, elmt_var :: Vector{Int}) = _calcul_gradient_expr_tree(a, x, elmt_var)
     function _calcul_gradient_expr_tree(expr_tree, x :: Vector{})
         g = ForwardDiff.gradient( evaluate_expr_tree(expr_tree), x)
         return g
     end
-    function _calcul_gradient_expr_tree(expr_tree, x :: Vector{}, elmt_var :: Vector{Int64})
+    function _calcul_gradient_expr_tree(expr_tree, x :: Vector{}, elmt_var :: Vector{Int})
         g = ForwardDiff.gradient( evaluate_element_expr_tree(expr_tree, elmt_var), x)
         return g
     end

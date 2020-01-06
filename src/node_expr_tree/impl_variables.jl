@@ -19,10 +19,10 @@ module variables
 
     mutable struct variable <: ab_ex_nd
         name :: Symbol
-        index :: Int64
+        index :: Int
     end
 
-    function create_node_expr(n :: Symbol, id :: Int64)
+    function create_node_expr(n :: Symbol, id :: Int)
         return variable(n, id)
     end
 
@@ -45,7 +45,7 @@ module variables
 
     _get_type_node(v :: variable) = implementation_type_expr.return_linear()
 
-    _get_var_index(v :: variable) = v.index :: Int64
+    _get_var_index(v :: variable) = v.index :: Int
 
     (==)(a :: variable, b :: variable) =  (a.name == b.name) && (a.index == b.index)
 
@@ -54,14 +54,14 @@ module variables
         return x[v.index] :: Number
     end
 
-    function _evaluate_node(v :: variable, dic :: Dict{Int64,Number})
+    function _evaluate_node(v :: variable, dic :: Dict{Int,Number})
         return dic[v.index] :: Number
     end
-    function _change_from_N_to_Ni!(v :: variable, dic_new_var :: Dict{Int64,Int64})
+    function _change_from_N_to_Ni!(v :: variable, dic_new_var :: Dict{Int,Int})
         v.index = dic_new_var[v.index]
     end
 
-    function _change_from_N_to_Ni!(v :: Expr, dic_new_var :: Dict{Int64,Int64})
+    function _change_from_N_to_Ni!(v :: Expr, dic_new_var :: Dict{Int,Int})
         hd =v.head
         if hd != :ref
             error("on ne traite pas une variable")
@@ -71,10 +71,10 @@ module variables
         end
     end
 
-    function change_index( x :: Int64, dic_new_var :: Dict{Int64,Int64})
+    function change_index( x :: Int, dic_new_var :: Dict{Int,Int})
         return dic_new_var[x]
     end
-    function change_index( x :: MathOptInterface.VariableIndex, dic_new_var :: Dict{Int64,Int64})
+    function change_index( x :: MathOptInterface.VariableIndex, dic_new_var :: Dict{Int,Int})
         return MathOptInterface.VariableIndex(dic_new_var[x.value])
     end
 
