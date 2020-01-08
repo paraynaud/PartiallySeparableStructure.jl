@@ -6,6 +6,7 @@ module trait_expr_node
     import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
     import ..interface_expr_node._get_type_node, ..interface_expr_node._get_var_index
     import ..interface_expr_node._evaluate_node, ..interface_expr_node._change_from_N_to_Ni!
+    import ..interface_expr_node._cast_constant!
 
     using ..implementation_type_expr
     using ..trait_type_expr
@@ -71,6 +72,10 @@ module trait_expr_node
     _node_is_constant(a, ::type_not_expr_node) = error("This node is not a expr node")
 
 
+
+
+""" partie faisant partie intégrante d'autre algorithme définis dans expr_tree/tr_expr_tree"""
+
     get_type_node(a) = _get_type_node(a, is_expr_node(a))
     _get_type_node(a, ::type_expr_node) = _get_type_node(a)
     _get_type_node(a, ::type_not_expr_node) = error("This node is not a expr node")
@@ -114,6 +119,13 @@ module trait_expr_node
     _change_from_N_to_Ni!(a, ::type_expr_node, dic_new_var :: Dict{Int,Int}) = _change_from_N_to_Ni!(a, dic_new_var)
     _change_from_N_to_Ni!(a, ::type_not_expr_node, dic_new_var :: Dict{Int,Int}) = error("This node is not a expr node")
 
+
+    cast_constant!(a, t :: DataType) = _cast_constant!(a, is_expr_node(a), t)
+    _cast_constant!(a, ::type_expr_node, t :: DataType) = _cast_constant!(a, t)
+    function _cast_constant!(a, ::type_not_expr_node, t :: DataType)
+         @show a
+         error("This node is not a expr node")
+    end
 end  # module trait_expr_node
 
 

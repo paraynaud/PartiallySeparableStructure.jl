@@ -6,8 +6,7 @@ module operators
     import ..interface_expr_node._node_is_constant, ..interface_expr_node._node_is_variable,..interface_expr_node._node_is_operator
     import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
 
-    import ..interface_expr_node._get_type_node, ..interface_expr_node._evaluate_node
-
+    import ..interface_expr_node._get_type_node, ..interface_expr_node._evaluate_node, ..interface_expr_node._cast_constant!
     import Base.==
 
     using ..implementation_type_expr

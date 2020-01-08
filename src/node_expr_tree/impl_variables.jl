@@ -11,7 +11,7 @@ module variables
     import ..implementation_type_expr.t_type_expr_basic
     import ..interface_expr_node._get_type_node, ..interface_expr_node._get_var_index
     import  ..interface_expr_node._evaluate_node, ..interface_expr_node._change_from_N_to_Ni!
-
+    import ..interface_expr_node._cast_constant!
 
     using ..implementation_type_expr
 
@@ -62,7 +62,7 @@ module variables
     end
 
     function _change_from_N_to_Ni!(v :: Expr, dic_new_var :: Dict{Int,Int})
-        hd =v.head
+        hd = v.head
         if hd != :ref
             error("on ne traite pas une variable")
         else

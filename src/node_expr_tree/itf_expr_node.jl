@@ -20,6 +20,8 @@ module interface_expr_node
 
     _change_from_N_to_Ni!() = ()
 
+    _cast_constant!() = ()
+
 
 
 end

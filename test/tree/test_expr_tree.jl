@@ -299,7 +299,7 @@ println("test du module PartiallySeparableStructure")
 using ..PartiallySeparableStructure
 
 
-# @testset "test gradient/hessian/product SPS" begin
+@testset "test gradient/hessian/product SPS" begin
 
     m = Model()
     n_x = 100
@@ -351,9 +351,15 @@ using ..PartiallySeparableStructure
     id[1] = 1
     PartiallySeparableStructure.product_matrix_sps(S_test,B,id)
     @test H_test2*x2 == PartiallySeparableStructure.product_matrix_sps(S_test,B,x2)
-# end
+end
 
-
+a = :(x[1] + 5)
+b = algo_expr_tree.transform_expr_tree(a)
+t = Int8
+algo_expr_tree.cast_type_of_constant!(a, t)
+@show a
+algo_expr_tree.cast_type_of_constant!(b, t)
+@show b 
 #
 # @testset "test max performance" begin
 #     m = Model()

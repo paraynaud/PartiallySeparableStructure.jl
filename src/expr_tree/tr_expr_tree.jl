@@ -225,7 +225,7 @@ This function create a sparse matrix of size length(index_new_var)×n.
 """
     function get_Ui(index_vars :: Vector{Int}, n :: Int)
         m = length(index_vars)
-        U = sparse( [1:m;] ::Vector{Int}, index_vars,  ones(Int,length(index_vars)), m, n) :: SparseMatrixCSC{Int,Int}
+        U = sparse( [1:m;] :: Vector{Int}, index_vars,  ones(Int,length(index_vars)), m, n) :: SparseMatrixCSC{Int,Int}
         # :: SparseVector{Int,Int}
         return U
     end
@@ -267,6 +267,39 @@ This function rename the variable of expr_tree to x₁,x₂,... instead of x₇,
             end
         end
     end
+
+
+
+
+"""
+    cast_type_of_constant(expr_tree, t)
+Cast the constant of the expression tree expr_tree to the type t.
+
+
+"""
+    cast_type_of_constant!(expr_tree, t :: DataType) = _cast_type_of_constant!(expr_tree, trait_expr_tree.is_expr_tree(expr_tree), t)
+    _cast_type_of_constant!(expr_tree, :: trait_expr_tree.type_not_expr_tree, t :: DataType) =  error("this is not an expr tree")
+    _cast_type_of_constant!(expr_tree, :: trait_expr_tree.type_expr_tree, t :: DataType) =  _cast_type_of_constant!(expr_tree, t)
+# On chercher à caster les constantes de l'arbre au type t, on va donc parcourir l'arbre jusqu'à arriver aux feuilles
+# où nous réaliserons l'opération de caster au type t une constante individuellement .
+    function _cast_type_of_constant!(expr_tree, t :: DataType)
+        nd = trait_expr_tree.get_expr_node(expr_tree)
+        if trait_expr_node.node_is_operator(nd)
+            @show nd
+            ch = trait_expr_tree.get_expr_children(expr_tree)
+            cast_type_of_constant!.(ch, t) #
+        elseif trait_expr_node.node_is_variable(nd)
+            # il n'y a pas besoin de caster une variable
+        elseif trait_expr_node.node_is_constant(nd)
+            @show expr_tree
+            tmp = trait_expr_node.cast_constant!(expr_tree, t)
+            expr_tree = tmp
+            @show expr_tree, nd, tmp, typeof(tmp), typeof(expr_tree)
+        else
+            error("Cas qui n'est pas sensé arrivé")
+        end
+    end
+
 
 end
 
