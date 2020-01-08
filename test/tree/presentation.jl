@@ -23,6 +23,7 @@ using .PartiallySeparableStructure
 
     obj_o = MathOptInterface.objective_expr(eval_test)
     obj = copy(obj_o)
+    obj_t = algo_expr_tree.transform_expr_tree(obj)
     x = ones(n_x)
 
     # t_obj = algo_expr_tree.transform_expr_tree(obj)
@@ -32,12 +33,15 @@ using .PartiallySeparableStructure
     # séparation en fonction partiellement séparable
     elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
     elmt_fun2 = algo_expr_tree.delete_imbricated_plus(obj_o)
+    elmt_fun_t = algo_expr_tree.delete_imbricated_plus(obj_t)
     # on détermine le type
     type = algo_expr_tree.get_type_tree(obj_o)
     type_i = algo_expr_tree.get_type_tree.(elmt_fun)
 
     # on récupère les variables élémentaires
     elmt_var = algo_expr_tree.get_elemental_variable.(elmt_fun)
+    elmt_var_t = algo_expr_tree.get_elemental_variable.(elmt_fun_t)
+
     var = algo_expr_tree.get_elemental_variable(obj_o)
 
 
@@ -45,6 +49,7 @@ using .PartiallySeparableStructure
     obj_en_x = M_evaluation_expr_tree.evaluate_expr_tree(obj_o, x)
     # évaluation des fonction éléments
     algo_expr_tree.element_fun_from_N_to_Ni!.(elmt_fun, elmt_var)
+    algo_expr_tree.element_fun_from_N_to_Ni!.(elmt_fun_t, elmt_var_t)
     res_elmt_fun = Vector{Number}(undef, length(elmt_fun))
     for i in 1:length(elmt_fun)
         res_elmt_fun[i] = M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun[i], Array(view(x,elmt_var[i])))

@@ -1,11 +1,15 @@
 module implementation_expr_tree_Expr
 
-    import ..abstract_expr_tree.create_expr_tree
-    # import ..abstract_expr_node.create_node_expr
+    import ..abstract_expr_tree.create_expr_tree, ..abstract_expr_tree.create_Expr
     using ..abstract_expr_node
     import ..interface_expr_tree._get_expr_node, ..interface_expr_tree._get_expr_children, ..interface_expr_tree._inverse_expr_tree
+    import ..interface_expr_tree._modify_expr_tree!
 
     function create_expr_tree( ex :: Expr)
+        return ex
+    end
+
+    function create_Expr(ex :: Expr)
         return ex
     end
 
@@ -15,22 +19,22 @@ module implementation_expr_tree_Expr
         if hd == :call
             op = args[1]
             if op != :^
-                return create_node_expr(op)
+                return abstract_expr_node.create_node_expr(op)
             else
                 index_power = args[end]
-                return create_node_expr(op, [index_power])
+                return abstract_expr_node.create_node_expr(op, [index_power])
             end
         elseif hd == :ref
             name_variable = args[1]
             index_variable = args[2]
-            return create_node_expr(name_variable, index_variable)
+            return abstract_expr_node.create_node_expr(name_variable, index_variable)
         else
             error("partie non traite des Expr pour le moment ")
         end
     end
 
     function _get_expr_node(ex :: Number )
-        return create_node_expr(ex)
+        return abstract_expr_node.create_node_expr(ex)
     end
 
 
@@ -63,6 +67,7 @@ module implementation_expr_tree_Expr
         return Expr(:call, :-, ex)
     end
 
+    # function _modify_expr_tree!(ex_o :: Expr, new_ex)
 
 
 end

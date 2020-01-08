@@ -297,6 +297,7 @@ end
 
 println("test du module PartiallySeparableStructure")
 using ..PartiallySeparableStructure
+using LinearAlgebra
 
 
 @testset "test gradient/hessian/product SPS" begin
@@ -304,7 +305,7 @@ using ..PartiallySeparableStructure
     m = Model()
     n_x = 100
     @variable(m, x[1:n_x])
-    @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n_x-1 ) + x[1]*5 )
+    @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n_x-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
     # @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]))
     eval_test = JuMP.NLPEvaluator(m)
     MathOptInterface.initialize(eval_test, [:ExprGraph])
@@ -350,7 +351,12 @@ using ..PartiallySeparableStructure
     id = zeros(n_x)
     id[1] = 1
     PartiallySeparableStructure.product_matrix_sps(S_test,B,id)
-    @test H_test2*x2 == PartiallySeparableStructure.product_matrix_sps(S_test,B,x2)
+    @test norm(H_test2*x2 - PartiallySeparableStructure.product_matrix_sps(S_test,B,x2), 2) < 10e-10
+
+    obj_o2 = algo_expr_tree.transform_expr_tree(obj_o)
+    obj_o3 = algo_expr_tree.transform_to_Expr(obj_o2)
+    @test obj_o == obj_o3
+
 end
 
 a = :(x[1] + 5)
@@ -358,8 +364,10 @@ b = algo_expr_tree.transform_expr_tree(a)
 t = Int8
 algo_expr_tree.cast_type_of_constant!(a, t)
 @show a
-algo_expr_tree.cast_type_of_constant!(b, t)
-@show b 
+c = algo_expr_tree.transform_to_Expr(b)
+
+# algo_expr_tree.cast_type_of_constant!(b, t)
+# @show b
 #
 # @testset "test max performance" begin
 #     m = Model()

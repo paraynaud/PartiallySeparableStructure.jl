@@ -1,9 +1,9 @@
 module trait_expr_tree
 
-    import ..abstract_expr_tree.ab_ex_tr
+    using ..abstract_expr_tree
 
     import ..interface_expr_tree._get_expr_node, ..interface_expr_tree._get_expr_children, ..interface_expr_tree._inverse_expr_tree
-    import ..implementation_expr_tree.t_expr_tree
+    import ..implementation_expr_tree.t_expr_tree, ..interface_expr_tree._modify_expr_tree!
 
     import Base.==
     using Base.Threads
@@ -12,7 +12,7 @@ module trait_expr_tree
     struct type_expr_tree end
     struct type_not_expr_tree end
 
-    is_expr_tree(a :: ab_ex_tr) = type_expr_tree()
+    is_expr_tree(a :: abstract_expr_tree.ab_ex_tr) = type_expr_tree()
     is_expr_tree(a :: t_expr_tree )= type_expr_tree()
     is_expr_tree(a :: Expr) = type_expr_tree()
     is_expr_tree(a :: Number) = type_expr_tree()
@@ -60,7 +60,10 @@ module trait_expr_tree
 
 
 
-
+    modify_expr_tree!( a, b) = _modify_expr_tree!(is_expr_tree(a), is_expr_tree(b), a, b)
+    _modify_expr_tree!(:: type_not_expr_tree, :: Any, :: Any, :: Any) = error("l'un des 2 paramètre n'est pas un arbre d'expression")
+    _modify_expr_tree!( :: Any, :: type_not_expr_tree, :: Any, :: Any) = error("l'un des 2 paramètre n'est pas un arbre d'expression")
+    _modify_expr_tree!( :: type_expr_tree, :: type_expr_tree, a, b) = _modify_expr_tree!(a,b)
 
     export is_expr_tree, get_expr_node, get_expr_children, inverse_expr_tree
 
@@ -97,6 +100,13 @@ module algo_expr_tree
         return abstract_expr_tree.create_expr_tree(abstract_expr_node.create_node_expr(ex))
     end
 
+
+    transform_to_Expr(ex) = _transform_to_Expr(trait_expr_tree.is_expr_tree(ex), ex)
+    _transform_to_Expr( :: trait_expr_tree.type_expr_tree, ex) = _transform_to_Expr(ex)
+    _transform_to_Expr( :: trait_expr_tree.type_not_expr_tree, ex) = error("notre parametre n'est pas un arbre d'expression")
+    function _transform_to_Expr(ex)
+        return abstract_expr_tree.create_Expr(ex)
+    end
 
 
 """
@@ -243,6 +253,11 @@ This function rename the variable of expr_tree to x₁,x₂,... instead of x₇,
     element_fun_from_N_to_Ni!(expr_tree, a :: Dict{Int,Int}) = _element_fun_from_N_to_Ni!(expr_tree, trait_expr_tree.is_expr_tree(expr_tree),a)
     _element_fun_from_N_to_Ni!(expr_tree, :: trait_expr_tree.type_not_expr_tree, a :: Dict{Int,Int}) = error(" This is not an Expr tree")
     _element_fun_from_N_to_Ni!(expr_tree, :: trait_expr_tree.type_expr_tree, a :: Dict{Int,Int}) = _element_fun_from_N_to_Ni!(expr_tree,a)
+    # Pour les 2 fonction suivantes.
+    #     - La première prend en entrée un vecteur d'entier, la fonction N_to_Ni créé le dictionnaire qui sera nécessaire pour la seconde fonction,
+    #     la première fonction défini juste le dictionnaire nécessaire pour la seconde fonction.
+    #     - La seconde fonction est la fonction qui va réellement modifier l'arbre d'expression expr_tree, en modifiant les indices des variables
+    #     en accord avec les valeurs dans le dictionnaire.
     function _element_fun_from_N_to_Ni!(expr_tree, elmt_var :: Vector{Int})
         function N_to_Ni(elemental_var :: Vector{Int})
             dic_var_value = Dict{Int,Int}()
@@ -299,6 +314,8 @@ Cast the constant of the expression tree expr_tree to the type t.
             error("Cas qui n'est pas sensé arrivé")
         end
     end
+
+
 
 
 end

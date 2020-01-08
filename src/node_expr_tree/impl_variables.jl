@@ -11,7 +11,7 @@ module variables
     import ..implementation_type_expr.t_type_expr_basic
     import ..interface_expr_node._get_type_node, ..interface_expr_node._get_var_index
     import  ..interface_expr_node._evaluate_node, ..interface_expr_node._change_from_N_to_Ni!
-    import ..interface_expr_node._cast_constant!
+    import ..interface_expr_node._cast_constant!, ..interface_expr_node._node_to_Expr
 
     using ..implementation_type_expr
 
@@ -74,10 +74,13 @@ module variables
     function change_index( x :: Int, dic_new_var :: Dict{Int,Int})
         return dic_new_var[x]
     end
+
     function change_index( x :: MathOptInterface.VariableIndex, dic_new_var :: Dict{Int,Int})
         return MathOptInterface.VariableIndex(dic_new_var[x.value])
     end
 
-
+    function _node_to_Expr(v :: variable)
+        return Expr(:ref, v.name,  MathOptInterface.VariableIndex(v.index))
+    end
     export variable
 end

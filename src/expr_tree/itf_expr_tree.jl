@@ -7,4 +7,6 @@ module interface_expr_tree
 
     _inverse_expr_tree() = ()
 
+    _modify_expr_tree!() = ()
+
 end

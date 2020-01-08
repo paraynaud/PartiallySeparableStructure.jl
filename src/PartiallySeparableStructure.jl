@@ -111,6 +111,7 @@ at the point x, return a vector of size n (the number of variable) which is the 
         l_elmt_fun = length(sps.structure)
         gradient_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).([1:sps.n_var;]) )
          @Threads.threads for i in 1:l_elmt_fun
+         # for i in 1:l_elmt_fun
             (rown, column, value) = findnz(sps.structure[i].U)
             temp = ForwardDiff.gradient(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable))  )
             atomic_add!.(gradient_prl[column], temp)
