@@ -48,6 +48,8 @@ module constants
     end
 
     _change_from_N_to_Ni!(v :: Number, dic_new_var :: Dict{Int,Int}) = ()
+    _change_from_N_to_Ni!(c :: constant, dic_new_var :: Dict{Int,Int}) = ()
+
 
     function _cast_constant!(c :: constant, t :: DataType)
         tmp =  create_node_expr((t)(1))

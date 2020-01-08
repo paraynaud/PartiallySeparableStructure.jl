@@ -10,6 +10,7 @@ module implementation_expr_tree
     import ..implementation_tree.type_node
 
     import ..interface_expr_tree._get_expr_node, ..interface_expr_tree._get_expr_children, ..interface_expr_tree._inverse_expr_tree
+    import ..interface_expr_tree._modify_expr_tree!, ..interface_expr_tree._get_real_node
 
 
     t_expr_tree = type_node{ab_ex_nd}
@@ -35,15 +36,13 @@ module implementation_expr_tree
     end
 
     function create_expr_tree(field :: ab_ex_nd, children :: Vector{ type_node{ab_ex_nd}} )
-        return type_node{ab_ex_nd}(field, children)
+        return t_expr_tree(field, children)
     end
 
 
     function create_expr_tree(field :: ab_ex_nd )
-        return type_node{ab_ex_nd}(field, [])
+        return t_expr_tree(field, [])
     end
-
-
 
 
     function _get_expr_node(t :: t_expr_tree)
@@ -60,6 +59,15 @@ module implementation_expr_tree
         new_node = abstract_expr_tree.create_expr_tree(op_minus, [t])
         return new_node
     end
+
+    function _get_real_node(ex :: t_expr_tree)
+        if isempty(_get_expr_children(ex))
+            return ex.field
+        else
+            return _get_expr_node(ex)
+        end
+    end
+
 
     export t_expr_tree
 

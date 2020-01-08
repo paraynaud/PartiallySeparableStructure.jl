@@ -3,7 +3,7 @@ module trait_expr_tree
     using ..abstract_expr_tree
 
     import ..interface_expr_tree._get_expr_node, ..interface_expr_tree._get_expr_children, ..interface_expr_tree._inverse_expr_tree
-    import ..implementation_expr_tree.t_expr_tree, ..interface_expr_tree._modify_expr_tree!
+    import ..implementation_expr_tree.t_expr_tree, ..interface_expr_tree._modify_expr_tree!, ..interface_expr_tree._get_real_node
 
     import Base.==
     using Base.Threads
@@ -65,6 +65,11 @@ module trait_expr_tree
     _modify_expr_tree!( :: Any, :: type_not_expr_tree, :: Any, :: Any) = error("l'un des 2 paramètre n'est pas un arbre d'expression")
     _modify_expr_tree!( :: type_expr_tree, :: type_expr_tree, a, b) = _modify_expr_tree!(a,b)
 
+
+    get_real_node(a) = _get_real_node(is_expr_tree(a), a)
+    _get_real_node(:: type_not_expr_tree, :: Any) = error("nous ne traitons pas un arbre d'expression")
+    _get_real_node(:: type_expr_tree, a :: Any) = _get_real_node(a)
+
     export is_expr_tree, get_expr_node, get_expr_children, inverse_expr_tree
 
 end  # module trait_expr_tree
@@ -101,7 +106,7 @@ module algo_expr_tree
     end
 
 
-    transform_to_Expr(ex) = _transform_to_Expr(trait_expr_tree.is_expr_tree(ex), ex)
+    transform_to_Expr(ex) = _transform_to_Expr( trait_expr_tree.is_expr_tree(ex), ex)
     _transform_to_Expr( :: trait_expr_tree.type_expr_tree, ex) = _transform_to_Expr(ex)
     _transform_to_Expr( :: trait_expr_tree.type_not_expr_tree, ex) = error("notre parametre n'est pas un arbre d'expression")
     function _transform_to_Expr(ex)
@@ -273,8 +278,9 @@ This function rename the variable of expr_tree to x₁,x₂,... instead of x₇,
     function _element_fun_from_N_to_Ni!(expr_tree, dic_new_var :: Dict{Int,Int})
         ch = trait_expr_tree.get_expr_children(expr_tree)
         if isempty(ch) # on est alors dans une feuille
-            nd =  trait_expr_tree.get_expr_node(expr_tree)
-            trait_expr_node.change_from_N_to_Ni!(expr_tree, dic_new_var)
+            r_node = trait_expr_tree.get_real_node(expr_tree)
+            trait_expr_node.change_from_N_to_Ni!(r_node, dic_new_var)
+            # trait_expr_node.change_from_N_to_Ni!(expr_tree, dic_new_var)
         else
             n = length(ch)
             for i in 1:n
@@ -282,7 +288,6 @@ This function rename the variable of expr_tree to x₁,x₂,... instead of x₇,
             end
         end
     end
-
 
 
 

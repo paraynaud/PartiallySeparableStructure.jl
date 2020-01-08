@@ -3,7 +3,7 @@ module implementation_expr_tree_Expr
     import ..abstract_expr_tree.create_expr_tree, ..abstract_expr_tree.create_Expr
     using ..abstract_expr_node
     import ..interface_expr_tree._get_expr_node, ..interface_expr_tree._get_expr_children, ..interface_expr_tree._inverse_expr_tree
-    import ..interface_expr_tree._modify_expr_tree!
+    import ..interface_expr_tree._modify_expr_tree!, ..interface_expr_tree._get_real_node
 
     function create_expr_tree( ex :: Expr)
         return ex
@@ -65,6 +65,14 @@ module implementation_expr_tree_Expr
 
     function _inverse_expr_tree(ex :: Number)
         return Expr(:call, :-, ex)
+    end
+
+    function _get_real_node(ex :: Expr)
+            return ex
+    end
+
+    function _get_real_node(ex :: Number)
+        return ex
     end
 
     # function _modify_expr_tree!(ex_o :: Expr, new_ex)
