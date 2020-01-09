@@ -359,11 +359,12 @@ using LinearAlgebra
 
 end
 
-a = :(x[1] + 5)
+a = :(x[1] + 6)
 b = algo_expr_tree.transform_expr_tree(a)
 t = Int8
-algo_expr_tree.cast_type_of_constant!(a, t)
-@show a
+a_t = algo_expr_tree.cast_type_of_constant!(a, t)
+b_t = algo_expr_tree.cast_type_of_constant!(b, t)
+@show a, a_t
 c = algo_expr_tree.transform_to_Expr(b)
 
 # algo_expr_tree.cast_type_of_constant!(b, t)

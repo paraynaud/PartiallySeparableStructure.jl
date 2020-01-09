@@ -51,17 +51,15 @@ module constants
     _change_from_N_to_Ni!(c :: constant, dic_new_var :: Dict{Int,Int}) = ()
 
 
+
     function _cast_constant!(c :: constant, t :: DataType)
         tmp =  create_node_expr((t)(1))
         @show c.value,t , typeof( (t)(c.value)), tmp
         c = tmp
-        # tmp = (t)(1)
-        # c.value = tmp
     end
 
     function _cast_constant!(c :: Number, t :: DataType)
         c = (t)(c) :: t
-        @show c, typeof(c)
         return c
     end
 

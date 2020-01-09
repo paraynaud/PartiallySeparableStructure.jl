@@ -67,6 +67,7 @@ module implementation_expr_tree_Expr
         return Expr(:call, :-, ex)
     end
 
+    #Fonction à reprendre potetiellement, pourle moment ca marche
     function _get_real_node(ex :: Expr)
             return ex
     end

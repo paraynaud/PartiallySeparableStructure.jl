@@ -280,7 +280,6 @@ This function rename the variable of expr_tree to x₁,x₂,... instead of x₇,
         if isempty(ch) # on est alors dans une feuille
             r_node = trait_expr_tree.get_real_node(expr_tree)
             trait_expr_node.change_from_N_to_Ni!(r_node, dic_new_var)
-            # trait_expr_node.change_from_N_to_Ni!(expr_tree, dic_new_var)
         else
             n = length(ch)
             for i in 1:n
@@ -303,24 +302,8 @@ Cast the constant of the expression tree expr_tree to the type t.
 # On chercher à caster les constantes de l'arbre au type t, on va donc parcourir l'arbre jusqu'à arriver aux feuilles
 # où nous réaliserons l'opération de caster au type t une constante individuellement .
     function _cast_type_of_constant!(expr_tree, t :: DataType)
-        nd = trait_expr_tree.get_expr_node(expr_tree)
-        if trait_expr_node.node_is_operator(nd)
-            @show nd
-            ch = trait_expr_tree.get_expr_children(expr_tree)
-            cast_type_of_constant!.(ch, t) #
-        elseif trait_expr_node.node_is_variable(nd)
-            # il n'y a pas besoin de caster une variable
-        elseif trait_expr_node.node_is_constant(nd)
-            @show expr_tree
-            tmp = trait_expr_node.cast_constant!(expr_tree, t)
-            expr_tree = tmp
-            @show expr_tree, nd, tmp, typeof(tmp), typeof(expr_tree)
-        else
-            error("Cas qui n'est pas sensé arrivé")
-        end
+#en suspsend
     end
-
-
 
 
 end

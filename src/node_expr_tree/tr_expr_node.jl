@@ -130,10 +130,8 @@ module trait_expr_node
 
     cast_constant!(a, t :: DataType) = _cast_constant!(a, is_expr_node(a), t)
     _cast_constant!(a, ::type_expr_node, t :: DataType) = _cast_constant!(a, t)
-    function _cast_constant!(a, ::type_not_expr_node, t :: DataType)
-         @show a
-         error("This node is not a expr node")
-    end
+    _cast_constant!(a, ::type_not_expr_node, t :: DataType) = error("This node is not a expr node")
+
 end  # module trait_expr_node
 
 
