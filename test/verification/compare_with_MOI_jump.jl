@@ -13,7 +13,7 @@ m = Model()
 n = 10
 @variable(m, x[1:n])
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
-@NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
+@NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
 obj = MathOptInterface.objective_expr(evaluator)
@@ -124,8 +124,8 @@ end
 @testset "vérification des types des évalations de la fonction/gradient/Hessian" begin
     var_type_BigFloat = (α -> α - 50).( (β -> 100 * β).(rand(BigFloat,n)) )
 
-    SPS_test_type = PartiallySeparableStructure.evaluate_SPS(SPS, var_type_BigFloat)
-    @test typeof(var_type_BigFloat[1]) == typeof(SPS_test_type)
-    SPS_gradient_test_type_en_x = PartiallySeparableStructure.evaluate_gradient(SPS, var_type_BigFloat)
-    @test typeof(SPS_gradient_test_type_en_x[1]) == typeof(var_type_BigFloat[1])
+    # SPS_test_type = PartiallySeparableStructure.evaluate_SPS(SPS, var_type_BigFloat)
+    # @test typeof(var_type_BigFloat[1]) == typeof(SPS_test_type)
+    # SPS_gradient_test_type_en_x = PartiallySeparableStructure.evaluate_gradient(SPS, var_type_BigFloat)
+    # @test typeof(SPS_gradient_test_type_en_x[1]) == typeof(var_type_BigFloat[1])
 end
