@@ -23,10 +23,10 @@ using .PartiallySeparableStructure
 
     obj_o = MathOptInterface.objective_expr(eval_test)
     obj = copy(obj_o)
-    obj_t = algo_expr_tree.transform_expr_tree(obj)
+    obj_t = trait_expr_tree.transform_to_expr_tree(obj)
     x = ones(n_x)
 
-    # t_obj = algo_expr_tree.transform_expr_tree(obj)
+    # t_obj = trait_expr_tree.transform_to_expr_tree(obj)
     # algo_tree.printer_tree(t_obj)
 
     # algo_tree.printer_tree(obj)

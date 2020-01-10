@@ -17,14 +17,14 @@ using .algo_tree
     @test t_expr_1 == expr_1
     @test trait_expr_tree.expr_tree_equal(t_expr_1, expr_1)
 
-    t1 = algo_expr_tree.transform_expr_tree(t_expr_1)
+    t1 = trait_expr_tree.transform_to_expr_tree(t_expr_1)
     @test trait_expr_tree.expr_tree_equal(t1, t_expr_1)
 
     expr_2 = :( (x[3]+x[4])^2 +  x[1] * x[2] )
     @test trait_expr_tree.expr_tree_equal(expr_1, expr_2) == false
     t_expr_2 = abstract_expr_tree.create_expr_tree(expr_2)
     @test t_expr_2 == expr_2
-    t2 = algo_expr_tree.transform_expr_tree(t_expr_2)
+    t2 = trait_expr_tree.transform_to_expr_tree(t_expr_2)
     @test  trait_expr_tree.expr_tree_equal(expr_2, t2)
     @test  trait_expr_tree.expr_tree_equal(t_expr_2, t2)
 
@@ -49,7 +49,7 @@ using .algo_tree
 
 @testset " Deletion of imbricated +" begin
     t_expr_4 = abstract_expr_tree.create_expr_tree( :( (x[3]+x[4]) + (x[1] + x[2]) ) )
-    t4 = algo_expr_tree.transform_expr_tree(t_expr_4)
+    t4 = trait_expr_tree.transform_to_expr_tree(t_expr_4)
     res_t4 = algo_expr_tree.delete_imbricated_plus(t4)
     res_t_expr_4 = algo_expr_tree.delete_imbricated_plus(t_expr_4)
     test_res_t_expr_4 = [:(x[3]), :(x[4]), :(x[1]), :(x[2])]
@@ -57,7 +57,7 @@ using .algo_tree
     @test foldl(&,trait_expr_tree.expr_tree_equal.(res_t4, res_t_expr_4))
 
     t_expr_5 = abstract_expr_tree.create_expr_tree( :( (x[3])^2+ (x[5] * x[4]) + (x[1] + x[2]) ) )
-    t5 = algo_expr_tree.transform_expr_tree(t_expr_5)
+    t5 = trait_expr_tree.transform_to_expr_tree(t_expr_5)
     res_t_expr_5 = algo_expr_tree.delete_imbricated_plus(t_expr_5)
     res_t5 = algo_expr_tree.delete_imbricated_plus(t5)
     test_res_t_expr_5 = [ :(x[3]^2), :(x[5] * x[4]), :(x[1]), :(x[2])]
@@ -66,7 +66,7 @@ using .algo_tree
 
 
     t_expr_6 = abstract_expr_tree.create_expr_tree( :( (x[3])^2+ (x[5] * x[4]) - (x[1] + x[2]) ) )
-    t6 = algo_expr_tree.transform_expr_tree(t_expr_6)
+    t6 = trait_expr_tree.transform_to_expr_tree(t_expr_6)
     res_t_expr_6 = algo_expr_tree.delete_imbricated_plus(t_expr_6)
     res_t6 = algo_expr_tree.delete_imbricated_plus(t6)
     test_res_t_expr_6 = [ :(x[3]^2), :(x[5] * x[4]), :(-(x[1])), :(-(x[2]))]
@@ -75,7 +75,7 @@ using .algo_tree
 
 
     t_expr_7 = abstract_expr_tree.create_expr_tree( :( (x[3])^2+ (x[5] * x[4]) - (x[1] - x[2]) ) )
-    t7 = algo_expr_tree.transform_expr_tree(t_expr_7)
+    t7 = trait_expr_tree.transform_to_expr_tree(t_expr_7)
     res_t_expr_7 = algo_expr_tree.delete_imbricated_plus(t_expr_7)
     res_t7 = algo_expr_tree.delete_imbricated_plus(t7)
     test_res_t_expr_7 = [ :(x[3]^2), :(x[5] * x[4]), :(-(x[1])), :(-(-(x[2])))]
@@ -93,7 +93,7 @@ end
 @testset "get type of a expr tree" begin
 
     t_expr_8 = abstract_expr_tree.create_expr_tree( :( (x[3]^4)+ (x[5] * x[4]) - (x[1] - x[2]) ) )
-    t8 = algo_expr_tree.transform_expr_tree(t_expr_8)
+    t8 = trait_expr_tree.transform_to_expr_tree(t_expr_8)
 
     test_res8 =  algo_expr_tree.get_type_tree(t_expr_8)
     test_res_t8 =  algo_expr_tree.get_type_tree(t8)
@@ -102,7 +102,7 @@ end
 
 
     t_expr_cubic = abstract_expr_tree.create_expr_tree( :( (x[3]^3)+ (x[5] * x[4]) - (x[1] - x[2]) ) )
-    t_cubic = algo_expr_tree.transform_expr_tree(t_expr_cubic)
+    t_cubic = trait_expr_tree.transform_to_expr_tree(t_expr_cubic)
 
     res_cubic =  algo_expr_tree.get_type_tree(t_expr_cubic)
     res_t_cubic =  algo_expr_tree.get_type_tree(t_cubic)
@@ -110,7 +110,7 @@ end
     @test trait_type_expr._is_cubic(res_t_cubic)
 
     t_expr_cubic2 = abstract_expr_tree.create_expr_tree( :( (x[3]^3)+ (x[5] * x[4]) - (x[1] - x[2]) + sin(5)) )
-    t_cubic2 = algo_expr_tree.transform_expr_tree(t_expr_cubic2)
+    t_cubic2 = trait_expr_tree.transform_to_expr_tree(t_expr_cubic2)
 
     res_cubic2 =  algo_expr_tree.get_type_tree(t_expr_cubic2)
     res_t_cubic2 =  algo_expr_tree.get_type_tree(t_cubic2)
@@ -118,7 +118,7 @@ end
     @test trait_type_expr._is_cubic(res_t_cubic2)
 
     t_expr_sin = abstract_expr_tree.create_expr_tree( :( (x[3]^3)+ sin(x[5] * x[4]) - (x[1] - x[2]) ) )
-    t_sin = algo_expr_tree.transform_expr_tree(t_expr_sin)
+    t_sin = trait_expr_tree.transform_to_expr_tree(t_expr_sin)
 
     res_sin =  algo_expr_tree.get_type_tree(t_expr_sin)
     res_t_sin =  algo_expr_tree.get_type_tree(t_sin)
@@ -135,7 +135,7 @@ end
     eval_test = JuMP.NLPEvaluator(m)
     MathOptInterface.initialize(eval_test, [:ExprGraph])
     obj = MathOptInterface.objective_expr(eval_test)
-    t_obj =  algo_expr_tree.transform_expr_tree(obj)
+    t_obj =  trait_expr_tree.transform_to_expr_tree(obj)
 
     test_res_obj = algo_expr_tree.get_type_tree(t_obj)
     @test trait_type_expr._is_quadratic(test_res_obj)
@@ -155,13 +155,13 @@ end
 
 @testset "test de la récupération des variable élementaires" begin
     t_expr_var = abstract_expr_tree.create_expr_tree( :( (x[1]^3)+ sin(x[1] * x[2]) - (x[3] - x[2]) ) )
-    t_var = algo_expr_tree.transform_expr_tree(t_expr_var)
+    t_var = trait_expr_tree.transform_to_expr_tree(t_expr_var)
     res = algo_expr_tree.get_elemental_variable(t_var)
     res2 = algo_expr_tree.get_elemental_variable(t_expr_var)
     @test res == res2
     @test res == [1,2,3]
     t_expr_var1= abstract_expr_tree.create_expr_tree( :( (x[1]^3) ) )
-    t_var1 = algo_expr_tree.transform_expr_tree(t_expr_var1)
+    t_var1 = trait_expr_tree.transform_to_expr_tree(t_expr_var1)
     res_expr_var1 = algo_expr_tree.get_elemental_variable(t_expr_var1)
     res_var1 = algo_expr_tree.get_elemental_variable(t_var1)
     @test res_var1 == res_expr_var1
@@ -179,7 +179,7 @@ end
     eval_test = JuMP.NLPEvaluator(m)
     MathOptInterface.initialize(eval_test, [:ExprGraph])
     obj = MathOptInterface.objective_expr(eval_test)
-    t_obj =  algo_expr_tree.transform_expr_tree(obj)
+    t_obj =  trait_expr_tree.transform_to_expr_tree(obj)
     # DEFINITION DES OBJETS A TESTER
     elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
     type_elmt_fun = algo_expr_tree.get_type_tree.(elmt_fun)
@@ -353,14 +353,14 @@ using LinearAlgebra
     PartiallySeparableStructure.product_matrix_sps(S_test,B,id)
     @test norm(H_test2*x2 - PartiallySeparableStructure.product_matrix_sps(S_test,B,x2), 2) < 10e-10
 
-    obj_o2 = algo_expr_tree.transform_expr_tree(obj_o)
+    obj_o2 = trait_expr_tree.transform_to_expr_tree(obj_o)
     obj_o3 = algo_expr_tree.transform_to_Expr(obj_o2)
     @test obj_o == obj_o3
 
 end
 
 a = :(x[1] + 6)
-b = algo_expr_tree.transform_expr_tree(a)
+b = trait_expr_tree.transform_to_expr_tree(a)
 t = Int8
 a_t = algo_expr_tree.cast_type_of_constant!(a, t)
 b_t = algo_expr_tree.cast_type_of_constant!(b, t)

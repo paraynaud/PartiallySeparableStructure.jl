@@ -4,6 +4,7 @@ module trait_expr_tree
 
     import ..interface_expr_tree._get_expr_node, ..interface_expr_tree._get_expr_children, ..interface_expr_tree._inverse_expr_tree
     import ..implementation_expr_tree.t_expr_tree, ..interface_expr_tree._modify_expr_tree!, ..interface_expr_tree._get_real_node
+    import ..interface_expr_tree._transform_to_expr_tree
 
     import Base.==
     using Base.Threads
@@ -70,6 +71,16 @@ module trait_expr_tree
     _get_real_node(:: type_not_expr_tree, :: Any) = error("nous ne traitons pas un arbre d'expression")
     _get_real_node(:: type_expr_tree, a :: Any) = _get_real_node(a)
 
+
+
+    transform_to_expr_tree(a) = _transform_to_expr_tree(is_expr_tree(a), a)
+    _transform_to_expr_tree(:: type_not_expr_tree, :: Any) = error("nous ne traitons pas un arbre d'expression")
+    _transform_to_expr_tree(:: type_expr_tree, a :: Any) = _transform_to_expr_tree(a)
+
+
+
+
+
     export is_expr_tree, get_expr_node, get_expr_children, inverse_expr_tree
 
 end  # module trait_expr_tree
@@ -89,21 +100,6 @@ module algo_expr_tree
 
     using SparseArrays
 
-
-    function transform_expr_tree(ex :: Expr)
-        n_node = trait_expr_tree.get_expr_node(ex)
-        children = trait_expr_tree.get_expr_children(ex)
-        if isempty(children)
-            return abstract_expr_tree.create_expr_tree(n_node)
-        else
-            n_children = transform_expr_tree.(children)
-            return abstract_expr_tree.create_expr_tree(n_node, n_children)
-        end
-    end
-
-    function transform_expr_tree(ex :: Number)
-        return abstract_expr_tree.create_expr_tree(abstract_expr_node.create_node_expr(ex))
-    end
 
 
     transform_to_Expr(ex) = _transform_to_Expr( trait_expr_tree.is_expr_tree(ex), ex)
