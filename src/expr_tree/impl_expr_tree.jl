@@ -10,7 +10,7 @@ module implementation_expr_tree
     import ..implementation_tree.type_node
 
     import ..interface_expr_tree._get_expr_node, ..interface_expr_tree._get_expr_children, ..interface_expr_tree._inverse_expr_tree
-    import ..interface_expr_tree._modify_expr_tree!, ..interface_expr_tree._get_real_node, ..interface_expr_tree._transform_to_expr_tree
+    import ..interface_expr_tree._get_real_node, ..interface_expr_tree._transform_to_expr_tree
 
 
     t_expr_tree = type_node{ab_ex_nd}

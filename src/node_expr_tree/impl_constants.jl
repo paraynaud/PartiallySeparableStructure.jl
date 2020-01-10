@@ -53,9 +53,10 @@ module constants
 
 
     function _cast_constant!(c :: constant, t :: DataType)
-        tmp =  create_node_expr((t)(1))
-        @show c.value,t , typeof( (t)(c.value)), tmp
-        c = tmp
+        # tmp =  create_node_expr((t)(1))
+        # c = tmp
+        # @show c.value,t , typeof( (t)(c.value)), tmp
+        c.value = (t)(c.value)
     end
 
     function _cast_constant!(c :: Number, t :: DataType)

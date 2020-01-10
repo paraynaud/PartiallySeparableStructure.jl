@@ -354,7 +354,7 @@ using LinearAlgebra
     @test norm(H_test2*x2 - PartiallySeparableStructure.product_matrix_sps(S_test,B,x2), 2) < 10e-10
 
     obj_o2 = trait_expr_tree.transform_to_expr_tree(obj_o)
-    obj_o3 = algo_expr_tree.transform_to_Expr(obj_o2)
+    obj_o3 = trait_expr_tree.transform_to_Expr(obj_o2)
     @test obj_o == obj_o3
 
 end
@@ -365,8 +365,11 @@ t = Int8
 a_t = algo_expr_tree.cast_type_of_constant!(a, t)
 b_t = algo_expr_tree.cast_type_of_constant!(b, t)
 # @show a, a_t
-c = algo_expr_tree.transform_to_Expr(b)
+c = trait_expr_tree.transform_to_Expr(b)
 
+
+
+# a.args[3] = (Int8)(a.args[3])
 # algo_expr_tree.cast_type_of_constant!(b, t)
 # @show b
 #

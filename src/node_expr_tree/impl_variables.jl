@@ -82,5 +82,9 @@ module variables
     function _node_to_Expr(v :: variable)
         return Expr(:ref, v.name,  MathOptInterface.VariableIndex(v.index))
     end
+
+    _cast_constant!(v :: variable, t :: DataType) = ()
+
+
     export variable
 end

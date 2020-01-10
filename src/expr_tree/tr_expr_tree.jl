@@ -3,8 +3,8 @@ module trait_expr_tree
     using ..abstract_expr_tree
 
     import ..interface_expr_tree._get_expr_node, ..interface_expr_tree._get_expr_children, ..interface_expr_tree._inverse_expr_tree
-    import ..implementation_expr_tree.t_expr_tree, ..interface_expr_tree._modify_expr_tree!, ..interface_expr_tree._get_real_node
-    import ..interface_expr_tree._transform_to_expr_tree
+    import ..implementation_expr_tree.t_expr_tree, ..interface_expr_tree._get_real_node
+    import ..interface_expr_tree._transform_to_expr_tree, ..interface_expr_tree._expr_tree_to_create
 
     import Base.==
     using Base.Threads
@@ -66,24 +66,74 @@ module trait_expr_tree
     _modify_expr_tree!( :: Any, :: type_not_expr_tree, :: Any, :: Any) = error("l'un des 2 paramètre n'est pas un arbre d'expression")
     _modify_expr_tree!( :: type_expr_tree, :: type_expr_tree, a, b) = _modify_expr_tree!(a,b)
 
-
+"""
+    get_real_node(a)
+Fonction à prendre avec des pincettes, pour le moment utiliser seulement sur les feuilles.
+"""
     get_real_node(a) = _get_real_node(is_expr_tree(a), a)
     _get_real_node(:: type_not_expr_tree, :: Any) = error("nous ne traitons pas un arbre d'expression")
     _get_real_node(:: type_expr_tree, a :: Any) = _get_real_node(a)
 
 
-
+"""
+    transform_to_expr_tree(expression_tree)
+This function takes an argument expression_tree satisfying the trait is_expr_tree and return an expression tree of the type t_expr_tree.
+This function is usefull in our algorithms to synchronise all the types satisfying the trait is_expr_tree (like Expr) to the type t_expr_tree.
+"""
     transform_to_expr_tree(a) = _transform_to_expr_tree(is_expr_tree(a), a)
     _transform_to_expr_tree(:: type_not_expr_tree, :: Any) = error("nous ne traitons pas un arbre d'expression")
     _transform_to_expr_tree(:: type_expr_tree, a :: Any) = _transform_to_expr_tree(a)
 
 
+    transform_to_Expr(ex) = _transform_to_Expr( trait_expr_tree.is_expr_tree(ex), ex)
+    _transform_to_Expr( :: trait_expr_tree.type_expr_tree, ex) = _transform_to_Expr(ex)
+    _transform_to_Expr( :: trait_expr_tree.type_not_expr_tree, ex) = error("notre parametre n'est pas un arbre d'expression")
+    function _transform_to_Expr(ex)
+        return abstract_expr_tree.create_Expr(ex)
+    end
 
 
+    expr_tree_to_create(expr_tree_to_create, expr_tree_of_good_type) = _expr_tree_to_create(expr_tree_to_create, expr_tree_of_good_type, is_expr_tree(expr_tree_to_create), is_expr_tree(expr_tree_of_good_type))
+    _expr_tree_to_create(a, b, :: type_not_expr_tree, :: Any) = error("le type de l'arbre d'origine ne satisfait pas le trait")
+    _expr_tree_to_create(a, b, :: Any, :: type_not_expr_tree) = error("le type de l'arbre que l'on cherche à créer ne satisfait pas le trait")
+    function _expr_tree_to_create(a, b, :: type_expr_tree, :: type_expr_tree)
+        uniformized_a = transform_to_expr_tree(a)
+        # à priori on est sur que le type de uniformized_a est implementation_expr_tree.t_expr_tree
+        return _expr_tree_to_create(uniformized_a, b)
+    end
 
     export is_expr_tree, get_expr_node, get_expr_children, inverse_expr_tree
 
 end  # module trait_expr_tree
+
+
+module hl_trait_expr_tree
+
+    import ..interface_expr_tree._expr_tree_to_create
+
+    using ..trait_expr_tree, ..trait_expr_node
+    using ..implementation_expr_tree, ..implementation_expr_tree_Expr
+
+    function _expr_tree_to_create(original_ex :: implementation_expr_tree.t_expr_tree,  tree_of_needed_type :: Expr)
+        return trait_expr_tree.transform_to_Expr(original_ex)
+    end
+
+    function _expr_tree_to_create(original_ex :: implementation_expr_tree.t_expr_tree, tree_of_needed_type :: implementation_expr_tree.t_expr_tree)
+        return original_ex
+    end
+
+
+    function _cast_type_of_constant( ex ::  implementation_expr_tree.t_expr_tree, t :: DataType)
+        ch = trait_expr_tree.get_expr_children(ex)
+        if isempty(ch)
+            nd = trait_expr_tree.get_expr_node(ex)
+            trait_expr_node._cast_constant!(nd,t)
+        else
+            _cast_type_of_constant.(ch,t)
+        end
+    end
+
+end
 
 
 
@@ -97,17 +147,12 @@ module algo_expr_tree
     using ..abstract_tree
     using ..implementation_tree
     using ..implementation_type_expr
+    using ..hl_trait_expr_tree
 
     using SparseArrays
 
 
 
-    transform_to_Expr(ex) = _transform_to_Expr( trait_expr_tree.is_expr_tree(ex), ex)
-    _transform_to_Expr( :: trait_expr_tree.type_expr_tree, ex) = _transform_to_Expr(ex)
-    _transform_to_Expr( :: trait_expr_tree.type_not_expr_tree, ex) = error("notre parametre n'est pas un arbre d'expression")
-    function _transform_to_Expr(ex)
-        return abstract_expr_tree.create_Expr(ex)
-    end
 
 
 """
@@ -289,8 +334,6 @@ This function rename the variable of expr_tree to x₁,x₂,... instead of x₇,
 """
     cast_type_of_constant(expr_tree, t)
 Cast the constant of the expression tree expr_tree to the type t.
-
-
 """
     cast_type_of_constant!(expr_tree, t :: DataType) = _cast_type_of_constant!(expr_tree, trait_expr_tree.is_expr_tree(expr_tree), t)
     _cast_type_of_constant!(expr_tree, :: trait_expr_tree.type_not_expr_tree, t :: DataType) =  error("this is not an expr tree")
@@ -298,9 +341,12 @@ Cast the constant of the expression tree expr_tree to the type t.
 # On chercher à caster les constantes de l'arbre au type t, on va donc parcourir l'arbre jusqu'à arriver aux feuilles
 # où nous réaliserons l'opération de caster au type t une constante individuellement .
     function _cast_type_of_constant!(expr_tree, t :: DataType)
-#en suspsend
+        work_tree = trait_expr_tree.transform_to_expr_tree(expr_tree)
+        hl_trait_expr_tree._cast_type_of_constant(work_tree,t)
+        @show dump(work_tree)
+        res = trait_expr_tree.expr_tree_to_create(work_tree, expr_tree)
+        return res
     end
-
 
 end
 

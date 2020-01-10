@@ -213,7 +213,9 @@ compute the product g⊤ x = ∑ Uᵢ⊤ gᵢ⊤ xᵢ. So we need the sps struct
         return sum(res)
     end
 
-
+"""
+    Fonction ayant pour but de créer l'approximation SR1 de la structure SPS. Actuellement en suspend car je dois faire autre chose.
+"""
     function approx_B_SR1(sps :: SPS{T}, B :: Hess_matrix{Y}, y :: Vector{Y}, s :: Vector{Z}) where T where Y <: Number where Z <: Number
         l_elmt_fun = length(sps.structure)
         vector_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).([1:sps.n_var;]) )
