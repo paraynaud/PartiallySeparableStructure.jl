@@ -9,4 +9,6 @@ include("tree/ordered_include.jl")
 # apres node_expr_tree et tree
 include("expr_tree/ordered_include.jl")
 
+
+# le coeur du module
 include("PartiallySeparableStructure.jl")

@@ -120,6 +120,17 @@ at the point x, return a vector of size n (the number of variable) which is the 
         return gradient
     end
 
+    function evaluate_gradient(sps :: SPS{T}, x :: Vector{BigFloat} ) where T
+        l_elmt_fun = length(sps.structure)
+        gradient = Vector{BigFloat}(zeros(BigFloat, sps.n_var))
+        for i in 1:l_elmt_fun
+            (rown, column, value) = findnz(sps.structure[i].U)
+            temp = ForwardDiff.gradient(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable)) )
+            gradient[column] = gradient[column] + temp
+        end
+        return gradient
+    end
+
 """
     evaluate_hessian(sps,x)
 evalutate the hessian of the partially separable function f = ∑ fᵢ, stored in the sps structure
@@ -171,7 +182,7 @@ at the point x. Return the result as a Hess_matrix.
 
 """
     product_matrix_sps(sps,B,x)
-This function make the product of the structure B which represent a symetric matrix and the vector x.
+This function make the product of the structure B which represents a symetric matrix and the vector x.
 We need the structure sps for the variable used in each B[i], to replace B[i]*x[i] in the result vector.
 """
     product_matrix_sps(s_a :: struct_algo{T, Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number = product_matrix_sps(s_a.sps, s_a.B, x)
