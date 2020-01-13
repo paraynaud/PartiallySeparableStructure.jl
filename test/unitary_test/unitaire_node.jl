@@ -1,9 +1,5 @@
-
-<<<<<<< HEAD
 include("../../src/ordered_include.jl")
-=======
-# include("../../src/ordered_include.jl")
->>>>>>> dvpt_cast
+
 using ..abstract_expr_node, ..trait_expr_node
 
 using ..variables
