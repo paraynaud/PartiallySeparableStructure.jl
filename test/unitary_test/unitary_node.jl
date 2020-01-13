@@ -1,4 +1,4 @@
-include("../../src/ordered_include.jl")
+# include("../../src/ordered_include.jl")
 
 using ..abstract_expr_node, ..trait_expr_node
 
@@ -27,7 +27,6 @@ using MathOptInterface
 end
 
 @testset "test des fonctions de tests" begin
-
 
     constant = abstract_expr_node.create_node_expr(4)
     variable = abstract_expr_node.create_node_expr(:x, 5)
@@ -58,5 +57,5 @@ end
     @test trait_expr_node.node_is_constant.(coll_simple_op) == [false, false, false, false, false, false]
     @test trait_expr_node.node_is_variable.(coll_simple_op) == [false, false, false, false, false, false]
 
-
+    @test trait_expr_node.get_var_index(variable) == 5
 end
