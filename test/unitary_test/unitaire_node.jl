@@ -1,5 +1,9 @@
 
+<<<<<<< HEAD
 include("../../src/ordered_include.jl")
+=======
+# include("../../src/ordered_include.jl")
+>>>>>>> dvpt_cast
 using ..abstract_expr_node, ..trait_expr_node
 
 using ..variables
@@ -54,7 +58,9 @@ end
     @test trait_expr_node.node_is_cos.(coll_simple_op) == [false, false, false, false, true, false]
     @test trait_expr_node.node_is_tan.(coll_simple_op) == [false, false, false, false, false, true]
     @test trait_expr_node.node_is_power.(coll_simple_op) == [false, false, false, false, false, false]
-    @test trait_expr_node.node_is_constant.(coll_simple_op) == [false, false, false, false, false, false]
 
-    
+    @test trait_expr_node.node_is_constant.(coll_simple_op) == [false, false, false, false, false, false]
+    @test trait_expr_node.node_is_variable.(coll_simple_op) == [false, false, false, false, false, false]
+
+
 end
