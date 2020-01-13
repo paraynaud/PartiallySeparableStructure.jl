@@ -61,11 +61,6 @@ module trait_expr_tree
 
 
 
-    modify_expr_tree!( a, b) = _modify_expr_tree!(is_expr_tree(a), is_expr_tree(b), a, b)
-    _modify_expr_tree!(:: type_not_expr_tree, :: Any, :: Any, :: Any) = error("l'un des 2 paramètre n'est pas un arbre d'expression")
-    _modify_expr_tree!( :: Any, :: type_not_expr_tree, :: Any, :: Any) = error("l'un des 2 paramètre n'est pas un arbre d'expression")
-    _modify_expr_tree!( :: type_expr_tree, :: type_expr_tree, a, b) = _modify_expr_tree!(a,b)
-
 """
     get_real_node(a)
 Fonction à prendre avec des pincettes, pour le moment utiliser seulement sur les feuilles.

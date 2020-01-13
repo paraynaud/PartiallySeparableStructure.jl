@@ -22,13 +22,13 @@ module constants
 
 
     _node_is_operator( c :: constant) = false
-    _node_is_plus( c :: constant) = false
-    _node_is_minus(c :: constant) = false
-    _node_is_times(c :: constant) = false
-    _node_is_power(c :: constant) = false
-    _node_is_sin(c :: constant) = false
-    _node_is_cos(c :: constant) = false
-    _node_is_tan(c :: constant) = false
+        _node_is_plus( c :: constant) = false
+        _node_is_minus(c :: constant) = false
+        _node_is_times(c :: constant) = false
+        _node_is_power(c :: constant) = false
+        _node_is_sin(c :: constant) = false
+        _node_is_cos(c :: constant) = false
+        _node_is_tan(c :: constant) = false
 
     _node_is_variable(c :: constant) = false
 

@@ -1,4 +1,4 @@
-module operators
+module complex_operators
 
     import ..abstract_expr_node.ab_ex_nd, ..abstract_expr_node.create_node_expr
 
