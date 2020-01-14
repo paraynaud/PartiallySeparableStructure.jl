@@ -102,7 +102,6 @@ end
     MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_y, x, y, 1.0, zeros(0))
 
 
-
     @test norm(MOI_Hessian_product_y - SPS_product_Hessian_en_x_et_y, 2) < σ
     @test norm(MOI_hessian_en_x*y - SPS_product_Hessian_en_x_et_y, 2) < σ
     @test norm(MOI_Hessian_product_y - MOI_hessian_en_x*y, 2) < σ

@@ -28,7 +28,7 @@ module complex_operators
     _node_is_plus( op :: complex_operator ) = (op.op == :+)
     _node_is_minus(op :: complex_operator ) = (op.op == :-)
     _node_is_times(op :: complex_operator ) = (op.op == :*)
-    _node_is_power(op :: complex_operator ) = (op.op == :^)
+    _node_is_power(op :: complex_operator ) = false
     _node_is_sin(op :: complex_operator) = (op.op == :sin)
     _node_is_cos(op :: complex_operator) = (op.op == :cos)
     _node_is_tan(op :: complex_operator) = (op.op == :tan)

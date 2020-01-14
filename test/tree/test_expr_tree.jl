@@ -3,12 +3,14 @@ using InteractiveUtils
 using MathOptInterface, JuMP
 using BenchmarkTools
 
+include("../../src/ordered_include.jl")
+
+
 using .trait_expr_tree
 using .abstract_expr_tree
 using .algo_expr_tree
 using .algo_tree
 
-include("../../src/ordered_include.jl")
 
 
 
@@ -360,7 +362,7 @@ using LinearAlgebra
 
 end
 
-a = :(x[1]^2 + 6)
+a = :(x[1]^2 + 6.0)
 b = trait_expr_tree.transform_to_expr_tree(a)
 t = Int8
 a_t = algo_expr_tree.cast_type_of_constant!(a, t)
@@ -368,16 +370,10 @@ b_t = algo_expr_tree.cast_type_of_constant!(b, t)
 c = trait_expr_tree.transform_to_Expr(b)
 
 
-
-
-function test!(a :: Expr)
-       trait_expr_tree.get_expr_children(a)[2] = 3
-end
-test!(a)
-
-dump(a)
-
-
+point_1_dim = Vector{Float16}([4])
+res = M_evaluation_expr_tree.evaluate_expr_tree(a, point_1_dim )
+res_t = M_evaluation_expr_tree.evaluate_expr_tree(a_t, point_1_dim )
+@show typeof(res), typeof(res_t)
 
 
 
