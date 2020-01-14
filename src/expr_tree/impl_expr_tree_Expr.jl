@@ -26,7 +26,7 @@ module implementation_expr_tree_Expr
                 return abstract_expr_node.create_node_expr(op)
             else
                 index_power = args[end]
-                return abstract_expr_node.create_node_expr(op, [index_power])
+                return abstract_expr_node.create_node_expr(op, index_power, true )
             end
         elseif hd == :ref
             name_variable = args[1]

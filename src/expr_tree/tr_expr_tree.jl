@@ -123,7 +123,12 @@ module hl_trait_expr_tree
         if isempty(ch)
             nd = trait_expr_tree.get_expr_node(ex)
             trait_expr_node._cast_constant!(nd,t)
+            @show trait_expr_tree.get_expr_node(ex)
         else
+            nd = trait_expr_tree.get_expr_node(ex)
+            if trait_expr_node.node_is_power(nd)
+                trait_expr_node._cast_constant!(nd,t)
+            end
             _cast_type_of_constant.(ch,t)
         end
     end
@@ -338,41 +343,8 @@ Cast the constant of the expression tree expr_tree to the type t.
     function _cast_type_of_constant!(expr_tree, t :: DataType)
         work_tree = trait_expr_tree.transform_to_expr_tree(expr_tree)
         hl_trait_expr_tree._cast_type_of_constant(work_tree,t)
-        @show dump(work_tree)
         res = trait_expr_tree.expr_tree_to_create(work_tree, expr_tree)
         return res
     end
 
 end
-
-
-
-""" Old version of functions"""
-
-    # function _get_type_tree(expr_tree)
-    #     ch = trait_expr_tree.get_expr_children(expr_tree)
-    #     if isempty(ch)
-# @testset "test complet à
-    #         nd =  trait_expr_tree.get_expr_node(expr_tree)
-    #         type_node = trait_expr_node.get_type_node(nd)
-    #         res_tree = abstract_tree.create_tree(type_node,[])
-    #         return res_tree
-    #     else
-    #         n = length(ch)
-    #         ch_type_tree =  Vector{implementation_tree.type_node{implementation_type_expr.t_type_expr_basic}}(undef,n)
-    #         ch_type_node =  Vector{implementation_type_expr.t_type_expr_basic}(undef,n)
-    #         # Threads.@threads for i in 1:n
-    #         #     ch_type_tree[i] = _get_type_tree(ch[i])
-    #         # end
-    #         # Threads.@threads for i in 1:length(ch_type_tree)
-    #         #     ch_type_node[i] = trait_tree.get_node(ch_type_tree[i])
-    #         # end
-    #         ch_type_tree = _get_type_tree.(ch)
-# @testset "test complet à
-    #         ch_type_node = trait_tree.get_node.(ch_type_tree)
-    #         nd_op =  trait_expr_tree.get_expr_node(expr_tree)
-    #         type_node = trait_expr_node.get_type_node(nd_op, ch_type_node)
-    #         res_tree = abstract_tree.create_tree(type_node, ch_type_tree)
-    #         return res_tree
-    #     end
-    # end

@@ -8,6 +8,7 @@ using .abstract_expr_tree
 using .algo_expr_tree
 using .algo_tree
 
+include("../../src/ordered_include.jl")
 
 
 
@@ -37,7 +38,7 @@ using .algo_tree
     n3_2_1_2 = abstract_expr_tree.create_expr_tree(abstract_expr_node.create_node_expr(:x,4))
     n3_2_1_op = abstract_expr_node.create_node_expr(:+)
     n3_2_1 = abstract_expr_tree.create_expr_tree(n3_2_1_op, [n3_2_1_1, n3_2_1_2])
-    n3_2_op = abstract_expr_node.create_node_expr(:^,[2])
+    n3_2_op = abstract_expr_node.create_node_expr(:^,2, true)
     n3_2 = abstract_expr_tree.create_expr_tree(n3_2_op, [n3_2_1])
     n3_op = abstract_expr_node.create_node_expr(:+)
     t3 = abstract_expr_tree.create_expr_tree(n3_op,[n3_2,n3_1])
@@ -277,7 +278,7 @@ end
 
 
 @testset "test arbres factorielle désimbriqué les + et get_type " begin
-    n = 7
+    n = 5
     @time test_fac_expr_tree_plus = expr_tree_factorielle_plus(n, :+) :: implementation_expr_tree.t_expr_tree
     # test_fac_expr_tree = expr_tree_factorielle_dif_node(3) :: implementation_expr_tree.t_expr_tree
     # algo_tree.printer_tree(test_fac_expr_tree)
@@ -285,10 +286,10 @@ end
     # @time algo_expr_tree.get_type_tree.(test_fac_expr_tree_plus_no_plus) # ca ne semble pas être une bonne idée ou alors encore parralélisé
     # algo_tree.printer_tree.(test_fac_expr_tree_plus_no_plus)
     # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
-    @time test_fac_expr_tree_plus_no_plus = algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
-    @time algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
-    @time res3 = algo_expr_tree.get_elemental_variable(test_fac_expr_tree_plus)
-    @time res = M_evaluation_expr_tree.evaluate_expr_tree(test_fac_expr_tree_plus,ones(5))
+     test_fac_expr_tree_plus_no_plus = algo_expr_tree.delete_imbricated_plus(test_fac_expr_tree_plus)
+     algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
+     res3 = algo_expr_tree.get_elemental_variable(test_fac_expr_tree_plus)
+     res = M_evaluation_expr_tree.evaluate_expr_tree(test_fac_expr_tree_plus,ones(5))
     @test res == factorial(n)
 
     # InteractiveUtils.@code_warntype algo_expr_tree.get_type_tree(test_fac_expr_tree_plus)
@@ -333,14 +334,14 @@ using LinearAlgebra
     res_test2 = M_evaluation_expr_tree.evaluate_expr_tree(obj,x)
     @test res_test == res_test2
 
-    @time g_test = PartiallySeparableStructure.evaluate_gradient(S_test, x )
-    @time g_test2 = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj,x)
+    g_test = PartiallySeparableStructure.evaluate_gradient(S_test, x )
+    g_test2 = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj,x)
     # @benchmark PartiallySeparableStructure.evaluate_gradient(S_test, x )
     # @benchmark M_evaluation_expr_tree.calcul_gradient_expr_tree(obj,x)
     @test g_test == g_test2
 
-    @time H_test = PartiallySeparableStructure.evaluate_hessian(S_test, x )
-    @time H_test2 = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj, x)
+    H_test = PartiallySeparableStructure.evaluate_hessian(S_test, x )
+    H_test2 = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj, x)
     @test Array(H_test) == H_test2
 
     B = PartiallySeparableStructure.struct_hessian(S_test, x )
@@ -359,34 +360,25 @@ using LinearAlgebra
 
 end
 
-a = :(x[1] + 6)
+a = :(x[1]^2 + 6)
 b = trait_expr_tree.transform_to_expr_tree(a)
 t = Int8
 a_t = algo_expr_tree.cast_type_of_constant!(a, t)
 b_t = algo_expr_tree.cast_type_of_constant!(b, t)
-# @show a, a_t
 c = trait_expr_tree.transform_to_Expr(b)
 
 
 
-# a.args[3] = (Int8)(a.args[3])
-# algo_expr_tree.cast_type_of_constant!(b, t)
-# @show b
-#
-# @testset "test max performance" begin
-#     m = Model()
-#     n_x = 10000
-#     @variable(m, x[1:n_x])
-#     @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n_x-1 ) + x[1]*5 )
-#     # @NLobjective(m, Min, sum( (x[j] * x[j+1]  @time  for j in 1:n_x-1  ) ) + sin(x[1]))
-#     eval_test = JuMP.NLPEvaluator(m)
-#     MathOptInterface.initialize(eval_test, [:ExprGraph])
-#     obj_o = MathOptInterface.objective_expr(eval_test)
-#     x = (x -> 3*x).(ones(n_x))
-#
-#     @time S_test = PartiallySeparableStructure.deduct_partially_separable_structure(obj_o, n_x)
-#     @time H_test = PartiallySeparableStructure.evaluate_hessian(S_test, x )
-# end
+
+function test!(a :: Expr)
+       trait_expr_tree.get_expr_children(a)[2] = 3
+end
+test!(a)
+
+dump(a)
+
+
+
 
 
 

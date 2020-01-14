@@ -22,6 +22,7 @@ using MathOptInterface
 
     @test abstract_expr_node.create_node_expr(:+) == simple_operators.simple_operator(:+)
     @test abstract_expr_node.create_node_expr(:*) == simple_operators.simple_operator(:*)
+    @test abstract_expr_node.create_node_expr(:^,2, true ) == power_operators.power_operator(2)
     @test abstract_expr_node.create_node_expr(:^,[2]) == complex_operators.complex_operator(:^,[2])
 
 end
@@ -31,8 +32,8 @@ end
     constant = abstract_expr_node.create_node_expr(4)
     variable = abstract_expr_node.create_node_expr(:x, 5)
     simple_operator = abstract_expr_node.create_node_expr(:+)
-    complex_operator = abstract_expr_node.create_node_expr(:^,[2])
-    collection = [constant, variable, simple_operator, complex_operator]
+    power_operator = abstract_expr_node.create_node_expr(:^,2, true )
+    collection = [constant, variable, simple_operator, power_operator]
 
     @test trait_expr_node.is_expr_node.( vcat(collection,[:+, :*]) ) == [trait_expr_node.type_expr_node(), trait_expr_node.type_expr_node(), trait_expr_node.type_expr_node(), trait_expr_node.type_expr_node(), trait_expr_node.type_not_expr_node(), trait_expr_node.type_not_expr_node()]
     @test trait_expr_node.node_is_operator.( collection ) == [false, false, true, true]

@@ -24,7 +24,7 @@ module implementation_expr_tree
         else
             children_Expr = create_Expr.(ch)
             node_Expr = trait_expr_node.node_to_Expr(nd)
-            #défférenciation entre les opérateurs simple :+, :- et compliqué comme :^2z
+            #défférenciation entre les opérateurs simple :+, :- et compliqué comme :^2
             if length(node_Expr) == 1
                 return Expr(:call, node_Expr[1], children_Expr...)
             elseif length(node_Expr) == 2
