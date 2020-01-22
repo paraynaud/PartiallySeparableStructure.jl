@@ -59,6 +59,10 @@ module constants
         c.value = (t)(c.value)
     end
 
+    function _cast_constant!(c :: Number, t :: DataType)
+        return (t)(c)
+    end
+
 
     function _node_to_Expr(c :: constant)
         return c.value

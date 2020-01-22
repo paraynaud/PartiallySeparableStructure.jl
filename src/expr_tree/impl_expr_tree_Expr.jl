@@ -73,7 +73,24 @@ module implementation_expr_tree_Expr
 
     #Fonction à reprendre potetiellement, pourle moment ca marche
     function _get_real_node(ex :: Expr)
+        hd = ex.head
+        args = ex.args
+        if hd == :call
+            op = args[1]
+            if op != :^
+                return op
+            else
+                index_power = args[end]
+                error("pas encore fait")
+            end
+        elseif hd == :ref
+            # name_variable = args[1]
+            # index_variable = args[2]
+            # return [name_variable, index_variable]
             return ex
+        else
+            error("partie non traite des Expr pour le moment ")
+        end
     end
 
     function _get_real_node(ex :: Number)

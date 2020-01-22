@@ -57,27 +57,28 @@ module variables
     function _evaluate_node(v :: variable, dic :: Dict{Int,Number})
         return dic[v.index] :: Number
     end
+
+
     function _change_from_N_to_Ni!(v :: variable, dic_new_var :: Dict{Int,Int})
         v.index = dic_new_var[v.index]
     end
-
     function _change_from_N_to_Ni!(v :: Expr, dic_new_var :: Dict{Int,Int})
         hd = v.head
         if hd != :ref
-            error("on ne traite pas une variable")
+            error("on ne traite pas autre chose qu'une variable")
         else
-            new_index = change_index(v.args[2], dic_new_var)
-            v.args[2] = new_index
+            index_variable = v.args[2]
+            v.args[2] = change_index(index_variable, dic_new_var)
         end
     end
 
-    function change_index( x :: Int, dic_new_var :: Dict{Int,Int})
-        return dic_new_var[x]
-    end
+        function change_index( x :: Int, dic_new_var :: Dict{Int,Int})
+            return dic_new_var[x]
+        end
+        function change_index( x :: MathOptInterface.VariableIndex, dic_new_var :: Dict{Int,Int})
+            return MathOptInterface.VariableIndex(dic_new_var[x.value])
+        end
 
-    function change_index( x :: MathOptInterface.VariableIndex, dic_new_var :: Dict{Int,Int})
-        return MathOptInterface.VariableIndex(dic_new_var[x.value])
-    end
 
     function _node_to_Expr(v :: variable)
         return Expr(:ref, v.name,  MathOptInterface.VariableIndex(v.index))

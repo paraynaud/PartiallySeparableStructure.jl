@@ -3,7 +3,7 @@ using InteractiveUtils
 using MathOptInterface, JuMP
 using BenchmarkTools
 
-include("../../src/ordered_include.jl")
+# include("../../src/ordered_include.jl")
 
 
 using .trait_expr_tree
@@ -364,16 +364,17 @@ end
 
 a = :(x[1]^2 + 6.0)
 b = trait_expr_tree.transform_to_expr_tree(a)
-t = Int8
+t = Float16
+ algo_expr_tree.cast_type_of_constant!(a, t)
 a_t = algo_expr_tree.cast_type_of_constant!(a, t)
 b_t = algo_expr_tree.cast_type_of_constant!(b, t)
 c = trait_expr_tree.transform_to_Expr(b)
 
 
-point_1_dim = Vector{Float16}([4])
-res = M_evaluation_expr_tree.evaluate_expr_tree(a, point_1_dim )
-res_t = M_evaluation_expr_tree.evaluate_expr_tree(a_t, point_1_dim )
-@show typeof(res), typeof(res_t)
+# point_1_dim = Vector{Float16}([4])
+# res = M_evaluation_expr_tree.evaluate_expr_tree(a, point_1_dim )
+# res_t = M_evaluation_expr_tree.evaluate_expr_tree(a_t, point_1_dim )
+# @show typeof(res), typeof(res_t)
 
 
 

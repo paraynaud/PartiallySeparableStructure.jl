@@ -1,7 +1,7 @@
 using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
 using Test, BenchmarkTools
 
-
+include("../../src/ordered_include.jl")
 
 using ..PartiallySeparableStructure
 
@@ -100,6 +100,8 @@ end
     v_tmp = Vector{ Float64 }(undef, length(MOI_pattern))
     MOI_Hessian_product_y = Vector{ typeof(y[1]) }(undef,n)
     MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_y, x, y, 1.0, zeros(0))
+
+
 
 
     @test norm(MOI_Hessian_product_y - SPS_product_Hessian_en_x_et_y, 2) < σ
