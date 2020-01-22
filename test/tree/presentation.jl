@@ -16,8 +16,9 @@ using .PartiallySeparableStructure
     m = Model()
     n_x = 10
     @variable(m, x[1:n_x])
-    @NLobjective(m, Min, sum( x[j+1]^2 * x[j]^2 for j in 1:n_x-1 ) + x[1]*5 + sin(x[2]) + (x[3]^2 * 5)*x[4] )
+    # @NLobjective(m, Min, sum( x[j+1]^2 * x[j]^2 for j in 1:n_x-1 ) + x[1]*5 + sin(x[2]) + (x[3]^2 * 5)*x[4] )
     # @NLobjective(m, Min, sum( (x[j] * x[j+1]  @time  for j in 1:n_x-1  ) ) + sin(x[1]))
+    @NLobjective(m, Min, sum( (x[j] * x[j+1] ) for j in 1:n_x-1   ) + 5)
     eval_test = JuMP.NLPEvaluator(m)
     MathOptInterface.initialize(eval_test, [:ExprGraph])
 
@@ -57,31 +58,32 @@ using .PartiallySeparableStructure
     obj_elmt_en_x = sum(res_elmt_fun)
     @test obj_elmt_en_x == obj_en_x
 
+
 # Comparaison
-#     m2 = Model()
-#     n_x2 = 100
-#     @variable(m2, x[1:n_x2])
-#     @NLobjective(m2, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n_x2-1 ) + x[1]*5 )
-#     # @NLobjective(m, Min, sum( (x[j] * x[j+1]  @time  for j in 1:n_x-1  ) ) + sin(x[1]))
-#     eval_test2 = JuMP.NLPEvaluator(m2)
-#     MathOptInterface.initialize(eval_test2, [:ExprGraph])
-#     obj_perf = MathOptInterface.objective_expr(eval_test2)
-#
-#     x2 = ones(Float64,n_x2)
-#     S_perf = PartiallySeparableStructure.deduct_partially_separable_structure(obj_perf, n_x2)
-#
-#     g_perf = PartiallySeparableStructure.evaluate_gradient(S_perf, x2 )
-#     gradient = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj_perf, x2)
-#     @test g_perf == gradient
-#
-#     H_test_perf = PartiallySeparableStructure.evaluate_hessian(S_perf, x2 )
-#     Hessian = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj_perf, x2)
-#     @test Array(H_test_perf) == Hessian
-#
-#     B = PartiallySeparableStructure.struct_hessian(S_perf, x2)
-#     id1 = zeros(n_x2)
-#     id1[1] = 1
-#     @test PartiallySeparableStructure.product_matrix_sps(S_perf, B, id1) == Hessian[1,:] ==  Hessian[:,1]
+    m2 = Model()
+    n_x2 = 10
+    @variable(m2, x[1:n_x2])
+    @NLobjective(m2, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n_x2-1 ) + x[1]*5 + (5*4))
+    # @NLobjective(m, Min, sum( (x[j] * x[j+1]  @time  for j in 1:n_x-1  ) ) + sin(x[1]))
+    eval_test2 = JuMP.NLPEvaluator(m2)
+    MathOptInterface.initialize(eval_test2, [:ExprGraph])
+    obj_perf = MathOptInterface.objective_expr(eval_test2)
+
+    x2 = ones(Float64,n_x2)
+    S_perf = PartiallySeparableStructure.deduct_partially_separable_structure(obj_perf, n_x2)
+
+    g_perf = PartiallySeparableStructure.evaluate_gradient(S_perf, x2 )
+    gradient = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj_perf, x2)
+    @test g_perf == gradient
+
+    H_test_perf = PartiallySeparableStructure.evaluate_hessian(S_perf, x2 )
+    Hessian = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj_perf, x2)
+    @test Array(H_test_perf) == Hessian
+
+    B = PartiallySeparableStructure.struct_hessian(S_perf, x2)
+    id1 = zeros(n_x2)
+    id1[1] = 1
+    @test PartiallySeparableStructure.product_matrix_sps(S_perf, B, id1) == Hessian[1,:] ==  Hessian[:,1]
 #
 #         # @benchmark PartiallySeparableStructure.deduct_partially_separable_structure(obj_perf, n_x2)
 #         # @code_warntype PartiallySeparableStructure.deduct_partially_separable_structure(obj_perf, n_x2)

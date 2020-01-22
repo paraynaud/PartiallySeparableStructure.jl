@@ -112,9 +112,11 @@ at the point x, return a vector of size n (the number of variable) which is the 
         gradient_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).([1:sps.n_var;]) )
          @Threads.threads for i in 1:l_elmt_fun
          # for i in 1:l_elmt_fun
-            (rown, column, value) = findnz(sps.structure[i].U)
-            temp = ForwardDiff.gradient(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable))  )
-            atomic_add!.(gradient_prl[column], temp)
+            if isempty(sps.structure[i].U) == false
+                (row, column, value) = findnz(sps.structure[i].U)
+                temp = ForwardDiff.gradient(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable))  )
+                atomic_add!.(gradient_prl[column], temp)
+            end
         end
         gradient = (x -> x[]).(gradient_prl) :: Vector{Y}
         return gradient
@@ -156,13 +158,17 @@ Compute the Hessian of the elemental function fᵢ : Gᵢ a n × n matrix. So x�
 The result of the function is the triplet of the sparse matrix Gᵢ.
 """
     function evaluate_element_hessian(elmt_fun :: element_function{T}, x :: Vector{Y}) where T where Y <: Number
-        temp = ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun), x ) :: Array{Y,2}
-        temp_sparse = sparse(temp) :: SparseMatrixCSC{Y,Int}
-        G = SparseMatrixCSC{Y,Int}(elmt_fun.U'*temp_sparse*elmt_fun.U)
-        return findnz(G) :: Tuple{Vector{Int}, Vector{Int}, Vector{Y}}
+        if elmt_fun.type != implementation_type_expr.constant
+            temp = ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun), x ) :: Array{Y,2}
+            temp_sparse = sparse(temp) :: SparseMatrixCSC{Y,Int}
+            G = SparseMatrixCSC{Y,Int}(elmt_fun.U'*temp_sparse*elmt_fun.U)
+            return findnz(G) :: Tuple{Vector{Int}, Vector{Int}, Vector{Y}}
+        else
+            return (zeros(Int,0), zeros(Int,0), zeros(Y,0))
+        end
     end
 
-
+# On en est la; le probleme vient du calcul du Hessien pour
 
 """
     evaluate_hessian(sps,x)
@@ -174,7 +180,11 @@ at the point x. Return the result as a Hess_matrix.
         elmt_hess = Vector{Tuple{Vector{Int},Vector{Int},Vector{Y}}}(undef, l_elmt_fun)
         temp = Vector{element_hessian{Y}}(undef, l_elmt_fun)
         @Threads.threads for i in 1:l_elmt_fun # a voir si je laisse le array(view()) la ou non
-            temp[i] = element_hessian{Y}(ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable)) ) )
+            if sps.structure[i].type != implementation_type_expr.constant
+                temp[i] = element_hessian{Y}(ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable)) ) )
+            else # à rectifier surement dans le futur
+                temp[i] =  element_hessian{Y}( Array(SparseMatrixCSC{Y,Int64}(sparse([],[],[]))) )
+            end
         end
         G = Hess_matrix{Y}(temp)
         return G
