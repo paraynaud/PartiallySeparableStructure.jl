@@ -123,14 +123,10 @@ module hl_trait_expr_tree
 
     function _cast_type_of_constant( ex ::  implementation_expr_tree.t_expr_tree, t :: DataType)
         ch = trait_expr_tree.get_expr_children(ex)
-        if isempty(ch)
-            nd = trait_expr_tree.get_expr_node(ex)
+        nd = trait_expr_tree.get_expr_node(ex)
+        if isempty(ch) || trait_expr_node.node_is_power(nd)
             trait_expr_node._cast_constant!(nd,t)
         else
-            nd = trait_expr_tree.get_expr_node(ex)
-            if trait_expr_node.node_is_power(nd)
-                trait_expr_node._cast_constant!(nd,t)
-            end
             _cast_type_of_constant.(ch,t)
         end
     end
@@ -138,9 +134,12 @@ module hl_trait_expr_tree
     function _cast_type_of_constant( ex :: Expr, t :: DataType)
         ch = trait_expr_tree.get_expr_children(ex)
             for i in 1:length(ch)
-                if  trait_expr_node.node_is_constant(trait_expr_tree.get_expr_node(ch[i]))
-                    ex.args[i+1] = trait_expr_node._cast_constant!(i,t)
+                node_i = trait_expr_tree.get_expr_node(ch[i])
+                if  trait_expr_node.node_is_constant(node_i)
+                    ex.args[i+1] = trait_expr_node._cast_constant!(i,t) #manipulation assez bas niveau des Expr
                     @show i, ch[i]
+                elseif trait_expr_node.node_is_power(node_i )
+                    ch[i].args[end] = trait_expr_node._cast_constant!(node_i,t)
                 end
             end
         @show ex

@@ -1,13 +1,13 @@
 using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
 using Test, BenchmarkTools
 
-include("../../src/ordered_include.jl")
+# include("../../src/ordered_include.jl")
 
 using ..PartiallySeparableStructure
 
 #Définition d'un modèle JuMP
-σ = 10e-3
-n = 100
+σ = 10e-5
+n = 10000
 
 m = Model()
 @variable(m, x[1:n])

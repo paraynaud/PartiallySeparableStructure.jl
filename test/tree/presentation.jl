@@ -103,32 +103,32 @@ using .PartiallySeparableStructure
 #
 #
 # # test performance
-#     m3 = Model()
-#     n_x3 = 10000
-#     @variable(m3, x[1:n_x3])
-#     @NLobjective(m3, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n_x3-1 ) + x[1]*5 )
-#     # @NLobjective(m, Min, sum( (x[j] * x[j+1]  @time  for j in 1:n_x-1  ) ) + sin(x[1]))
-#     eval_test3 = JuMP.NLPEvaluator(m3)
-#     MathOptInterface.initialize(eval_test3, [:ExprGraph])
-#     obj_high_perf = MathOptInterface.objective_expr(eval_test3)
-#     x3 = ones(Float64,n_x3)
-#
-#     @time S_high_perf = PartiallySeparableStructure.deduct_partially_separable_structure(obj_high_perf, n_x3)
-#     # @benchmark PartiallySeparableStructure.deduct_partially_separable_structure(obj_high_perf, n_x3)
-#
-#     @time g_high_perf = PartiallySeparableStructure.evaluate_gradient(S_high_perf, x3 )
-#     # @benchmark PartiallySeparableStructure.evaluate_gradient(S_high_perf, x3 )
-#
-#     @time H_high_perf = PartiallySeparableStructure.evaluate_hessian(S_high_perf, x3 )
-#     # @benchmark PartiallySeparableStructure.evaluate_hessian(S_high_perf, x3 )
-#
-#     @time B_high_perf = PartiallySeparableStructure.struct_hessian(S_high_perf, x3)
-#     # @benchmark PartiallySeparableStructure.struct_hessian(S_high_perf, x3)
-#
-#     id2 = zeros(n_x3)
-#     id2[1] = 1
-#     @time r1 = H_high_perf*id2
-#     @time r2 = PartiallySeparableStructure.product_matrix_sps(S_high_perf, B_high_perf, id2)
-#     @test r1 == r2
-#     @time H_high_perf*x3
-#     # # j'ai du mal à battre le produit matrice vecteur de julia, surtout quand le vecteur est très creux
+    m3 = Model()
+    n_x3 = 10000
+    @variable(m3, x[1:n_x3])
+    @NLobjective(m3, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n_x3-1 ) + x[1]*5 )
+    # @NLobjective(m, Min, sum( (x[j] * x[j+1]  @time  for j in 1:n_x-1  ) ) + sin(x[1]))
+    eval_test3 = JuMP.NLPEvaluator(m3)
+    MathOptInterface.initialize(eval_test3, [:ExprGraph])
+    obj_high_perf = MathOptInterface.objective_expr(eval_test3)
+    x3 = ones(Float64,n_x3)
+
+    @time S_high_perf = PartiallySeparableStructure.deduct_partially_separable_structure(obj_high_perf, n_x3)
+    # @benchmark PartiallySeparableStructure.deduct_partially_separable_structure(obj_high_perf, n_x3)
+
+    @time g_high_perf = PartiallySeparableStructure.evaluate_gradient(S_high_perf, x3 )
+    # @benchmark PartiallySeparableStructure.evaluate_gradient(S_high_perf, x3 )
+
+    @time H_high_perf = PartiallySeparableStructure.evaluate_hessian(S_high_perf, x3 )
+    # @benchmark PartiallySeparableStructure.evaluate_hessian(S_high_perf, x3 )
+
+    @time B_high_perf = PartiallySeparableStructure.struct_hessian(S_high_perf, x3)
+    # @benchmark PartiallySeparableStructure.struct_hessian(S_high_perf, x3)
+
+    id2 = zeros(n_x3)
+    id2[1] = 1
+    @time r1 = H_high_perf*id2
+    @time r2 = PartiallySeparableStructure.product_matrix_sps(S_high_perf, B_high_perf, id2)
+    @test r1 == r2
+    @time H_high_perf*x3
+    # # j'ai du mal à battre le produit matrice vecteur de julia, surtout quand le vecteur est très creux
