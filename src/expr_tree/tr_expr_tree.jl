@@ -137,12 +137,12 @@ module hl_trait_expr_tree
                 node_i = trait_expr_tree.get_expr_node(ch[i])
                 if  trait_expr_node.node_is_constant(node_i)
                     ex.args[i+1] = trait_expr_node._cast_constant!(i,t) #manipulation assez bas niveau des Expr
-                    @show i, ch[i]
+                    # @show i, ch[i]
                 elseif trait_expr_node.node_is_power(node_i )
                     ch[i].args[end] = trait_expr_node._cast_constant!(node_i,t)
                 end
             end
-        @show ex
+        # @show ex
     end
 
 end

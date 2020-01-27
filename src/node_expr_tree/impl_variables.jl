@@ -50,12 +50,12 @@ module variables
     (==)(a :: variable, b :: variable) =  (a.name == b.name) && (a.index == b.index)
 
 
-    function _evaluate_node(v :: variable, x :: Vector{})
-        return x[v.index] :: Number
+    function _evaluate_node(v :: variable, x :: Vector{T}) where T <: Number
+         return x[v.index] :: T
     end
 
-    function _evaluate_node(v :: variable, dic :: Dict{Int,Number})
-        return dic[v.index] :: Number
+    function _evaluate_node(v :: variable, dic :: Dict{Int,T}) where T <: Number
+        return dic[v.index] :: T
     end
 
 

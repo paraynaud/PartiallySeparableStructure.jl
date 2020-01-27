@@ -43,9 +43,9 @@ module power_operators
 
     (==)(a :: power_operator, b :: power_operator) = ( a.index == b.index)
 
-    function _evaluate_node(op :: power_operator, value_ch :: Vector{})
+    function _evaluate_node(op :: power_operator, value_ch :: Vector{T}) where T <: Number
             length(value_ch) == 1 || error("power has more than one argument")
-            return value_ch[1]^(op.index) :: Number
+            return value_ch[1]^(op.index) :: T
     end
 
 

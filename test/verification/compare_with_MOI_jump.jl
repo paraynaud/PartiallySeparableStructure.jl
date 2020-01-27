@@ -1,13 +1,14 @@
 using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
-using Test, BenchmarkTools
+using Test, BenchmarkTools, ProfileView, InteractiveUtils
 
-# include("../../src/ordered_include.jl")
+
+include("../../src/ordered_include.jl")
 
 using ..PartiallySeparableStructure
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 30000
+n = 1000
 
 m = Model()
 @variable(m, x[1:n])
@@ -21,22 +22,112 @@ obj = MathOptInterface.objective_expr(evaluator)
 # t :: DataType = Float64
 # x = (α -> α - 50).( (β -> 100 * β).(rand(BigFloat, n)) )
 x = (α -> α - 50).( (β -> 100 * β).( rand(n) ) )
-x_MOI = (α -> α - 50).( (β -> 100 * β).(rand(Float64, n)) )
+# x_MOI = (α -> α - 50).( (β -> 100 * β).(rand(Float64, n)) )
 # x = ones(n)
 y = (β -> 100 * β).(rand(n))
 
 # détection de la structure partiellement séparable
 SPS = PartiallySeparableStructure.deduct_partially_separable_structure(obj, n)
 
+obj2 = trait_expr_tree.transform_to_expr_tree(obj)
+# SPS2 = PartiallySeparableStructure.deduct_partially_separable_structure(obj2, n)
 
 # elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
 
-    # SPS_en_x = PartiallySeparableStructure.evaluate_SPS( SPS, x)
+    SPS_en_x = PartiallySeparableStructure.evaluate_SPS( SPS, x)
     # MOI_obj_en_x = MathOptInterface.eval_objective( evaluator, x)
     # Expr_obj_en_x = M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
+    ev = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
+    ev_ = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
+    @code_warntype M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
+    @code_warntype M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
+
+    ev2 = @benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x)
+    ev3 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
+
+    # @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x))
+    @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x))
+
+"""
+
+BenchmarkTools.Trial:
+  memory estimate:  1.04 MiB
+  allocs estimate:  27049
+  --------------
+  minimum time:     601.899 μs (0.00% GC)
+  median time:      942.300 μs (0.00% GC)
+  mean time:        1.100 ms (12.16% GC)
+  maximum time:     607.230 ms (99.88% GC)
+  --------------
+  samples:          4534
+  evals/sample:     1
+
+BenchmarkTools.Trial:
+  memory estimate:  1.60 MiB
+  allocs estimate:  42084
+  --------------
+  minimum time:     953.600 μs (0.00% GC)
+  median time:      1.433 ms (0.00% GC)
+  mean time:        1.672 ms (12.51% GC)
+  maximum time:     625.551 ms (99.79% GC)
+  --------------
+  samples:          2985
+  evals/sample:     1
+
+  MOI:
+BenchmarkTools.Trial:
+  memory estimate:  16 bytes
+  allocs estimate:  1
+  --------------
+  minimum time:     717.647 ns (0.00% GC)
+  median time:      727.206 ns (0.00% GC)
+  mean time:        809.200 ns (0.00% GC)
+  maximum time:     5.554 μs (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     136
+"""
 
 
+"""
+n = 30000
+BenchmarkTools.Trial:
+  memory estimate:  36.62 MiB
+  allocs estimate:  990065
+  --------------
+  minimum time:     31.617 ms (0.00% GC)
+  median time:      45.944 ms (0.00% GC)
+  mean time:        44.760 ms (0.00% GC)
+  maximum time:     53.565 ms (0.00% GC)
+  --------------
+  samples:          112
+  evals/sample:     1
 
+avant améliorations n = 30000
+BenchmarkTools.Trial:
+  memory estimate:  39.37 MiB
+  allocs estimate:  1169587
+  --------------
+  minimum time:     223.525 ms (0.00% GC)
+  median time:      257.012 ms (0.00% GC)
+  mean time:        255.706 ms (0.00% GC)
+  maximum time:     290.271 ms (0.00% GC)
+  --------------
+  samples:          20
+  evals/sample:     1
+
+  memory estimate:  39.14 MiB
+   allocs estimate:  1169587
+   --------------
+   minimum time:     177.868 ms (0.00% GC)
+   median time:      206.463 ms (0.00% GC)
+   mean time:        214.665 ms (0.00% GC)
+   maximum time:     372.396 ms (0.00% GC)
+   --------------
+   samples:          24
+   evals/sample:     1
+
+"""
     # # TEST EN COURS
     # res = Vector{typeof(x[1])}(undef,length(elmt_fun))
     # for i in 1:length(elmt_fun)
@@ -150,13 +241,13 @@ SPS = PartiallySeparableStructure.deduct_partially_separable_structure(obj, n)
 #
 #     # on récupère le Hessian structuré du format SPS.
 #     #Ensuite on calcul le produit entre le structure de donnée SPS_Structured_Hessian_en_x et y
-    prod1 = @benchmark (SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS, x);
-    SPS_product_Hessian_en_x_et_y = PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)
-)#
+#     prod1 = @benchmark (SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS, x);
+#     SPS_product_Hessian_en_x_et_y = PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)
+# )
 #
     # v_tmp = Vector{ Float64 }(undef, length(MOI_pattern))
-    MOI_Hessian_product_y = Vector{ typeof(y[1]) }(undef,n)
-     prod2 = @benchmark (MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_y, x, y, 1.0, zeros(0)))
+#     MOI_Hessian_product_y = Vector{ typeof(y[1]) }(undef,n)
+#      prod2 = @benchmark (MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_y, x, y, 1.0, zeros(0)))
 #
 #
 #

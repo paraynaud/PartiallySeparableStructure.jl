@@ -64,26 +64,26 @@ module simple_operators
 
     (==)(a :: simple_operator, b :: simple_operator) = (a.op == b.op)
 
-    function _evaluate_node(op :: simple_operator, value_ch :: Vector{})
+    function _evaluate_node(op :: simple_operator, value_ch :: Vector{T}) where T <: Number
         if _node_is_plus(op)
-            return sum(value_ch) :: Number
+            return sum(value_ch) :: T
         elseif _node_is_minus(op)
             if length(value_ch) == 1
-                return - value_ch[1] :: Number
+                return - value_ch[1] :: T
             else
-                return value_ch[1] - value_ch[2] :: Number
+                return value_ch[1] - value_ch[2] :: T
             end
         elseif _node_is_times(op)
-            return foldl(*, value_ch) :: Number
+            return foldl(*, value_ch) :: T
         elseif _node_is_cos(op)
             length(value_ch) == 1 || error("more than one argument for cos")
-            return cos(value_ch[1]) :: Number
+            return cos(value_ch[1]) :: T
         elseif _node_is_sin(op)
             length(value_ch) == 1 || error("more than one argument for sin")
-            return sin(value_ch[1]) :: Number
+            return sin(value_ch[1]) :: T
         elseif _node_is_tan(op)
             length(value_ch) == 1 || error("more than one argument for tan")
-            return tan(value_ch[1]) :: Number
+            return tan(value_ch[1]) :: T
         else
             error("non traité pour le moment impl_simple_operator.jl/_eval_node")
         end
