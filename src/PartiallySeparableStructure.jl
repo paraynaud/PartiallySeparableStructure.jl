@@ -97,6 +97,7 @@ f(x) = ∑fᵢ(xᵢ), so we compute independently each fᵢ(xᵢ) and we return 
         l_elmt_fun = length(sps.structure)
         res = Vector{Y}(undef, l_elmt_fun)
         @Threads.threads for i in 1:l_elmt_fun
+        # for i in 1:l_elmt_fun
             res[i] = M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun, Array(view(x, sps.structure[i].used_variable)) )
         end
         return sum(res)
