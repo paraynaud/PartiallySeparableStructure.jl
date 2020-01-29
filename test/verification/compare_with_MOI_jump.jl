@@ -13,6 +13,7 @@ n = 1000
 m = Model()
 @variable(m, x[1:n])
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
+# @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
@@ -46,9 +47,23 @@ obj2 = trait_expr_tree.transform_to_expr_tree(obj)
     ev3 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
 
     # @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x))
+    M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
     @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x))
 
 """
+n=1000
+
+BenchmarkTools.Trial:
+  memory estimate:  363.00 KiB
+  allocs estimate:  8034
+  --------------
+  minimum time:     338.700 μs (0.00% GC)
+  median time:      471.800 μs (0.00% GC)
+  mean time:        574.925 μs (0.00% GC)
+  maximum time:     101.124 ms (0.00% GC)
+  --------------
+  samples:          8651
+  evals/sample:     1
 
 BenchmarkTools.Trial:
   memory estimate:  1.04 MiB
@@ -91,6 +106,22 @@ BenchmarkTools.Trial:
 
 """
 n = 30000
+
+ev_
+BenchmarkTools.Trial:
+  memory estimate:  10.76 MiB
+  allocs estimate:  240019
+  --------------
+  minimum time:     18.256 ms (0.00% GC)
+  median time:      22.196 ms (0.00% GC)
+  mean time:        22.002 ms (0.00% GC)
+  maximum time:     24.064 ms (0.00% GC)
+  --------------
+  samples:          228
+  evals/sample:     1
+
+
+
 BenchmarkTools.Trial:
   memory estimate:  36.62 MiB
   allocs estimate:  990065

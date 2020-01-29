@@ -11,3 +11,5 @@ include("unitary_test/unitary_node.jl")
 include("unitary_test/unitary_tree.jl")
 include("unitary_test/unitary_expr_tree.jl")
  # modif pour commit
+# ≈ \approx
+# @fastmath

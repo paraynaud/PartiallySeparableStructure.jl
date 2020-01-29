@@ -24,7 +24,7 @@ module M_evaluation_expr_tree
     function _evaluate_expr_tree(expr_tree, x :: Vector{T}) where T <: Number
         nd = trait_expr_tree._get_expr_node(expr_tree)
         ch = trait_expr_tree._get_expr_children(expr_tree)
-        if isempty(ch)
+        if  trait_expr_node.node_is_operator(nd) == false
             res = trait_expr_node.evaluate_node(nd, x) :: T
             return res
         else
@@ -39,19 +39,38 @@ module M_evaluation_expr_tree
     end
 
 
-    function _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x :: Vector{T}) where T <: Number
-        if isempty(expr_tree.children)
+    _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x :: Vector{T})  where T <: Number =  _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x :: Vector{T} , true )
+
+    function _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x :: Vector{T}, ::Bool) where T <: Number
+        if trait_expr_node.node_is_operator(expr_tree.field :: trait_expr_node.ab_ex_nd) == false
             return trait_expr_node.evaluate_node(expr_tree.field, x) :: T
         else
             n = length(expr_tree.children)
-            temp = Vector{T}(undef,n)
-            for i in 1:n
-                temp[i] = _evaluate_expr_tree(expr_tree.children[i], x) :: T
+            temp = Vector{T}(undef, n)
+            Threads.@threads for i in 1:n
+                temp[i] = _evaluate_expr_tree(expr_tree.children[i], x, true, true ) :: T
             end
-            # temp = Vector{T}( ((y -> _evaluate_expr_tree(y, x) ::T ).(expr_tree.children)), n)  
             return trait_expr_node.evaluate_node(expr_tree.field, temp) :: T
         end
     end
+
+    function _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x :: Vector{T}, ::Bool, ::Bool) where T <: Number
+        if trait_expr_node.node_is_operator(expr_tree.field :: trait_expr_node.ab_ex_nd) == false
+            return trait_expr_node.evaluate_node(expr_tree.field, x) :: T
+        else
+            n = length(expr_tree.children)
+            temp = Vector{T}(undef, n)
+            for i in 1:n
+                temp[i] = _evaluate_expr_tree(expr_tree.children[i], x, true, true) :: T
+            end
+            return trait_expr_node.evaluate_node(expr_tree.field, temp) :: T
+        end
+    end
+    # _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree ) =  (x  ->  _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x) )
+    # temp = Vector{T}( ((y -> _evaluate_expr_tree(y, x) ::T ).(expr_tree.children)), n)
+    # f(y :: implementation_expr_tree.t_expr_tree, x :: Vector{T}) =  _evaluate_expr_tree(y, x) :: T
+    # temp = Vector{T}(_evaluate_expr_tree.(expr_tree.children :: Vector{implementation_expr_tree.t_expr_tree})(x) , n)
+    # return trait_expr_node.evaluate_node(expr_tree.field, temp ) :: T
 
 
     evaluate_element_expr_tree(a :: Any, elmt_var :: Vector{Int}) = ( x :: Vector{T} where T <: Number -> evaluate_element_expr_tree(a, x, elmt_var) )
