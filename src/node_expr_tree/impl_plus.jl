@@ -19,38 +19,40 @@ module plus_operators
     end
 
 
-    _node_is_operator( op :: power_operator ) = true
-    _node_is_plus( op :: power_operator ) = true
-    _node_is_minus(op :: power_operator ) = false
-    _node_is_times(op :: power_operator ) = false
-    _node_is_power(op :: power_operator ) = false
-    _node_is_sin(op :: power_operator) = false
-    _node_is_cos(op :: power_operator) = false
-    _node_is_tan(op :: power_operator) = false
+    _node_is_operator( op :: plus_operator ) = true
+    _node_is_plus( op :: plus_operator ) = true
+    _node_is_minus(op :: plus_operator ) = false
+    _node_is_times(op :: plus_operator ) = false
+    _node_is_power(op :: plus_operator ) = false
+    _node_is_sin(op :: plus_operator) = false
+    _node_is_cos(op :: plus_operator) = false
+    _node_is_tan(op :: plus_operator) = false
 
-    _node_is_variable(op :: power_operator ) = false
+    _node_is_variable(op :: plus_operator ) = false
 
-    _node_is_constant(op :: power_operator ) = false
+    _node_is_constant(op :: plus_operator ) = false
 
-    function _get_type_node(op :: power_operator, type_ch :: Vector{t_type_expr_basic})
-        length(type_ch) == 1 || error("power has more than one argument")
-        return trait_type_expr.type_power(op.index, type_ch[1])
+    function _get_type_node(op :: plus_operator, type_ch :: Vector{t_type_expr_basic})
+        if length(type_ch) == 1
+            return type_ch[1]
+        else
+            return max(type_ch...)
+        end
     end
 
-    (==)(a :: power_operator, b :: power_operator) = ( a.index == b.index)
+    (==)(a :: plus_operator, b :: plus_operator) = true
 
-    function _evaluate_node(op :: power_operator, value_ch :: Vector{T}) where T <: Number
-            length(value_ch) == 1 || error("power has more than one argument")
-            return value_ch[1]^(op.index) :: T
+    function _evaluate_node(op :: plus_operator, value_ch :: Vector{T}) where T <: Number
+        if length(value_ch) > 1
+            return sum(value_ch) :: T
+        else
+            error("probleme operateur plus ")
+        end
     end
 
 
-    function _node_to_Expr(op :: power_operator)
-        return [:^, op.index]
-    end
-
-    function _cast_constant!(op :: power_operator, t :: DataType)
-        return op.index = (t)(op.index)
+    function _node_to_Expr(op :: plus_operator)
+        return [:+]
     end
 
     export operator

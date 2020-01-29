@@ -8,13 +8,14 @@ using ..PartiallySeparableStructure
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 1000
+n = 30000
 
 m = Model()
 @variable(m, x[1:n])
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
-@NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
+# @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
+@NLobjective(m, Min, sum( (x[j] + x[j+1])^2 for j in 1:n-1 ))
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
 obj = MathOptInterface.objective_expr(evaluator)
@@ -28,27 +29,34 @@ x = (α -> α - 50).( (β -> 100 * β).( rand(n) ) )
 y = (β -> 100 * β).(rand(n))
 
 # détection de la structure partiellement séparable
-SPS = PartiallySeparableStructure.deduct_partially_separable_structure(obj, n)
+# SPS = PartiallySeparableStructure.deduct_partially_separable_structure(obj, n)
 
 obj2 = trait_expr_tree.transform_to_expr_tree(obj)
 # SPS2 = PartiallySeparableStructure.deduct_partially_separable_structure(obj2, n)
 
 # elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
+# elmt_fun2 = algo_expr_tree.delete_imbricated_plus(obj2)
+# elmt_var2 = algo_expr_tree.get_elemental_variable.(elmt_fun2)
+#
+# for i in 1:length(elmt_fun2)
+#     algo_expr_tree._element_fun_from_N_to_Ni!(elmt_fun2[i],elmt_var2[i])
+# end
 
-    SPS_en_x = PartiallySeparableStructure.evaluate_SPS( SPS, x)
+    # SPS_en_x = PartiallySeparableStructure.evaluate_SPS( SPS, x)
     # MOI_obj_en_x = MathOptInterface.eval_objective( evaluator, x)
     # Expr_obj_en_x = M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
     ev = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
     ev_ = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
-    @code_warntype M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
-    @code_warntype M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
+    # @test M_evaluation_expr_tree.evaluate_expr_tree(obj, x) == M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
+    # @code_warntype M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
+    # @code_warntype M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
 
-    ev2 = @benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x)
-    ev3 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
+    # ev2 = @benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x)
+    # ev3 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
 
     # @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x))
-    M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
-    @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x))
+    # M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
+    # @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x))
 
 """
 n=1000

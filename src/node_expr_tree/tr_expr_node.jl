@@ -107,7 +107,6 @@ module trait_expr_node
     end
 
 
-
     evaluate_node(a, x :: Vector{T}) where T <: Number = _evaluate_node(a, is_expr_node(a), x)
     _evaluate_node(a, ::type_expr_node, x:: Vector{T}) where T <: Number = _evaluate_node(a, x)
     _evaluate_node(a, ::type_not_expr_node, x :: Vector{T}) where T <: Number = error("This node is not a expr node")
