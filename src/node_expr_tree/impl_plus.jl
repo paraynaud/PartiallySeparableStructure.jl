@@ -50,6 +50,13 @@ module plus_operators
         end
     end
 
+    function _evaluate_node(op :: plus_operator, value_ch :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number
+        if length(value_ch) > 1
+            return sum(value_ch) :: T
+        else
+            error("probleme operateur plus ")
+        end
+    end
 
     function _node_to_Expr(op :: plus_operator)
         return [:+]

@@ -2,7 +2,7 @@ using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
 using Test, BenchmarkTools, ProfileView, InteractiveUtils
 
 
-# include("../../src/ordered_include.jl")
+include("../../src/ordered_include.jl")
 
 using ..PartiallySeparableStructure
 
@@ -12,7 +12,7 @@ println("\n\nCompare_With_MOI_JUMP\n\n")
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 10000
+n = 30000
 
 m = Model()
 @variable(m, x[1:n])
@@ -36,7 +36,8 @@ y = (β -> 100 * β).(rand(n))
 SPS = PartiallySeparableStructure.deduct_partially_separable_structure(obj, n)
 
 obj2 = trait_expr_tree.transform_to_expr_tree(obj)
-# SPS2 = PartiallySeparableStructure.deduct_partially_separable_structure(obj2, n)
+obj3 = trait_expr_tree.transform_to_expr_tree(obj)
+SPS2 = PartiallySeparableStructure.deduct_partially_separable_structure(obj3, n)
 
 # elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
 # elmt_fun2 = algo_expr_tree.delete_imbricated_plus(obj2)
@@ -56,7 +57,8 @@ obj2 = trait_expr_tree.transform_to_expr_tree(obj)
     # @code_warntype M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
 
     ev2 = @benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x)
-    # ev3 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
+    ev3 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
+    ev4 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x)
 
     # @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x))
     # M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)

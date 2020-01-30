@@ -95,6 +95,32 @@ module simple_operators
     end
 
 
+    function _evaluate_node(op :: simple_operator, value_ch :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false} ) where T <: Number
+        if _node_is_plus(op)
+            return sum(value_ch) :: T
+        elseif _node_is_minus(op)
+            if length(value_ch) == 1
+                return - value_ch[1] :: T
+            else
+                return value_ch[1] - value_ch[2] :: T
+            end
+        elseif _node_is_times(op)
+            return foldl(*, value_ch) :: T
+        elseif _node_is_cos(op)
+            length(value_ch) == 1 || error("more than one argument for cos")
+            return cos(value_ch[1]) :: T
+        elseif _node_is_sin(op)
+            length(value_ch) == 1 || error("more than one argument for sin")
+            return sin(value_ch[1]) :: T
+        elseif _node_is_tan(op)
+            length(value_ch) == 1 || error("more than one argument for tan")
+            return tan(value_ch[1]) :: T
+        else
+            error("non traité pour le moment impl_simple_operator.jl/_eval_node")
+        end
+    end
+
+
     function _node_to_Expr(v :: simple_operator)
         return [v.op]
     end

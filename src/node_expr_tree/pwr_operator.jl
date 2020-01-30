@@ -48,7 +48,7 @@ module power_operators
             # @show temp = (T)(value_ch[1]^(op.index) ) :: T
             # @show typeof(temp)
             # return temp
-            return (T)(value_ch[1]^(op.index) ) :: T
+            return (T)( value_ch[1]^(op.index) ) :: T
     end
 
 

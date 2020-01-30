@@ -12,8 +12,11 @@ module M_evaluation_expr_tree
     # n'augmentent pas le type
     evaluate_expr_tree(a :: Any) = (x :: Vector -> evaluate_expr_tree(a,x) )
     evaluate_expr_tree(a :: Any, x :: Vector{T})  where T <: Number = _evaluate_expr_tree(a, trait_expr_tree.is_expr_tree(a), x)
+    evaluate_expr_tree(a :: Any, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number = _evaluate_expr_tree(a, trait_expr_tree.is_expr_tree(a), x)
     _evaluate_expr_tree(a, :: trait_expr_tree.type_not_expr_tree, x :: Vector{T})  where T <: Number = error(" This is not an Expr tree")
     _evaluate_expr_tree(a, :: trait_expr_tree.type_expr_tree, x :: Vector{T}) where T <: Number = _evaluate_expr_tree(a, x)
+    _evaluate_expr_tree(a, :: trait_expr_tree.type_not_expr_tree, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number = error(" This is not an Expr tree")
+    _evaluate_expr_tree(a, :: trait_expr_tree.type_expr_tree, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number = _evaluate_expr_tree(a,x)
     # function _evaluate_expr_tree(expr_tree, x :: Vector{T}) where T <: Number
     #     if isempty( trait_expr_tree._get_expr_children(expr_tree))
     #         return trait_expr_node.evaluate_node(trait_expr_tree._get_expr_node(expr_tree), x) :: T
@@ -39,6 +42,24 @@ module M_evaluation_expr_tree
         end
     end
 
+    # end
+    function _evaluate_expr_tree(expr_tree, x  :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number
+        nd = trait_expr_tree._get_expr_node(expr_tree)
+        ch = trait_expr_tree._get_expr_children(expr_tree)
+        if  trait_expr_node.node_is_operator(nd) == false
+            # @show expr_tree, nd
+            res = trait_expr_node.evaluate_node(nd, x) :: T
+            return res
+        else
+            n = length(ch)
+            temp = Vector{T}(undef,n)
+            for i in 1:n
+                temp[i] = evaluate_expr_tree(ch[i],x) :: T
+            end
+            res = trait_expr_node.evaluate_node(nd, temp) :: T
+            return res
+        end
+    end
 
     # _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x :: Vector{T})  where T <: Number =  _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x :: Vector{T} , true )
 
@@ -48,6 +69,23 @@ module M_evaluation_expr_tree
         else
             if trait_expr_node.node_is_plus(expr_tree.field)
                 mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children)
+            else
+                n = length(expr_tree.children)
+                temp = Vector{T}(undef, n)
+                map!( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, temp, expr_tree.children)
+                return trait_expr_node.evaluate_node(expr_tree.field,  temp) :: T
+            end
+        end
+    end
+
+    function _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x  :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number
+        if trait_expr_node.node_is_operator(expr_tree.field :: trait_expr_node.ab_ex_nd) == false
+            return trait_expr_node.evaluate_node(expr_tree.field, x) :: T
+        else
+            if trait_expr_node.node_is_plus(expr_tree.field)
+                mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children)
+            elseif trait_expr_node.node_is_power(expr_tree.field)
+                _evaluate_expr_tree(,x)
             else
                 n = length(expr_tree.children)
                 temp = Vector{T}(undef, n)

@@ -43,6 +43,11 @@ module constants
         return (T)(c.value) :: T
     end
 
+    function _evaluate_node(c :: constant, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number
+        return (T)(c.value) :: T
+    end
+
+
     function _evaluate_node(c :: constant, dic :: Dict{Int, T where T <: Number})
         return c.value :: Number
     end

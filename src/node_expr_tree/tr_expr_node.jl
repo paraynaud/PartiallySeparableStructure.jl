@@ -113,6 +113,10 @@ module trait_expr_node
     evaluate_node(a, x :: Dict{Int,Number}) = _evaluate_node(a, is_expr_node(a), x)
     _evaluate_node(a, ::type_expr_node, x:: Dict{Int,Number}) = _evaluate_node(a, x)
     _evaluate_node(a, ::type_not_expr_node, x :: Dict{Int,Number}) = error("This node is not a expr node")
+    evaluate_node(a, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}}}) where T <: Number  = _evaluate_node(a, is_expr_node(a), x)
+    _evaluate_node(a, ::type_expr_node, x:: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}}}) where T <: Number = _evaluate_node(a, x)
+    _evaluate_node(a, ::type_not_expr_node, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}}}) where T <: Number = error("This node is not a expr node")
+
 
     # change_from_N_to_Ni!(a :: , dic_new_var :: Dict{Int,Int}) = _change_from_N_to_Ni!(a, is_expr_node(a), dic_new_var)
     change_from_N_to_Ni!(a, dic_new_var :: Dict{Int,Int}) = _change_from_N_to_Ni!(a, is_expr_node(a), dic_new_var)

@@ -2,6 +2,7 @@ module PartiallySeparableStructure
 
     using ..implementation_type_expr
     using ..algo_expr_tree, ..trait_expr_tree, ..trait_type_expr, ..M_evaluation_expr_tree
+    using ..implementation_expr_tree
     using ForwardDiff, SparseArrays
     using Base.Threads
 
@@ -88,6 +89,43 @@ function _deduct_partially_separable_structure(expr_tree :: T , n :: Int) where 
     return SPS{T}(Sps, length_vec[], n)
 end
 
+function _deduct_partially_separable_structure(expr_tree :: implementation_expr_tree.t_expr_tree , n :: Int) where T
+    elmt_fun = algo_expr_tree.delete_imbricated_plus(expr_tree) :: Vector{implementation_expr_tree.t_expr_tree}
+    m_i = length(elmt_fun)
+
+    type_i = Vector{trait_type_expr.t_type_expr_basic}(undef, m_i)
+    # type_i = algo_expr_tree._get_type_tree.(elmt_fun) :: Vector{trait_type_expr.t_type_expr_basic}
+    Threads.@threads for i in 1:m_i
+        type_i[i] = algo_expr_tree.get_type_tree(elmt_fun[i])
+    end
+
+    # elmt_var_i = algo_expr_tree.get_elemental_variable.(elmt_fun) :: Vector{ Vector{Int}}
+    elmt_var_i =  Vector{ Vector{Int}}(undef,m_i)
+    length_vec = Threads.Atomic{Int}(0)
+    Threads.@threads for i in 1:m_i
+        elmt_var_i[i] = algo_expr_tree.get_elemental_variable(elmt_fun[i])
+        atomic_add!(length_vec, length(elmt_var_i[i]))
+    end
+
+    # U_i = algo_expr_tree.get_Ui.(elmt_var_i, n) :: Vector{SparseMatrixCSC{Int,Int}}
+    U_i = Vector{SparseMatrixCSC{Int,Int}}(undef,m_i)
+    Threads.@threads for i in 1:m_i
+        U_i[i] = algo_expr_tree.get_Ui(elmt_var_i[i], n)
+    end
+
+    # algo_expr_tree.element_fun_from_N_to_Ni!.(elmt_fun,elmt_var_i)
+    Threads.@threads for i in 1:m_i
+        algo_expr_tree.element_fun_from_N_to_Ni!(elmt_fun[i],elmt_var_i[i])
+    end
+
+    Sps = Vector{element_function{implementation_expr_tree.t_expr_tree}}(undef,m_i)
+    Threads.@threads for i in 1:m_i
+        Sps[i] = element_function{implementation_expr_tree.t_expr_tree}(elmt_fun[i], type_i[i], elmt_var_i[i], U_i[i])
+    end
+
+    return SPS{implementation_expr_tree.t_expr_tree}(Sps, length_vec[], n)
+end
+
 """
     evaluate_SPS(sps,x)
 evalutate the partially separable function f = ∑fᵢ, stored in the sps structure at the point x.
@@ -98,7 +136,8 @@ f(x) = ∑fᵢ(xᵢ), so we compute independently each fᵢ(xᵢ) and we return 
         res = Vector{Y}(undef, l_elmt_fun)
         @Threads.threads for i in 1:l_elmt_fun
         # for i in 1:l_elmt_fun
-            res[i] = M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun, Array(view(x, sps.structure[i].used_variable)) )
+            # res[i] = M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun, Array(view(x, sps.structure[i].used_variable)) )
+            res[i] = M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun, view(x, sps.structure[i].used_variable) )
         end
         return sum(res)
     end
