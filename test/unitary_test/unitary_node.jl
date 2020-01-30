@@ -20,7 +20,7 @@ using MathOptInterface
 
     @test abstract_expr_node.create_node_expr(:x, MathOptInterface.VariableIndex(5)) == abstract_expr_node.create_node_expr(:x, 5)
 
-    @test abstract_expr_node.create_node_expr(:+) == simple_operators.simple_operator(:+)
+    @test abstract_expr_node.create_node_expr(:+) == plus_operators.plus_operator()
     @test abstract_expr_node.create_node_expr(:*) == simple_operators.simple_operator(:*)
     @test abstract_expr_node.create_node_expr(:^,2, true ) == power_operators.power_operator(2)
     @test abstract_expr_node.create_node_expr(:^,[2]) == complex_operators.complex_operator(:^,[2])

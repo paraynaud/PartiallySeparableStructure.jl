@@ -14,46 +14,49 @@ module power_operators
 
     import Base.==
 
-    mutable struct power_operator <: ab_ex_nd
-        index :: Number
+    mutable struct power_operator{T <: Number} <: ab_ex_nd
+        index :: T
     end
 
 
-    function create_node_expr(op :: Symbol, arg :: Number, ::Bool)
+    function create_node_expr(op :: Symbol, arg :: T , ::Bool) where T <: Number
         return power_operator(arg)
     end
 
-    _node_is_operator( op :: power_operator ) = true
-    _node_is_plus( op :: power_operator ) = false
-    _node_is_minus(op :: power_operator ) = false
-    _node_is_times(op :: power_operator ) = false
-    _node_is_power(op :: power_operator ) = true
-    _node_is_sin(op :: power_operator) = false
-    _node_is_cos(op :: power_operator) = false
-    _node_is_tan(op :: power_operator) = false
+    _node_is_operator( op :: power_operator{T} ) where T <: Number= true
+    _node_is_plus( op :: power_operator{T} ) where T <: Number = false
+    _node_is_minus(op :: power_operator{T} ) where T <: Number = false
+    _node_is_times(op :: power_operator{T} ) where T <: Number = false
+    _node_is_power(op :: power_operator{T} ) where T <: Number = true
+    _node_is_sin(op :: power_operator{T}) where T <: Number = false
+    _node_is_cos(op :: power_operator{T}) where T <: Number = false
+    _node_is_tan(op :: power_operator{T}) where T <: Number = false
 
-    _node_is_variable(op :: power_operator ) = false
+    _node_is_variable(op :: power_operator{T} ) where T <: Number = false
 
-    _node_is_constant(op :: power_operator ) = false
+    _node_is_constant(op :: power_operator{T} ) where T <: Number = false
 
-    function _get_type_node(op :: power_operator, type_ch :: Vector{t_type_expr_basic})
+    function _get_type_node(op :: power_operator{T}, type_ch :: Vector{t_type_expr_basic}) where T <: Number
         length(type_ch) == 1 || error("power has more than one argument")
         return trait_type_expr.type_power(op.index, type_ch[1])
     end
 
-    (==)(a :: power_operator, b :: power_operator) = ( a.index == b.index)
+    (==)(a :: power_operator{T}, b :: power_operator{T}) where T <: Number = ( a.index == b.index)
 
-    function _evaluate_node(op :: power_operator, value_ch :: Vector{T}) where T <: Number
+    function _evaluate_node(op :: power_operator{Z}, value_ch :: Vector{T}) where T <: Number where Z <: Number
             length(value_ch) == 1 || error("power has more than one argument")
-            return value_ch[1]^(op.index) :: T
+            # @show temp = (T)(value_ch[1]^(op.index) ) :: T
+            # @show typeof(temp)
+            # return temp
+            return (T)(value_ch[1]^(op.index) ) :: T
     end
 
 
-    function _node_to_Expr(op :: power_operator)
+    function _node_to_Expr(op :: power_operator{T}) where T <: Number
         return [:^, op.index]
     end
 
-    function _cast_constant!(op :: power_operator, t :: DataType)
+    function _cast_constant!(op :: power_operator{T}, t :: DataType) where T <: Number
         return op.index = (t)(op.index)
     end
 

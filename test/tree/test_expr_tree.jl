@@ -12,7 +12,7 @@ using .algo_expr_tree
 using .algo_tree
 
 
-
+println("\n\n test_expr_tree\n\n") 
 
 @testset "test building of trees and equality" begin
     expr_1 = :(x[1] + x[2] )
@@ -213,7 +213,7 @@ end
         res = M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
         t_res = M_evaluation_expr_tree.evaluate_expr_tree(t_obj, x)
         @test res == t_res
-        @test res == eval_ones
+        @test res == (Float32)(eval_ones)
     # TEST SUR LES EVALUATIONS DE FONCTIONS ELEMENTS
         n_element = length(elmt_fun)
         res_p = Vector{Number}(undef, n_element)
@@ -227,7 +227,7 @@ end
         #     # InteractiveUtils.@code_warntype res_p[i] = algo_expr_tree.evaluate_element_expr_tree(elmt_fun[i], x, U[i])
         # end)
         res_total = sum(res_p)
-        @test res_total == res
+        @test (typeof(res))(res_total) == res
 end
 
 
@@ -303,7 +303,7 @@ using ..PartiallySeparableStructure
 using LinearAlgebra
 
 
-@testset "test gradient/hessian/product SPS" begin
+# @testset "test gradient/hessian/product SPS" begin
 
     m = Model()
     n_x = 100
@@ -360,7 +360,7 @@ using LinearAlgebra
     obj_o3 = trait_expr_tree.transform_to_Expr(obj_o2)
     @test obj_o == obj_o3
 
-end
+# end
 
 a = :(x[1]^2 + 6.0)
 b = trait_expr_tree.transform_to_expr_tree(a)

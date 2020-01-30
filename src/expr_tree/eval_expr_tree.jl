@@ -10,7 +10,7 @@ module M_evaluation_expr_tree
     # IMPORTANT La fonction evaluate_expr_tree garde le type des variables,
     # Il faut cependant veiller à modifier les constantes dans les expressions pour qu'elles
     # n'augmentent pas le type
-    evaluate_expr_tree(a :: Any) = (x :: Vector{T where T <: Number} -> evaluate_expr_tree(a,x) )
+    evaluate_expr_tree(a :: Any) = (x :: Vector -> evaluate_expr_tree(a,x) )
     evaluate_expr_tree(a :: Any, x :: Vector{T})  where T <: Number = _evaluate_expr_tree(a, trait_expr_tree.is_expr_tree(a), x)
     _evaluate_expr_tree(a, :: trait_expr_tree.type_not_expr_tree, x :: Vector{T})  where T <: Number = error(" This is not an Expr tree")
     _evaluate_expr_tree(a, :: trait_expr_tree.type_expr_tree, x :: Vector{T}) where T <: Number = _evaluate_expr_tree(a, x)
@@ -25,6 +25,7 @@ module M_evaluation_expr_tree
         nd = trait_expr_tree._get_expr_node(expr_tree)
         ch = trait_expr_tree._get_expr_children(expr_tree)
         if  trait_expr_node.node_is_operator(nd) == false
+            # @show expr_tree, nd
             res = trait_expr_node.evaluate_node(nd, x) :: T
             return res
         else
@@ -81,7 +82,7 @@ module M_evaluation_expr_tree
         return _evaluate_element_expr_tree(expr_tree, dic_var_value)
     end
 
-    function _evaluate_element_expr_tree(expr_tree, dic_var_value :: Dict{Int,T where T <: Number})
+    function _evaluate_element_expr_tree(expr_tree, dic_var_value :: Dict{Int, T }) where T <: Number
         nd = trait_expr_tree._get_expr_node(expr_tree)
         ch = trait_expr_tree._get_expr_children(expr_tree)
         if isempty(ch)
@@ -106,7 +107,7 @@ module M_evaluation_expr_tree
     _calcul_gradient_expr_tree(a :: Any,:: trait_expr_tree.type_expr_tree, x :: Vector{}) = _calcul_gradient_expr_tree(a, x)
     _calcul_gradient_expr_tree(a :: Any,:: trait_expr_tree.type_not_expr_tree, x :: Vector{}, elmt_var :: Vector{Int}) = error("ce n'est pas un arbre d'expression")
     _calcul_gradient_expr_tree(a :: Any,:: trait_expr_tree.type_expr_tree, x :: Vector{}, elmt_var :: Vector{Int}) = _calcul_gradient_expr_tree(a, x, elmt_var)
-    function _calcul_gradient_expr_tree(expr_tree, x :: Vector{})
+    function _calcul_gradient_expr_tree(expr_tree, x :: Vector{T}) where T <: Number
         g = ForwardDiff.gradient( evaluate_expr_tree(expr_tree), x)
         return g
     end

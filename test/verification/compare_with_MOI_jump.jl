@@ -2,13 +2,17 @@ using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
 using Test, BenchmarkTools, ProfileView, InteractiveUtils
 
 
-include("../../src/ordered_include.jl")
+# include("../../src/ordered_include.jl")
 
 using ..PartiallySeparableStructure
 
+println("\n\nCompare_With_MOI_JUMP\n\n")
+
+
+
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 30000
+n = 10000
 
 m = Model()
 @variable(m, x[1:n])
@@ -29,7 +33,7 @@ x = (α -> α - 50).( (β -> 100 * β).( rand(n) ) )
 y = (β -> 100 * β).(rand(n))
 
 # détection de la structure partiellement séparable
-# SPS = PartiallySeparableStructure.deduct_partially_separable_structure(obj, n)
+SPS = PartiallySeparableStructure.deduct_partially_separable_structure(obj, n)
 
 obj2 = trait_expr_tree.transform_to_expr_tree(obj)
 # SPS2 = PartiallySeparableStructure.deduct_partially_separable_structure(obj2, n)
@@ -51,7 +55,7 @@ obj2 = trait_expr_tree.transform_to_expr_tree(obj)
     # @code_warntype M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
     # @code_warntype M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
 
-    # ev2 = @benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x)
+    ev2 = @benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x)
     # ev3 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
 
     # @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x))
@@ -206,12 +210,12 @@ BenchmarkTools.Trial:
 #
 # @testset "evaluation des fonctions par divers moyens" begin
 #
-#     SPS_en_x = PartiallySeparableStructure.evaluate_SPS( SPS, x)
-#     MOI_obj_en_x = MathOptInterface.eval_objective( evaluator, x)
-#     Expr_obj_en_x = M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
-#
-#     @test MOI_obj_en_x - Expr_obj_en_x < σ
-#     @test SPS_en_x - MOI_obj_en_x < σ
+    # SPS_en_x = PartiallySeparableStructure.evaluate_SPS( SPS, x)
+    # MOI_obj_en_x = MathOptInterface.eval_objective( evaluator, x)
+    # Expr_obj_en_x = M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
+    #
+    # @test MOI_obj_en_x - Expr_obj_en_x ≈ σ
+    # @test SPS_en_x - MOI_obj_en_x ≈ σ
 #
 #
 #     SPS_en_y = PartiallySeparableStructure.evaluate_SPS(SPS, y)
@@ -260,18 +264,18 @@ BenchmarkTools.Trial:
 #
 # @testset "evaluation du Hessian par divers moyers" begin
 #
-#
+
 #     MOI_pattern = MathOptInterface.hessian_lagrangian_structure(evaluator)
 #     column = [x[1] for x in MOI_pattern]
 #     row = [x[2]  for x in MOI_pattern]
-#
+# #
 #     MOI_value_Hessian = Vector{ typeof(x[1]) }(undef,length(MOI_pattern))
 #     MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
 #     values = [x for x in MOI_value_Hessian]
 # #
 #     MOI_half_hessian_en_x = sparse(row,column,values)
 #     MOI_hessian_en_x = Symmetric(MOI_half_hessian_en_x)
-#
+
     # SPS_Hessian_en_x = PartiallySeparableStructure.evaluate_hessian(SPS, x )
     # Expr_Hessian_en_x = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj, x)
 #     #

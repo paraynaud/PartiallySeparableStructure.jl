@@ -40,7 +40,7 @@ module constants
     (==)(a :: constant, b :: constant) = (a.value == b.value)
 
     function _evaluate_node(c :: constant, x :: Vector{T}) where T <: Number
-        return c.value :: Number
+        return (T)(c.value) :: T
     end
 
     function _evaluate_node(c :: constant, dic :: Dict{Int, T where T <: Number})
