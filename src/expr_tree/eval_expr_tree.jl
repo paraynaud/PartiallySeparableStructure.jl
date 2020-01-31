@@ -83,9 +83,9 @@ module M_evaluation_expr_tree
             return trait_expr_node.evaluate_node(expr_tree.field, x) :: T
         else
             if trait_expr_node.node_is_plus(expr_tree.field)
-                mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children)
+                return mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children)
             elseif trait_expr_node.node_is_power(expr_tree.field)
-                _evaluate_expr_tree(,x)
+                return _evaluate_expr_tree(y,x)
             else
                 n = length(expr_tree.children)
                 temp = Vector{T}(undef, n)
