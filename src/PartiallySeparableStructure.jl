@@ -132,16 +132,23 @@ evalutate the partially separable function f = ∑fᵢ, stored in the sps struct
 f(x) = ∑fᵢ(xᵢ), so we compute independently each fᵢ(xᵢ) and we return the sum.
 """
     function evaluate_SPS(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
-        l_elmt_fun = length(sps.structure)
-        res = Vector{Y}(undef, l_elmt_fun)
-        @Threads.threads for i in 1:l_elmt_fun
-        # for i in 1:l_elmt_fun
-            # res[i] = M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun, Array(view(x, sps.structure[i].used_variable)) )
-            # res[i] = M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun, view(x, sps.structure[i].used_variable) )
-            res[i] = M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun, x)
-        end
-        return sum(res)
+        f(x :: element_function{T}) = x.fun :: T
+        # res = mapreduce( ex_tr_el_fun :: T -> M_evaluation_expr_tree.evaluate_expr_tree(ex_tr_el_fun, x) :: Y, + , f.(sps.structure) :: Vector{T})
+        # return res
+        mapreduce( ex_tr_el_fun :: T -> M_evaluation_expr_tree.evaluate_expr_tree(ex_tr_el_fun, x) :: Y, + , f.(sps.structure) :: Vector{T})
     end
+    # Attention au fonction constante dans le cas des Expr
+
+    # l_elmt_fun = length(sps.structure)
+    # res = Vector{Y}(undef, l_elmt_fun)
+    # @Threads.threads for i in 1:l_elmt_fun
+    # for i in 1:l_elmt_fun
+    #     res[i] = M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun, Array(view(x, sps.structure[i].used_variable)) )
+    #     # res[i] = M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun, view(x, sps.structure[i].used_variable) )
+    #     # res[i] = M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun, x)
+    # end
+    # return sum(res)
+
 
 """
     evaluate_gradient(sps,x)

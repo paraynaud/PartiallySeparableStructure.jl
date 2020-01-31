@@ -12,14 +12,16 @@ println("\n\nCompare_With_MOI_JUMP\n\n")
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 1000
+n = 10000
 
 m = Model()
 @variable(m, x[1:n])
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
-@NLobjective(m, Min, sum( (x[j] + x[j+1])^2 for j in 1:n-1 ))
+# @NLobjective(m, Min, sum( (x[j] + x[j+1])^2 for j in 1:n-1 ))
+# @NLobjective(m, Min, sum( (x[j] * x[j+1])^2 * x[j+2]  for j in 1:n-2 ))
+@NLobjective(m, Min, sum( (x[j] - x[j+1])^2 - x[j+2]  for j in 1:n-2 ))
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
 obj = MathOptInterface.objective_expr(evaluator)
@@ -39,34 +41,36 @@ obj2 = trait_expr_tree.transform_to_expr_tree(obj)
 obj3 = trait_expr_tree.transform_to_expr_tree(obj)
 SPS2 = PartiallySeparableStructure.deduct_partially_separable_structure(obj3, n)
 
-# elmt_fun = algo_expr_tree.delete_imbricated_plus(obj)
-# elmt_fun2 = algo_expr_tree.delete_imbricated_plus(obj2)
-# elmt_var2 = algo_expr_tree.get_elemental_variable.(elmt_fun2)
-#
-# for i in 1:length(elmt_fun2)
-#     algo_expr_tree._element_fun_from_N_to_Ni!(elmt_fun2[i],elmt_var2[i])
-# end
+println("- set up des données fini")
 
-    # SPS_en_x = PartiallySeparableStructure.evaluate_SPS( SPS, x)
-    # MOI_obj_en_x = MathOptInterface.eval_objective( evaluator, x)
-    # Expr_obj_en_x = M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
+println("- Début des test")
+    @test PartiallySeparableStructure.evaluate_SPS(SPS2, x) -  PartiallySeparableStructure.evaluate_SPS(SPS, x) < σ
+    @test M_evaluation_expr_tree.evaluate_expr_tree(obj2, x) - M_evaluation_expr_tree.evaluate_expr_tree(obj, x) < σ
+    @test PartiallySeparableStructure.evaluate_SPS(SPS2, x) - M_evaluation_expr_tree.evaluate_expr_tree(obj2, x) < σ
+    @test PartiallySeparableStructure.evaluate_SPS(SPS2, x) - MathOptInterface.eval_objective(evaluator, x) < σ
+
+println(" fin des tests vérifiant les résultats")
+
+println("- Génération des benchmarks")
+
     ev_obj_Expr = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
-    println("obj Expr fait ")
+    println("  - obj Expr fait ")
     ev_obj_expr_tree = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
-    println("obj_expr_tree fait")
-    # @test M_evaluation_expr_tree.evaluate_expr_tree(obj, x) == M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
-    # @code_warntype M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
-    # @code_warntype M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
+    println("  - obj_expr_tree fait")
 
     ev_SPS_Expr = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
-    println("SPS Expr fait")
-    ev_Sps_expr_tree = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x)
-    println("SPS expr_tree fait, plus que MOI")
+    println("  - SPS Expr fait")
+    ev_SPS_expr_tree = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x)
+    println("  - SPS expr_tree fait")
     ev_MOI = @benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x)
-    println("fini\n\n")
-    # @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x))
-    # M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
-    # @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x))
+    println("  - Evaluation MOI faite")
+
+println("- Les profiles des fonctions maintenant \n\n")
+# @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x))
+# @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x))
+# M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
+@profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x))
+
 
 """
 n=1000
