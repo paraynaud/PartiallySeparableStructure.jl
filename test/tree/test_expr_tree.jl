@@ -12,7 +12,7 @@ using .algo_expr_tree
 using .algo_tree
 
 
-println("\n\n test_expr_tree\n\n") 
+println("\n\n test_expr_tree\n\n")
 
 @testset "test building of trees and equality" begin
     expr_1 = :(x[1] + x[2] )
@@ -219,7 +219,7 @@ end
         res_p = Vector{Number}(undef, n_element)
 
         for i in 1:n_element
-            res_p[i] = M_evaluation_expr_tree.evaluate_element_expr_tree(elmt_fun[i], x, U[i])
+            res_p[i] = M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun[i], x)
             # InteractiveUtils.@code_warntype res_p[i] = algo_expr_tree.evaluate_element_expr_tree(elmt_fun[i], x, U[i])
         end
         # @time (Threads.@threads for i in 1:n_element

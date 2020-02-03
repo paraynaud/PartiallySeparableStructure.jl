@@ -132,12 +132,19 @@ evalutate the partially separable function f = ∑fᵢ, stored in the sps struct
 f(x) = ∑fᵢ(xᵢ), so we compute independently each fᵢ(xᵢ) and we return the sum.
 """
     function evaluate_SPS(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
-        f(x :: element_function{T}) = x.fun :: T
-        # res = mapreduce( ex_tr_el_fun :: T -> M_evaluation_expr_tree.evaluate_expr_tree(ex_tr_el_fun, x) :: Y, + , f.(sps.structure) :: Vector{T})
-        # return res
-        mapreduce( ex_tr_el_fun :: T -> M_evaluation_expr_tree.evaluate_expr_tree(ex_tr_el_fun, x) :: Y, + , f.(sps.structure) :: Vector{T})
+        # on utilise un mapreduce de manière à ne pas allouer un tableau temporaire, on utilise l'opérateur + pour le reduce car cela correspond
+        # à la définition des fonctions partiellement séparable.
+        mapreduce( elmt_fun :: element_function{T} -> M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun, view(x, elmt_fun.used_variable)) :: Y, + , sps.structure :: Vector{element_function{T}})
     end
+
+    function evaluate_SPS(sps :: SPS{implementation_expr_tree.t_expr_tree}, x :: Vector{Y} ) where Y <: Number
+        mapreduce( elmt_fun :: element_function{implementation_expr_tree.t_expr_tree} -> M_evaluation_expr_tree._evaluate_expr_tree(elmt_fun.fun :: implementation_expr_tree.t_expr_tree, view(x, elmt_fun.used_variable) :: SubArray{Y,1,Array{Y,1},Tuple{Array{Int64,1}},false}) :: Y, + , sps.structure :: Vector{element_function{implementation_expr_tree.t_expr_tree}})
+    end
+
     # Attention au fonction constante dans le cas des Expr
+
+    # f(x :: element_function{T}) = x.fun :: T
+    # mapreduce( ex_tr_el_fun :: T -> M_evaluation_expr_tree.evaluate_expr_tree(ex_tr_el_fun, x) :: Y, + , f.(sps.structure) :: Vector{T})
 
     # l_elmt_fun = length(sps.structure)
     # res = Vector{Y}(undef, l_elmt_fun)
@@ -227,16 +234,46 @@ at the point x. Return the result as a Hess_matrix.
         l_elmt_fun = length(sps.structure)
         elmt_hess = Vector{Tuple{Vector{Int},Vector{Int},Vector{Y}}}(undef, l_elmt_fun)
         temp = Vector{element_hessian{Y}}(undef, l_elmt_fun)
+        f = ( elm_fun :: element_function{T} -> element_hessian{Y}( Array{Y,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
+        t = f.(sps.structure) :: Vector{element_hessian{Y}}
+        temp = Hess_matrix{Y}(t)
         @Threads.threads for i in 1:l_elmt_fun # a voir si je laisse le array(view()) la ou non
             if sps.structure[i].type != implementation_type_expr.constant
-                temp[i] = element_hessian{Y}(ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable)) ) )
+                temp.arr[i] = element_hessian{Y}(ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), view(x, sps.structure[i].used_variable) ) )
             else # à rectifier surement dans le futur
-                temp[i] =  element_hessian{Y}( Array(SparseMatrixCSC{Y,Int64}(sparse([],[],[]))) )
+                temp.arr[i] =  element_hessian{Y}( Array(SparseMatrixCSC{Y,Int64}(sparse([],[],[]))) )
             end
         end
-        G = Hess_matrix{Y}(temp)
-        return G
+        # G = Hess_matrix{Y}(temp)
+        # return G
+        return temp
     end
+
+
+    function struct_hessian(sps :: SPS{implementation_expr_tree.t_expr_tree}, x :: Vector{Y} ) where Y <: Number
+        l_elmt_fun = length(sps.structure)
+        # temp = Vector{element_hessian{Y}}(undef, l_elmt_fun)
+        # println("test")
+        f = ( elm_fun :: element_function{implementation_expr_tree.t_expr_tree} -> element_hessian{Y}( Array{Y,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
+        t = f.(sps.structure) :: Vector{element_hessian{Y}}
+        # @show typeof(t)
+        # temp = Vector{element_hessian{Y}}(t)
+        temp = Hess_matrix{Y}(t)
+
+        @Threads.threads for i in 1:l_elmt_fun # a voir si je laisse le array(view()) la ou non
+        # à rectifier surement dans le futur
+            if sps.structure[i].type == implementation_type_expr.constant || sps.structure[i].type == implementation_type_expr.linear
+                temp.arr[i] =  element_hessian{Y}( Array(SparseMatrixCSC{Y,Int64}(sparse([],[],[]))) )
+            else
+                temp.arr[i] = element_hessian{Y}(ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun :: implementation_expr_tree.t_expr_tree), view(x, sps.structure[i].used_variable :: Vector{Int})  ) )
+            end
+        end
+        # G = Hess_matrix{Y}(temp)
+        # return G
+        return temp
+    end
+
+
 
 """
     product_matrix_sps(sps,B,x)

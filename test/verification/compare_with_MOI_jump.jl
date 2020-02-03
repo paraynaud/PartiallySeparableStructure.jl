@@ -2,7 +2,7 @@ using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
 using Test, BenchmarkTools, ProfileView, InteractiveUtils
 
 
-include("../../src/ordered_include.jl")
+# include("../../src/ordered_include.jl")
 
 using ..PartiallySeparableStructure
 
@@ -12,7 +12,7 @@ println("\n\nCompare_With_MOI_JUMP\n\n")
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 100
+n = 10
 
 m = Model()
 @variable(m, x[1:n])
@@ -38,12 +38,16 @@ ones_ = ones(n)
 
 
 """ EVALUATION DES FONCTIONS """
-
-@testset "evaluation des fonctions par divers moyens" begin
+x_test = [ x[1], x[2], x[1], x[2], x[1], x[2], x[1], x[2], x[1], x[2]]
+# @testset "evaluation des fonctions par divers moyens" begin
     SPS_en_x = PartiallySeparableStructure.evaluate_SPS( SPS, ones_)
     MOI_obj_en_x = MathOptInterface.eval_objective( evaluator, ones_)
     SPS_en_x = PartiallySeparableStructure.evaluate_SPS( SPS, x)
     MOI_obj_en_x = MathOptInterface.eval_objective( evaluator, x)
+
+    # SPS_en_x = PartiallySeparableStructure.evaluate_SPS( SPS, x_test)
+    # MOI_obj_en_x = MathOptInterface.eval_objective( evaluator, x_test)
+
     Expr_obj_en_x = M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
 
     @test MOI_obj_en_x - Expr_obj_en_x < σ
@@ -60,7 +64,7 @@ ones_ = ones(n)
     a = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
     b = @benchmark PartiallySeparableStructure.evaluate_SPS( SPS, x)
     c = @benchmark MathOptInterface.eval_objective( evaluator, x)
-end
+# end
 
 
 """ EVALUATION DES GRADIENTS """

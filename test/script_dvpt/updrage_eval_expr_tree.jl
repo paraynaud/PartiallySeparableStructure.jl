@@ -53,26 +53,41 @@ println(" fin des tests vérifiant les résultats")
 
 println("- Génération des benchmarks")
 
-    ev_obj_Expr = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
-    println("  - obj Expr fait ")
-    ev_obj_expr_tree = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
-    println("  - obj_expr_tree fait")
+    # ev_obj_Expr = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
+    # println("  - obj Expr fait ")
+    # ev_obj_expr_tree = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
+    # println("  - obj_expr_tree fait")
+    #
+    # ev_SPS_Expr = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
+    # println("  - SPS Expr fait")
+    # ev_SPS_expr_tree = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x)
+    # println("  - SPS expr_tree fait")
+    # ev_MOI = @benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x)
+    # println("  - Evaluation MOI faite")
 
-    ev_SPS_Expr = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
-    println("  - SPS Expr fait")
-    ev_SPS_expr_tree = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x)
-    println("  - SPS expr_tree fait")
-    ev_MOI = @benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x)
-    println("  - Evaluation MOI faite")
-
-println("- Les profiles des fonctions maintenant \n\n")
+# println("- Les profiles des fonctions maintenant \n\n")
 # @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x))
 # @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x))
-# M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
-@profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x))
-
-
+# @profview (@benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x))
+# @profview (@benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x))
+# @profview (@benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x))
 """
+
+n=10000
+
+BenchmarkTools.Trial:
+  memory estimate:  3.97 MiB
+  allocs estimate:  119979
+  --------------
+  minimum time:     6.667 ms (0.00% GC)
+  median time:      8.362 ms (0.00% GC)
+  mean time:        8.418 ms (0.00% GC)
+  maximum time:     11.107 ms (0.00% GC)
+  --------------
+  samples:          594
+  evals/sample:     1
+
+
 n=1000
 
 BenchmarkTools.Trial:
@@ -288,13 +303,13 @@ BenchmarkTools.Trial:
 # @testset "evaluation du Hessian par divers moyers" begin
 #
 
-#     MOI_pattern = MathOptInterface.hessian_lagrangian_structure(evaluator)
-#     column = [x[1] for x in MOI_pattern]
-#     row = [x[2]  for x in MOI_pattern]
+    MOI_pattern = MathOptInterface.hessian_lagrangian_structure(evaluator)
+    column = [x[1] for x in MOI_pattern]
+    row = [x[2]  for x in MOI_pattern]
 # #
-#     MOI_value_Hessian = Vector{ typeof(x[1]) }(undef,length(MOI_pattern))
-#     MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
-#     values = [x for x in MOI_value_Hessian]
+    MOI_value_Hessian = Vector{ typeof(x[1]) }(undef,length(MOI_pattern))
+    MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
+    values = [x for x in MOI_value_Hessian]
 # #
 #     MOI_half_hessian_en_x = sparse(row,column,values)
 #     MOI_hessian_en_x = Symmetric(MOI_half_hessian_en_x)
@@ -314,8 +329,16 @@ BenchmarkTools.Trial:
     # v_tmp = Vector{ Float64 }(undef, length(MOI_pattern))
 #     MOI_Hessian_product_y = Vector{ typeof(y[1]) }(undef,n)
 #      prod2 = @benchmark (MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_y, x, y, 1.0, zeros(0)))
+println("test du Hessien ")
+SPS_expr_tree_HESSIAN = @benchmark SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS2, x)
+println("Hessien expr_tree")
+SPS_Expr_HESSIAN = @benchmark SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS, x)
+println("Hessien Expr_tree")
+MOI_HESSIAN = @benchmark MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
+println("Hessien MOI")
+# time_f = @elapsed SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS2, x)
 #
-#
+
 #
 #
 #     @test norm(MOI_Hessian_product_y - SPS_product_Hessian_en_x_et_y, 2) < σ

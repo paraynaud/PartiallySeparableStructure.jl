@@ -10,7 +10,7 @@ module M_evaluation_expr_tree
     # IMPORTANT La fonction evaluate_expr_tree garde le type des variables,
     # Il faut cependant veiller à modifier les constantes dans les expressions pour qu'elles
     # n'augmentent pas le type
-    evaluate_expr_tree(a :: Any) = (x :: Vector -> evaluate_expr_tree(a,x) )
+    evaluate_expr_tree(a :: Any) = (x :: Union{Vector,SubArray} -> evaluate_expr_tree(a,x) )
     evaluate_expr_tree(a :: Any, x :: Vector{T})  where T <: Number = _evaluate_expr_tree(a, trait_expr_tree.is_expr_tree(a), x)
     evaluate_expr_tree(a :: Any, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number = _evaluate_expr_tree(a, trait_expr_tree.is_expr_tree(a), x)
     _evaluate_expr_tree(a, :: trait_expr_tree.type_not_expr_tree, x :: Vector{T})  where T <: Number = error(" This is not an Expr tree")
@@ -77,18 +77,18 @@ module M_evaluation_expr_tree
     end
 
     function _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x  :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number
-        if trait_expr_node.node_is_operator(expr_tree.field :: trait_expr_node.ab_ex_nd) == false
-            return trait_expr_node.evaluate_node(expr_tree.field, x) :: T
+        if trait_expr_node.node_is_operator(expr_tree.field :: trait_expr_node.ab_ex_nd) :: Bool == false
+            return trait_expr_node._evaluate_node(expr_tree.field, x) :: T
         else
-            if trait_expr_node.node_is_plus(expr_tree.field)
-                return mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children)
+            if trait_expr_node.node_is_plus(expr_tree.field) :: Bool
+                return mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children) :: T
             elseif trait_expr_node.node_is_power(expr_tree.field)
-                return _evaluate_expr_tree(y,x)
+                return _evaluate_expr_tree(expr_tree.children[1],x) :: T
             else
                 n = length(expr_tree.children)
                 temp = Vector{T}(undef, n)
                 map!( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, temp, expr_tree.children)
-                return trait_expr_node.evaluate_node(expr_tree.field,  temp) :: T
+                return trait_expr_node._evaluate_node(expr_tree.field,  temp) :: T
             end
         end
     end
@@ -97,43 +97,6 @@ module M_evaluation_expr_tree
     #     temp[i] = _evaluate_expr_tree(expr_tree.children[i], x) :: T
     # end
     # return trait_expr_node.evaluate_node(expr_tree.field, temp) :: T
-
-
-    evaluate_element_expr_tree(a :: Any, elmt_var :: Vector{Int}) = ( x :: Vector{T} where T <: Number -> evaluate_element_expr_tree(a, x, elmt_var) )
-    evaluate_element_expr_tree(a :: Any, x :: Vector{T}, elmt_var :: Vector{Int}) where T <: Number = _evaluate_element_expr_tree(a, trait_expr_tree.is_expr_tree(a), x, elmt_var )
-    evaluate_element_expr_tree(a :: Any, elmt_var :: Dict{Int,T where T <: Number}) =  _evaluate_element_expr_tree(a, trait_expr_tree.is_expr_tree(a), elmt_var )
-    _evaluate_element_expr_tree(a, :: trait_expr_tree.type_not_expr_tree, x :: Vector{T}, elmt_var :: Vector{Int}) where T <: Number = error(" This is not an Expr tree")
-    _evaluate_element_expr_tree(a, :: trait_expr_tree.type_expr_tree, x :: Vector{T}, elmt_var :: Vector{Int}) where T <: Number = _evaluate_element_expr_tree(a, x, elmt_var )
-    _evaluate_element_expr_tree(a, :: trait_expr_tree.type_expr_tree, elmt_var :: Dict{Int,T where T <: Number}) = _evaluate_element_expr_tree(a, elmt_var)
-    #La fonction du premier appel
-    function _evaluate_element_expr_tree(expr_tree, x :: Vector{T}, elmt_var :: Vector{Int}) where T <: Number
-        function transition_array(elemental_var :: Vector{Int}, x :: Vector{T}) where T <: Number
-            dic_var_value = Dict{Int,T where T <: Number}()
-            for i in 1:length(elemental_var)
-                dic_var_value[(elemental_var[i])] = x[i]
-            end
-            return dic_var_value
-        end
-        dic_var_value = transition_array(elmt_var, x ) :: Dict{Int,T where T <: Number}
-        return _evaluate_element_expr_tree(expr_tree, dic_var_value)
-    end
-
-    function _evaluate_element_expr_tree(expr_tree, dic_var_value :: Dict{Int, T }) where T <: Number
-        nd = trait_expr_tree._get_expr_node(expr_tree)
-        ch = trait_expr_tree._get_expr_children(expr_tree)
-        if isempty(ch)
-            res = trait_expr_node.evaluate_node(nd, dic_var_value) :: T
-            return res
-        else
-            n = length(ch)
-            temp = Vector{Number}(undef,n)
-            for i in 1:n
-                temp[i] = evaluate_element_expr_tree(ch[i],dic_var_value) :: T
-            end
-            res = trait_expr_node.evaluate_node(nd, temp)  :: T
-            return res
-        end
-    end
 
 
 
@@ -162,3 +125,53 @@ module M_evaluation_expr_tree
 
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #
+    # evaluate_element_expr_tree(a :: Any, elmt_var :: Vector{Int}) = ( x :: Vector{T} where T <: Number -> evaluate_element_expr_tree(a, x, elmt_var) )
+    # evaluate_element_expr_tree(a :: Any, x :: Vector{T}, elmt_var :: Vector{Int}) where T <: Number = _evaluate_element_expr_tree(a, trait_expr_tree.is_expr_tree(a), x, elmt_var )
+    # evaluate_element_expr_tree(a :: Any, elmt_var :: Dict{Int,T where T <: Number}) =  _evaluate_element_expr_tree(a, trait_expr_tree.is_expr_tree(a), elmt_var )
+    # _evaluate_element_expr_tree(a, :: trait_expr_tree.type_not_expr_tree, x :: Vector{T}, elmt_var :: Vector{Int}) where T <: Number = error(" This is not an Expr tree")
+    # _evaluate_element_expr_tree(a, :: trait_expr_tree.type_expr_tree, x :: Vector{T}, elmt_var :: Vector{Int}) where T <: Number = _evaluate_element_expr_tree(a, x, elmt_var )
+    # _evaluate_element_expr_tree(a, :: trait_expr_tree.type_expr_tree, elmt_var :: Dict{Int,T where T <: Number}) = _evaluate_element_expr_tree(a, elmt_var)
+    # #La fonction du premier appel
+    # function _evaluate_element_expr_tree(expr_tree, x :: Vector{T}, elmt_var :: Vector{Int}) where T <: Number
+    #     function transition_array(elemental_var :: Vector{Int}, x :: Vector{T}) where T <: Number
+    #         dic_var_value = Dict{Int,T where T <: Number}()
+    #         for i in 1:length(elemental_var)
+    #             dic_var_value[(elemental_var[i])] = x[i]
+    #         end
+    #         return dic_var_value
+    #     end
+    #     dic_var_value = transition_array(elmt_var, x ) :: Dict{Int,T where T <: Number}
+    #     return _evaluate_element_expr_tree(expr_tree, dic_var_value)
+    # end
+    #
+    # function _evaluate_element_expr_tree(expr_tree, dic_var_value :: Dict{Int, T }) where T <: Number
+    #     nd = trait_expr_tree._get_expr_node(expr_tree)
+    #     ch = trait_expr_tree._get_expr_children(expr_tree)
+    #     if isempty(ch)
+    #         res = trait_expr_node.evaluate_node(nd, dic_var_value) :: T
+    #         return res
+    #     else
+    #         n = length(ch)
+    #         temp = Vector{Number}(undef,n)
+    #         for i in 1:n
+    #             temp[i] = evaluate_element_expr_tree(ch[i],dic_var_value) :: T
+    #         end
+    #         res = trait_expr_node.evaluate_node(nd, temp)  :: T
+    #         return res
+    #     end
+    # end
