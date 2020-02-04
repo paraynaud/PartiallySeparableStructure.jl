@@ -67,11 +67,12 @@ module M_evaluation_expr_tree
         if trait_expr_node.node_is_operator(expr_tree.field :: trait_expr_node.ab_ex_nd) == false
             return trait_expr_node.evaluate_node(expr_tree.field, x) :: T
         elseif trait_expr_node.node_is_plus(expr_tree.field)
-            mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children)
+            @inbounds @fastmath mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children)
+            # mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children)
         else
             n = length(expr_tree.children)
             temp = Vector{T}(undef, n)
-            map!( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, temp, expr_tree.children)
+            @inbounds @fastmath map!( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, temp, expr_tree.children)
             return trait_expr_node.evaluate_node(expr_tree.field,  temp) :: T
         end
     end
@@ -87,7 +88,7 @@ module M_evaluation_expr_tree
             else
                 n = length(expr_tree.children)
                 temp = Vector{T}(undef, n)
-                map!( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, temp, expr_tree.children)
+                @inbounds @fastmath map!( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, temp, expr_tree.children)
                 return trait_expr_node._evaluate_node(expr_tree.field,  temp) :: T
             end
         end

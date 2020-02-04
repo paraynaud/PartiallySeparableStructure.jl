@@ -5,6 +5,7 @@ using Test, BenchmarkTools, ProfileView, InteractiveUtils
 include("../../src/ordered_include.jl")
 
 using ..PartiallySeparableStructure
+using ..implementation_expr_tree
 
 println("\n\nCompare_With_MOI_JUMP\n\n")
 
@@ -12,7 +13,7 @@ println("\n\nCompare_With_MOI_JUMP\n\n")
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 10000
+n = 1000
 
 m = Model()
 @variable(m, x[1:n])
@@ -21,7 +22,7 @@ m = Model()
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 # @NLobjective(m, Min, sum( (x[j] + x[j+1])^2 for j in 1:n-1 ))
 # @NLobjective(m, Min, sum( (x[j] * x[j+1])^2 * x[j+2]  for j in 1:n-2 ))
-@NLobjective(m, Min, sum( (x[j] - x[j+1])^2 - x[j+2]  for j in 1:n-2 ))
+@NLobjective(m, Min, sum( (x[j] - x[j+1])^2   for j in 1:n-1 ))
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
 obj = MathOptInterface.objective_expr(evaluator)
@@ -51,7 +52,7 @@ println("- Début des test")
 
 println(" fin des tests vérifiant les résultats")
 
-println("- Génération des benchmarks")
+println("- Génération des benchmarks evaluation des fonctions objectifs")
 
     # ev_obj_Expr = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
     # println("  - obj Expr fait ")
@@ -60,8 +61,8 @@ println("- Génération des benchmarks")
     #
     # ev_SPS_Expr = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
     # println("  - SPS Expr fait")
-    # ev_SPS_expr_tree = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x)
-    # println("  - SPS expr_tree fait")
+    ev_SPS_expr_tree2 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x)
+    println("  - SPS expr_tree fait")
     # ev_MOI = @benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x)
     # println("  - Evaluation MOI faite")
 
@@ -71,6 +72,36 @@ println("- Génération des benchmarks")
 # @profview (@benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x))
 # @profview (@benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x))
 # @profview (@benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x))
+
+
+# println("test du Hessien ")
+# println(" - set-up des structures de résultats")
+# MOI_pattern = MathOptInterface.hessian_lagrangian_structure(evaluator)
+# column = [x[1] for x in MOI_pattern]
+# row = [x[2]  for x in MOI_pattern]
+# # #
+# MOI_value_Hessian = Vector{ typeof(x[1]) }(undef,length(MOI_pattern))
+# MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
+# values = [x for x in MOI_value_Hessian]
+# f2 = ( elm_fun :: PartiallySeparableStructure.element_function{Expr} -> PartiallySeparableStructure.element_hessian{Float64}( Array{Float64,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
+# t2 = f2.(SPS.structure)
+# H2 = PartiallySeparableStructure.Hess_matrix{Float64}(t2)
+# f = ( elm_fun :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_hessian{Float64}( Array{Float64,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
+# t = f.(SPS2.structure) :: Vector{PartiallySeparableStructure.element_hessian{Float64}}
+# H = PartiallySeparableStructure.Hess_matrix{Float64}(t)
+# println("début des benchmark sur les Hessiens")
+#     SPS_expr_tree_HESSIAN = @benchmark SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS2, x)
+#     println("Hessien expr_tree")
+#     SPS_Expr_HESSIAN = @benchmark SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS, x)
+#     println("Hessien Expr")
+#     MOI_HESSIAN = @benchmark MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
+#     println("Hessien MOI")
+#     SPS_HESS_expr_tree! = @benchmark PartiallySeparableStructure.struct_hessian!(SPS2, x, H)
+#     println("Hessian! Expr fait ")
+#     SPS_HESS_Expr! = @benchmark PartiallySeparableStructure.struct_hessian!(SPS, x, H2)
+#     println("Hessian! expr_tree fait ")
+# @profview (@benchmark PartiallySeparableStructure.struct_hessian!(SPS2, x, H))
+
 """
 
 n=10000
@@ -303,13 +334,13 @@ BenchmarkTools.Trial:
 # @testset "evaluation du Hessian par divers moyers" begin
 #
 
-    MOI_pattern = MathOptInterface.hessian_lagrangian_structure(evaluator)
-    column = [x[1] for x in MOI_pattern]
-    row = [x[2]  for x in MOI_pattern]
-# #
-    MOI_value_Hessian = Vector{ typeof(x[1]) }(undef,length(MOI_pattern))
-    MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
-    values = [x for x in MOI_value_Hessian]
+#     MOI_pattern = MathOptInterface.hessian_lagrangian_structure(evaluator)
+#     column = [x[1] for x in MOI_pattern]
+#     row = [x[2]  for x in MOI_pattern]
+# # #
+#     MOI_value_Hessian = Vector{ typeof(x[1]) }(undef,length(MOI_pattern))
+#     MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
+#     values = [x for x in MOI_value_Hessian]
 # #
 #     MOI_half_hessian_en_x = sparse(row,column,values)
 #     MOI_hessian_en_x = Symmetric(MOI_half_hessian_en_x)
@@ -329,15 +360,11 @@ BenchmarkTools.Trial:
     # v_tmp = Vector{ Float64 }(undef, length(MOI_pattern))
 #     MOI_Hessian_product_y = Vector{ typeof(y[1]) }(undef,n)
 #      prod2 = @benchmark (MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_y, x, y, 1.0, zeros(0)))
-println("test du Hessien ")
-SPS_expr_tree_HESSIAN = @benchmark SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS2, x)
-println("Hessien expr_tree")
-SPS_Expr_HESSIAN = @benchmark SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS, x)
-println("Hessien Expr_tree")
-MOI_HESSIAN = @benchmark MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
-println("Hessien MOI")
-# time_f = @elapsed SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS2, x)
-#
+
+
+
+
+
 
 #
 #

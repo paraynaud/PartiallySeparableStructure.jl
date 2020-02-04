@@ -45,10 +45,7 @@ module power_operators
 
     function _evaluate_node(op :: power_operator{Z}, value_ch :: Vector{T}) where T <: Number where Z <: Number
             length(value_ch) == 1 || error("power has more than one argument")
-            # @show temp = (T)(value_ch[1]^(op.index) ) :: T
-            # @show typeof(temp)
-            # return temp
-            return (T)( value_ch[1]^(op.index) ) :: T
+            return @fastmath @inbounds (T)( value_ch[1]^(op.index) ) :: T
     end
 
 

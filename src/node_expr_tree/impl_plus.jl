@@ -57,6 +57,10 @@ module plus_operators
             error("probleme operateur plus ")
         end
     end
+    # function _evaluate_node(op :: plus_operator, value_ch :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number
+    #     length(value_ch) > 1 && @fastmath sum(value_ch) :: T
+    # end
+
 
     function _node_to_Expr(op :: plus_operator)
         return [:+]

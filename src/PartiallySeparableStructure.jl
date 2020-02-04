@@ -232,8 +232,8 @@ at the point x. Return the result as a Hess_matrix.
 """
     function struct_hessian(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
-        elmt_hess = Vector{Tuple{Vector{Int},Vector{Int},Vector{Y}}}(undef, l_elmt_fun)
-        temp = Vector{element_hessian{Y}}(undef, l_elmt_fun)
+        # elmt_hess = Vector{Tuple{Vector{Int},Vector{Int},Vector{Y}}}(undef, l_elmt_fun)
+        # temp = Vector{element_hessian{Y}}(undef, l_elmt_fun)
         f = ( elm_fun :: element_function{T} -> element_hessian{Y}( Array{Y,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
         t = f.(sps.structure) :: Vector{element_hessian{Y}}
         temp = Hess_matrix{Y}(t)
@@ -252,14 +252,9 @@ at the point x. Return the result as a Hess_matrix.
 
     function struct_hessian(sps :: SPS{implementation_expr_tree.t_expr_tree}, x :: Vector{Y} ) where Y <: Number
         l_elmt_fun = length(sps.structure)
-        # temp = Vector{element_hessian{Y}}(undef, l_elmt_fun)
-        # println("test")
         f = ( elm_fun :: element_function{implementation_expr_tree.t_expr_tree} -> element_hessian{Y}( Array{Y,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
         t = f.(sps.structure) :: Vector{element_hessian{Y}}
-        # @show typeof(t)
-        # temp = Vector{element_hessian{Y}}(t)
         temp = Hess_matrix{Y}(t)
-
         @Threads.threads for i in 1:l_elmt_fun # a voir si je laisse le array(view()) la ou non
         # à rectifier surement dans le futur
             if sps.structure[i].type == implementation_type_expr.constant || sps.structure[i].type == implementation_type_expr.linear
@@ -268,11 +263,19 @@ at the point x. Return the result as a Hess_matrix.
                 temp.arr[i] = element_hessian{Y}(ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun :: implementation_expr_tree.t_expr_tree), view(x, sps.structure[i].used_variable :: Vector{Int})  ) )
             end
         end
-        # G = Hess_matrix{Y}(temp)
-        # return G
         return temp
     end
 
+
+    function struct_hessian!(sps :: SPS{T}, x :: Vector{Y}, G :: Hess_matrix{Y} ) where T where Y <: Number
+        #on apllique a chaque fonction element ForwardDiff pour calculer son Hesseien elementaire, et l'on va stocker son résultat dans la structure Hess_matrix
+        map!( elt_fun -> element_hessian{Y}(ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(elt_fun.fun), view(x, elt_fun.used_variable) )) , G.arr, sps.structure :: Vector{element_function{T}} )
+    end
+
+    function struct_hessian!(sps :: SPS{ implementation_expr_tree.t_expr_tree}, x :: Vector{Y}, G :: Hess_matrix{Y} )  where Y <: Number
+        #on apllique a chaque fonction element ForwardDiff pour calculer son Hesseien elementaire, et l'on va stocker son résultat dans la structure Hess_matrix
+        map!( elt_fun -> element_hessian{Y}(ForwardDiff.hessian(M_evaluation_expr_tree.evaluate_expr_tree(elt_fun.fun::  implementation_expr_tree.t_expr_tree), view(x, elt_fun.used_variable :: Vector{Int}) )) , G.arr, sps.structure :: Vector{element_function{implementation_expr_tree.t_expr_tree} })
+    end
 
 
 """
