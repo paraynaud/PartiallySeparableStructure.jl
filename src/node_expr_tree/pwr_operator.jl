@@ -20,7 +20,7 @@ module power_operators
 
 
     function create_node_expr(op :: Symbol, arg :: T , ::Bool) where T <: Number
-        return power_operator(arg)
+        return power_operator{T}(arg)
     end
 
     _node_is_operator( op :: power_operator{T} ) where T <: Number= true

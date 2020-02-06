@@ -82,13 +82,14 @@ module M_evaluation_expr_tree
             return trait_expr_node._evaluate_node(expr_tree.field, x) :: T
         else
             if trait_expr_node.node_is_plus(expr_tree.field) :: Bool
-                return mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children) :: T
+                # return mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children) :: T
+                return @fastmath mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children) :: T
             elseif trait_expr_node.node_is_power(expr_tree.field)
                 return _evaluate_expr_tree(expr_tree.children[1],x) :: T
             else
                 n = length(expr_tree.children)
                 temp = Vector{T}(undef, n)
-                @inbounds @fastmath map!( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, temp, expr_tree.children)
+                @inbounds map!( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, temp, expr_tree.children)
                 return trait_expr_node._evaluate_node(expr_tree.field,  temp) :: T
             end
         end

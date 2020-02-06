@@ -14,7 +14,6 @@ println("\n\nCompare_With_MOI_JUMP\n\n")
 #Définition d'un modèle JuMP
 σ = 10e-5
 n = 1000
-
 m = Model()
 @variable(m, x[1:n])
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
@@ -22,7 +21,7 @@ m = Model()
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 # @NLobjective(m, Min, sum( (x[j] + x[j+1])^2 for j in 1:n-1 ))
 # @NLobjective(m, Min, sum( (x[j] * x[j+1])^2 * x[j+2]  for j in 1:n-2 ))
-@NLobjective(m, Min, sum( (x[j] - x[j+1])^2   for j in 1:n-1 ))
+@NLobjective(m, Min, sum( (x[j] + x[j+1]+ x[j+2] + x[j+3])^2   for j in 1:n-3 ))
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
 obj = MathOptInterface.objective_expr(evaluator)
@@ -61,7 +60,7 @@ println("- Génération des benchmarks evaluation des fonctions objectifs")
     #
     # ev_SPS_Expr = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
     # println("  - SPS Expr fait")
-    ev_SPS_expr_tree2 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x)
+    ev_SPS_expr_tree9 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x)
     println("  - SPS expr_tree fait")
     # ev_MOI = @benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x)
     # println("  - Evaluation MOI faite")
@@ -106,6 +105,17 @@ println("- Génération des benchmarks evaluation des fonctions objectifs")
 
 n=10000
 
+memory estimate:  1.98 MiB
+allocs estimate:  59997
+--------------
+minimum time:     2.753 ms (0.00% GC)
+median time:      3.599 ms (0.00% GC)
+mean time:        3.783 ms (0.00% GC)
+maximum time:     8.387 ms (0.00% GC)
+--------------
+samples:          1319
+evals/sample:     1
+
 BenchmarkTools.Trial:
   memory estimate:  3.97 MiB
   allocs estimate:  119979
@@ -120,6 +130,19 @@ BenchmarkTools.Trial:
 
 
 n=1000
+
+
+BenchmarkTools.Trial:
+  memory estimate:  202.97 KiB
+  allocs estimate:  5997
+  --------------
+  minimum time:     165.601 μs (0.00% GC)
+  median time:      218.900 μs (0.00% GC)
+  mean time:        259.198 μs (0.00% GC)
+  maximum time:     1.455 ms (0.00% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1
 
 BenchmarkTools.Trial:
   memory estimate:  363.00 KiB
