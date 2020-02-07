@@ -13,15 +13,15 @@ println("\n\nCompare_With_MOI_JUMP\n\n")
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 1000
+n = 10
 m = Model()
 @variable(m, x[1:n])
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
-# @NLobjective(m, Min, sum( (x[j] + x[j+1])^2 for j in 1:n-1 ))
+@NLobjective(m, Min, sum( (x[j] + x[j+1])^2 for j in 1:n-1 ))
 # @NLobjective(m, Min, sum( (x[j] * x[j+1])^2 * x[j+2]  for j in 1:n-2 ))
-@NLobjective(m, Min, sum( (x[j] + x[j+1]+ x[j+2] + x[j+3])^2   for j in 1:n-3 ))
+# @NLobjective(m, Min, sum( (x[j] + x[j+1]+ x[j+2] + x[j+3])^2   for j in 1:n-3 ))
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
 obj = MathOptInterface.objective_expr(evaluator)
@@ -60,18 +60,34 @@ println("- Génération des benchmarks evaluation des fonctions objectifs")
     #
     # ev_SPS_Expr = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x)
     # println("  - SPS Expr fait")
-    ev_SPS_expr_tree9 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x)
-    println("  - SPS expr_tree fait")
+    # ev_SPS_expr_tree9 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x)
+    # println("  - SPS expr_tree fait")
     # ev_MOI = @benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x)
     # println("  - Evaluation MOI faite")
 
-# println("- Les profiles des fonctions maintenant \n\n")
-# @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x))
-# @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x))
-# @profview (@benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x))
-# @profview (@benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x))
-# @profview (@benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x))
+println("- Les profiles des fonctions maintenant \n\n")
+    # @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x))
+    # @profview  (@benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x))
+    # @profview (@benchmark PartiallySeparableStructure.evaluate_SPS(SPS2, x))
+    # @profview (@benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x))
+    # @profview (@benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x))
 
+println("test des mises à jour SR1 et BFGS")
+    f = ( elm_fun :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_hessian{Float64}( Array{Float64,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
+    v_elmt_hess = f.(SPS2.structure)
+    v_elmt_hess2 = f.(SPS2.structure)
+    exact_Hessian = PartiallySeparableStructure.Hess_matrix{Float64}(v_elmt_hess)
+    approx_hessian = PartiallySeparableStructure.Hess_matrix{Float64}(v_elmt_hess2)
+
+    x_init = ones(n)
+    x_2nd = (x -> 2*x).(x_init)
+    fake_grad = (x -> - 50 + 100 * x).(rand(n))
+    fake_grad2 = (x -> - 50 + 100 * x).(rand(n))
+    s = x_2nd - x_init
+    y = fake_grad2 - fake_grad
+
+    PartiallySeparableStructure.struct_hessian!(SPS2, x, exact_Hessian)
+    PartiallySeparableStructure.update_SPS_SR1!(SPS2, exact_Hessian, approx_hessian, s, y)
 
 # println("test du Hessien ")
 # println(" - set-up des structures de résultats")

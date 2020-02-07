@@ -2,7 +2,7 @@ module PartiallySeparableStructure
 
     using ..implementation_type_expr
     using ..algo_expr_tree, ..trait_expr_tree, ..trait_type_expr, ..M_evaluation_expr_tree
-    using ..implementation_expr_tree
+    using ..implementation_expr_tree, ..Quasi_Newton_update
     using ForwardDiff, SparseArrays
     using Base.Threads
 
@@ -223,7 +223,6 @@ The result of the function is the triplet of the sparse matrix Gᵢ.
         end
     end
 
-# On en est la; le probleme vient du calcul du Hessien pour
 
 """
     evaluate_hessian(sps,x)
@@ -314,16 +313,17 @@ compute the product g⊤ x = ∑ Uᵢ⊤ gᵢ⊤ xᵢ. So we need the sps struct
 """
     Fonction ayant pour but de créer l'approximation SR1 de la structure SPS. Actuellement en suspend car je dois faire autre chose.
 """
-    function approx_B_SR1(sps :: SPS{T}, B :: Hess_matrix{Y}, y :: Vector{Y}, s :: Vector{Z}) where T where Y <: Number where Z <: Number
+    function update_SPS_SR1!(sps :: SPS{T}, B :: Hess_matrix{Y}, B_1 :: Hess_matrix{Y}, y :: Vector{Y}, s :: Vector{Y}) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
-        vector_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).([1:sps.n_var;]) )
          # @Threads.threads for i in 1:l_elmt_fun
          for i in 1:l_elmt_fun
             (rown, column, value) = findnz(sps.structure[i].U)
-            temp = B.arr[i].elmt_hess * Array(view(x, sps.structure[i].used_variable))
+            s_elem = Array(view(s, sps.structure[i].used_variable))
+            y_elem = Array(view(y, sps.structure[i].used_variable))
+            B_elem = B.arr[i].elmt_hess
+            B_elem_1 = B_1.arr[i].elmt_hess
+            Quasi_Newton_update.update_SR1!(s_elem, y_elem, B_elem, B_elem_1)
         end
-        vector_res = (x -> x[]).(vector_prl) :: Vector{Y}
-        return vector_res
     end
 
     export deduct_partially_separable_structure
