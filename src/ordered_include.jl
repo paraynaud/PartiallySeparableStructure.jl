@@ -10,5 +10,8 @@ include("tree/ordered_include.jl")
 include("expr_tree/ordered_include.jl")
 
 
+#les méthodes quasi-newton
+include("quasi_newton.jl")
+
 # le coeur du module
 include("PartiallySeparableStructure.jl")
