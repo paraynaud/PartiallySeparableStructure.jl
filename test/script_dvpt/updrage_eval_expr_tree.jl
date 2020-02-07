@@ -7,13 +7,13 @@ include("../../src/ordered_include.jl")
 using ..PartiallySeparableStructure
 using ..implementation_expr_tree
 
-println("\n\nCompare_With_MOI_JUMP\n\n")
+println("\n\n Début script de dvpt\n\n")
 
 
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 10
+n = 10000
 m = Model()
 @variable(m, x[1:n])
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
@@ -72,10 +72,23 @@ println("- Les profiles des fonctions maintenant \n\n")
     # @profview (@benchmark PartiallySeparableStructure.evaluate_SPS(SPS, x))
     # @profview (@benchmark MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x))
 
+
+# println("test SPS gradient ")
+    # x_init = ones(n)
+    # f = (x :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_gradient{typeof(x_init[1])}(Vector{typeof(x_init[1])}(undef, length(x.used_variable) )) )
+    # grad = PartiallySeparableStructure.grad_vector{typeof(x_init[1])}( f.(SPS2.structure) )
+    #
+    # bench_grad3 = @benchmark PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2, x_init, grad)
+    #
+    # @benchmark ForwardDiff.gradient( M_evaluation_expr_tree.evaluate_expr_tree( SPS2.structure[1].fun), x_init[1:2]  )
+    # @benchmark PartiallySeparableStructure.element_gradient!(SPS2.structure[1].fun, view(x_init, [1,2]), grad.arr[1])
+    # @benchmark M_evaluation_expr_tree.evaluate_expr_tree(SPS2.structure[1].fun, view(x_init, [1,2]) )
+
+
 println("test des mises à jour SR1 et BFGS")
-    f = ( elm_fun :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_hessian{Float64}( Array{Float64,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
-    v_elmt_hess = f.(SPS2.structure)
-    v_elmt_hess2 = f.(SPS2.structure)
+    f_approx = ( elm_fun :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_hessian{Float64}( Array{Float64,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
+    v_elmt_hess = f_approx.(SPS2.structure)
+    v_elmt_hess2 = f_approx.(SPS2.structure)
     exact_Hessian = PartiallySeparableStructure.Hess_matrix{Float64}(v_elmt_hess)
     approx_hessian = PartiallySeparableStructure.Hess_matrix{Float64}(v_elmt_hess2)
 
@@ -89,33 +102,110 @@ println("test des mises à jour SR1 et BFGS")
     PartiallySeparableStructure.struct_hessian!(SPS2, x, exact_Hessian)
     PartiallySeparableStructure.update_SPS_SR1!(SPS2, exact_Hessian, approx_hessian, s, y)
 
-# println("test du Hessien ")
-# println(" - set-up des structures de résultats")
-# MOI_pattern = MathOptInterface.hessian_lagrangian_structure(evaluator)
-# column = [x[1] for x in MOI_pattern]
-# row = [x[2]  for x in MOI_pattern]
-# # #
-# MOI_value_Hessian = Vector{ typeof(x[1]) }(undef,length(MOI_pattern))
+
+    f = (x :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_gradient{typeof(x_init[1])}(Vector{typeof(x_init[1])}(undef, length(x.used_variable) )) )
+    dif_grad = PartiallySeparableStructure.grad_vector{typeof(x_init[1])}( f.(SPS2.structure) )
+    PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2, x_init, dif_grad)
+
+    SPS_Hess_approx_grad_modif5 = @benchmark PartiallySeparableStructure.update_SPS_SR1!(SPS2, exact_Hessian, approx_hessian, dif_grad, s)
+    #
+    # SPS_Hess_approx2 = @benchmark PartiallySeparableStructure.update_SPS_SR1!(SPS2, exact_Hessian, approx_hessian, s, fake_grad)
+
+    # @code_warntype PartiallySeparableStructure.update_SPS_SR1!(SPS2, exact_Hessian, approx_hessian, s, y)
+    # @profview (@benchmark PartiallySeparableStructure.update_SPS_SR1!(SPS2, exact_Hessian, approx_hessian, dif_grad, s))
+
+    # @profview PartiallySeparableStructure.update_SPS_SR1!(SPS2, exact_Hessian, approx_hessian, dif_grad, s)
+    # using Profile
+    # Profile.clear()
+    # @profile PartiallySeparableStructure.update_SPS_SR1!(SPS2, exact_Hessian, approx_hessian, dif_grad, s)
+    # ProfileView.view()
+
+println("test du Hessien ")
+println(" - set-up des structures de résultats")
+MOI_pattern = MathOptInterface.hessian_lagrangian_structure(evaluator)
+column = [x[1] for x in MOI_pattern]
+row = [x[2]  for x in MOI_pattern]
+# #
+MOI_value_Hessian = Vector{ typeof(x[1]) }(undef,length(MOI_pattern))
 # MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
 # values = [x for x in MOI_value_Hessian]
 # f2 = ( elm_fun :: PartiallySeparableStructure.element_function{Expr} -> PartiallySeparableStructure.element_hessian{Float64}( Array{Float64,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
 # t2 = f2.(SPS.structure)
 # H2 = PartiallySeparableStructure.Hess_matrix{Float64}(t2)
-# f = ( elm_fun :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_hessian{Float64}( Array{Float64,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
-# t = f.(SPS2.structure) :: Vector{PartiallySeparableStructure.element_hessian{Float64}}
-# H = PartiallySeparableStructure.Hess_matrix{Float64}(t)
+f = ( elm_fun :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_hessian{Float64}( Array{Float64,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
+t = f.(SPS2.structure) :: Vector{PartiallySeparableStructure.element_hessian{Float64}}
+H = PartiallySeparableStructure.Hess_matrix{Float64}(t)
 # println("début des benchmark sur les Hessiens")
-#     SPS_expr_tree_HESSIAN = @benchmark SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS2, x)
-#     println("Hessien expr_tree")
+    # SPS_expr_tree_HESSIAN = @benchmark SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS2, x)
+    # println("Hessien expr_tree")
 #     SPS_Expr_HESSIAN = @benchmark SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS, x)
 #     println("Hessien Expr")
-#     MOI_HESSIAN = @benchmark MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
+    MOI_HESSIAN = @benchmark MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
 #     println("Hessien MOI")
-#     SPS_HESS_expr_tree! = @benchmark PartiallySeparableStructure.struct_hessian!(SPS2, x, H)
-#     println("Hessian! Expr fait ")
+    # SPS_HESS_expr_tree! = @benchmark PartiallySeparableStructure.struct_hessian!(SPS2, x, H)
+    # println("Hessian! Expr fait ")
 #     SPS_HESS_Expr! = @benchmark PartiallySeparableStructure.struct_hessian!(SPS, x, H2)
 #     println("Hessian! expr_tree fait ")
 # @profview (@benchmark PartiallySeparableStructure.struct_hessian!(SPS2, x, H))
+
+
+
+
+""" evolution des temps de l'approximation SR1 sur la structure SPS
+Utilisation du Hessien elementaire
+BenchmarkTools.Trial:
+  memory estimate:  7.93 MiB
+  allocs estimate:  109989
+  --------------
+  minimum time:     3.335 ms (0.00% GC)
+  median time:      6.135 ms (0.00% GC)
+  mean time:        7.087 ms (13.38% GC)
+  maximum time:     673.839 ms (99.21% GC)
+  --------------
+  samples:          705
+  evals/sample:     1
+
+J'ai mis des AbstractArray et AbstractVector
+    BenchmarkTools.Trial:
+      memory estimate:  12.36 MiB
+      allocs estimate:  179984
+      --------------
+      minimum time:     89.265 ms (0.00% GC)
+      median time:      96.222 ms (0.00% GC)
+      mean time:        96.017 ms (0.00% GC)
+      maximum time:     103.111 ms (0.00% GC)
+      --------------
+      samples:          53
+      evals/sample:     1
+
+Après avoir amélioré le calcul
+BenchmarkTools.Trial:
+  memory estimate:  11.18 MiB
+  allocs estimate:  164926
+  --------------
+  minimum time:     36.273 ms (0.00% GC)
+  median time:      138.827 ms (0.00% GC)
+  mean time:        124.770 ms (0.00% GC)
+  maximum time:     152.889 ms (0.00% GC)
+  --------------
+  samples:          41
+  evals/sample:     1
+
+BenchmarkTools.Trial:
+  memory estimate:  11.24 MiB
+  allocs estimate:  165720
+  --------------
+  minimum time:     42.881ms  (0.00% GC)
+  median time:      140.130 ms (0.00% GC)
+  mean time:        126.384 ms (0.00% GC)
+  maximum time:     163.439 ms (0.00% GC)
+  --------------
+  samples:          40
+  evals/sample:     1
+
+
+"""
+
 
 """
 

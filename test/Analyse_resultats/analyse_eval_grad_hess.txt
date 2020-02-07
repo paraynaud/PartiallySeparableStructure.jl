@@ -1,0 +1,124 @@
+Analyse du cout d'un gradient élémentaire en comparaison avec celui de ForwarDiff (utilisé dans la fonction)
+
+x_init = ones(n)
+f = (x :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_gradient{typeof(x_init[1])}(Vector{typeof(x_init[1])}(undef, length(x.used_variable) )) )
+grad = PartiallySeparableStructure.grad_vector{typeof(x_init[1])}( f.(SPS2.structure) )
+
+bench_grad3 = @benchmark PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2, x_init, grad)
+@benchmark ForwardDiff.gradient( M_evaluation_expr_tree.evaluate_expr_tree( SPS2.structure[1].fun), x_init[1:2]  )
+@benchmark PartiallySeparableStructure.element_gradient!(SPS2.structure[1].fun, view(x_init, [1,2]), grad.arr[1])
+
+Utilisation de ForwarDiff.gradient! au lieu de gradient
+  BenchmarkTools.Trial:
+    memory estimate:  5.19 MiB
+    allocs estimate:  129987
+    --------------
+    minimum time:     6.320 ms (0.00% GC)
+    median time:      8.721 ms (0.00% GC)
+    mean time:        8.595 ms (0.00% GC)
+    maximum time:     12.037 ms (0.00% GC)
+    --------------
+    samples:          582
+    evals/sample:     1
+
+fonction calculant le gradient de chaque fonction élément:
+    BenchmarkTools.Trial:
+      memory estimate:  6.10 MiB
+      allocs estimate:  139988
+      --------------
+      minimum time:     13.072 ms (0.00% GC)
+      median time:      16.767 ms (0.00% GC)
+      mean time:        17.028 ms (0.00% GC)
+      maximum time:     24.532 ms (0.00% GC)
+      --------------
+      samples:          294
+      evals/sample:     1
+
+ForwardDiff seul sur un gradient élémentaire
+    BenchmarkTools.Trial:
+      memory estimate:  656 bytes
+      allocs estimate:  12
+      --------------
+      minimum time:     1.480 μs (0.00% GC)
+      median time:      1.570 μs (0.00% GC)
+      mean time:        1.724 μs (0.00% GC)
+      maximum time:     21.990 μs (0.00% GC)
+      --------------
+      samples:          10000
+      evals/sample:     10
+
+Ma fonction calculant un seul gradient élémentaire
+    BenchmarkTools.Trial:
+    memory estimate:  736 bytes
+    allocs estimate:  15
+    --------------
+    minimum time:     1.250 μs (0.00% GC)
+    median time:      1.370 μs (0.00% GC)
+    mean time:        1.528 μs (0.00% GC)
+    maximum time:     23.550 μs (0.00% GC)
+    --------------
+    samples:          10000
+    evals/sample:     10
+
+Nous avons 10000 fonctions éléments, si on multiplie par 10000 notre temps de calcul de d'un gradient élémentaire, on tombe sur le résultat.
+Conclusion :
+    - La fonction calculant le gradient est bien codé, nous sommes bornés par le temps de calcul de forwardDiff qui dépend lui-même de mon évaluation d'expression
+
+
+Analyse de ForwardDiff en utilisant une fonction constante.
+
+f_one = (x :: Any -> (Int)(1) )
+a_one = rand(50000)
+@benchmark f_one(a_one)
+  BenchmarkTools.Trial:
+    memory estimate:  0 bytes
+    allocs estimate:  0
+    --------------
+    minimum time:     9.809 ns (0.00% GC)
+    median time:      10.711 ns (0.00% GC)
+    mean time:        12.320 ns (0.00% GC)
+    maximum time:     104.605 ns (0.00% GC)
+    --------------
+    samples:          10000
+    evals/sample:     999
+
+@benchmark g = ForwardDiff.gradient(f_one , a_one)
+  BenchmarkTools.Trial:
+    memory estimate:  5.34 MiB
+    allocs estimate:  5
+    --------------
+    minimum time:     3.376 ms (0.00% GC)
+    median time:      4.706 ms (0.00% GC)
+    mean time:        7.567 ms (34.28% GC)
+    maximum time:     2.079 s (99.80% GC)
+    --------------
+    samples:          800
+    evals/sample:     1
+
+g2 = Vector{Float64}(undef,50000)
+@benchmark ForwardDiff.gradient!(g2, f_one , a_one)
+    BenchmarkTools.Trial:
+      memory estimate:  4.96 MiB
+      allocs estimate:  3
+      --------------
+      minimum time:     1.611 ms (0.00% GC)
+      median time:      2.123 ms (0.00% GC)
+      mean time:        3.025 ms (30.82% GC)
+      maximum time:     832.767 ms (99.72% GC)
+      --------------
+      samples:          1724
+      evals/sample:     1
+
+En comparaison mon temps d'évaluation d'expr_tree d'une fonction élementaire x[i] + x[j] :
+  BenchmarkTools.Trial:
+    memory estimate:  224 bytes
+    allocs estimate:  7
+    --------------
+    minimum time:     243.079 ns (0.00% GC)
+    median time:      294.508 ns (0.00% GC)
+    mean time:        325.814 ns (0.00% GC)
+    maximum time:     1.076 μs (0.00% GC)
+    --------------
+    samples:          10000
+    evals/sample:     455
+  -> 25 fois plus long que la fonction constante

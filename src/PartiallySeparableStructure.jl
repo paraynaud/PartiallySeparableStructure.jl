@@ -188,6 +188,25 @@ at the point x, return a vector of size n (the number of variable) which is the 
         return gradient
     end
 
+
+
+    function evaluate_SPS_gradient!(sps :: SPS{T}, x :: Vector{Y}, g :: grad_vector{Y} ) where T where Y <: Number
+        l_elmt_fun = length(sps.structure)
+        # @inbounds for i in 1:l_elmt_fun
+        # Threads.@threads for i in 1:l_elmt_fun
+        for i in 1:l_elmt_fun
+            if isempty(sps.structure[i].U) == false
+                element_gradient!(sps.structure[i].fun, view(x, sps.structure[i].used_variable), g.arr[i] )
+            end
+        end
+    end
+
+    function element_gradient!( expr_tree :: implementation_expr_tree.t_expr_tree, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}, g :: element_gradient{T} ) where T <: Number
+        # g.g_i[:] = ForwardDiff.gradient(M_evaluation_expr_tree.evaluate_expr_tree(expr_tree), x  )
+        ForwardDiff.gradient!(g.g_i, M_evaluation_expr_tree.evaluate_expr_tree(expr_tree), x  )
+    end
+
+
 """
     evaluate_hessian(sps,x)
 evalutate the hessian of the partially separable function f = ∑ fᵢ, stored in the sps structure
@@ -206,6 +225,9 @@ at the point x. Return the sparse matrix of the hessian of size n × n.
         G = sparse(vcat(row...) :: Vector{Int} , vcat(column...) :: Vector{Int}, vcat(values...) :: Vector{Y}) :: SparseMatrixCSC{Y,Int}
         return G
     end
+
+
+
 
 """
     evaluate_element_hessian(fᵢ,xᵢ)
@@ -243,8 +265,6 @@ at the point x. Return the result as a Hess_matrix.
                 temp.arr[i] =  element_hessian{Y}( Array(SparseMatrixCSC{Y,Int64}(sparse([],[],[]))) )
             end
         end
-        # G = Hess_matrix{Y}(temp)
-        # return G
         return temp
     end
 
@@ -325,6 +345,19 @@ compute the product g⊤ x = ∑ Uᵢ⊤ gᵢ⊤ xᵢ. So we need the sps struct
             Quasi_Newton_update.update_SR1!(s_elem, y_elem, B_elem, B_elem_1)
         end
     end
+
+    function update_SPS_SR1!(sps :: SPS{T}, B :: Hess_matrix{Y}, B_1 :: Hess_matrix{Y}, y :: grad_vector{Y}, s :: Vector{Y}) where T where Y <: Number
+        l_elmt_fun = length(sps.structure)
+         # @Threads.threads for i in 1:l_elmt_fun
+         @inbounds for i in 1:l_elmt_fun
+            s_elem = Array(view(s, sps.structure[i].used_variable))
+            y_elem = y.arr[i].g_i
+            B_elem = B.arr[i].elmt_hess
+            B_elem_1 = B_1.arr[i].elmt_hess
+            Quasi_Newton_update.update_SR1!(s_elem, y_elem, B_elem, B_elem_1)
+        end
+    end
+
 
     export deduct_partially_separable_structure
 

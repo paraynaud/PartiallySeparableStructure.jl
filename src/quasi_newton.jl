@@ -12,24 +12,24 @@ function that builde the next approximation of the Hessian, which will be stored
 between 2 points, the difference of the gradient of the associate points, and the previous approximation of the Hessian. The approximation is made according
 to the SR1 update method.
 """
-    function update_SR1!(Δx :: Vector{Y},
-                        y :: Vector{Y},
-                        B :: Array{Y,2}, B_1 :: Array{Y,2}) where Y <: Number
+    function update_SR1!(Δx :: AbstractVector{Y},
+                        y :: AbstractVector{Y},
+                        B :: AbstractArray{Y,2}, B_1 :: AbstractArray{Y,2}) where Y <: Number
         n = length(Δx)
         ω = 1e-8
-        v = y - B * Δx :: Vector{Y}
+        @inbounds @fastmath v = y - B * Δx :: Vector{Y}
 
-        cond_left = abs( Δx' * v )
-        cond_right = ω * norm(Δx,2) * norm(v,2)
-        cond = (cond_left >= cond_right) :: Bool
+        @inbounds @fastmath cond_left = abs( Δx' * v )
+        @inbounds @fastmath cond_right = ω * norm(Δx,2) * norm(v,2)
+        @inbounds @fastmath cond = (cond_left >= cond_right) :: Bool
 
         if cond
-            num = Array{Y,2}( v * v')
-            den = (v' * Δx) :: Y
-            B_1[:] = (B + num/den) :: Array{Y,2}
+            @inbounds @fastmath num = Array{Y,2}( v * v')
+            @inbounds @fastmath den = (v' * Δx) :: Y
+            @inbounds @fastmath B_1[:] = (B + num/den) :: Array{Y,2}
         else
-            println("les conditions d'update ne sont pas vérifiés")
-            @show B_1[:] = B :: Array{Y,2}
+            # println("les conditions d'update ne sont pas vérifiés")
+            @inbounds @fastmath B_1[:] = B :: Array{Y,2}
         end
     end
 
@@ -93,6 +93,7 @@ g_SR1_0 = rand(n)
 g_SR1_1 = rand(n)
 B_SR1_0 = Array(sparse([1:n;], [1:n;], ones(n)))
 B_SR1_1 = Array{Float64,2}(undef,n,n)
+
 update_SR1!(x_SR1_0 , x_SR1_1, g_SR1_0, g_SR1_1, B_SR1_0, B_SR1_1)
 
 @testset "tests des résultats sur les approximations simple" begin
@@ -101,15 +102,57 @@ update_SR1!(x_SR1_0 , x_SR1_1, g_SR1_0, g_SR1_1, B_SR1_0, B_SR1_1)
  @test norm( B_SR1_1 * (x_SR1_1 - x_SR1_0) - (g_SR1_1 - g_SR1_0) ) < 10^-5
 end
 
+# bench_SR1_4 = @benchmark update_SR1!(x_SR1_0 , x_SR1_1, g_SR1_0, g_SR1_1, B_SR1_0, B_SR1_1)
 
 #typé correctement indépendamment des tests
 # @code_warntype update_SR1!(x ,x_1, g, g_1, B, B_1)
 # @code_warntype update_BFGS!(x ,x_1, g, g_1, B, B_1)
 # @profview (@benchmark update_BFGS!(x ,x_1, g, g_1, B, B_1))
 # bench_BFGS4 = @benchmark update_BFGS!(x ,x_1, g, g_1, B, B_1)
-# bench_SR12 = @benchmark update_SR1!(x_SR1_0 , x_SR1_1, g_SR1_0, g_SR1_1, B_SR1_0, B_SR1_1)
 
 end
+
+""" Evolution de Benchmark sur update SR1
+n = 5
+Avec @fastmaths
+    BenchmarkTools.Trial:
+      memory estimate:  1.64 KiB
+      allocs estimate:  9
+      --------------
+      minimum time:     477.041 ns (0.00% GC)
+      median time:      895.413 ns (0.00% GC)
+      mean time:        1.007 μs (0.00% GC)
+      maximum time:     3.291 μs (0.00% GC)
+      --------------
+      samples:          10000
+      evals/sample:     196
+
+avec @inbounds
+    BenchmarkTools.Trial:
+      memory estimate:  1.64 KiB
+      allocs estimate:  9
+      --------------
+      minimum time:     493.934 ns (0.00% GC)
+      median time:      889.399 ns (0.00% GC)
+      mean time:        1.018 μs (0.00% GC)
+      maximum time:     3.396 μs (0.00% GC)
+      --------------
+      samples:          10000
+      evals/sample:     198
+
+sans les @inbounds
+    BenchmarkTools.Trial:
+      memory estimate:  1.64 KiB
+      allocs estimate:  9
+      --------------
+      minimum time:     515.099 ns (0.00% GC)
+      median time:      952.078 ns (0.00% GC)
+      mean time:        1.038 μs (0.00% GC)
+      maximum time:     3.443 μs (0.00% GC)
+      --------------
+      samples:          10000
+      evals/sample:     192
+"""
 
 
 # a utiliser setproperty!, get_property, getindex, set_index!.
