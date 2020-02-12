@@ -6,14 +6,14 @@ include("../../src/ordered_include.jl")
 
 using ..PartiallySeparableStructure
 using ..implementation_expr_tree
-
+using ..M_evaluation_expr_tree
 println("\n\n Début script de dvpt\n\n")
 
 
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 10000
+n = 100
 m = Model()
 @variable(m, x[1:n])
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
@@ -119,6 +119,9 @@ println("test des mises à jour SR1 et BFGS")
     # Profile.clear()
     # @profile PartiallySeparableStructure.update_SPS_SR1!(SPS2, exact_Hessian, approx_hessian, dif_grad, s)
     # ProfileView.view()
+
+    # bench_forwardiff = @benchmark M_evaluation_expr_tree.calcul_gradient_expr_tree(obj,x)
+    # bench_reversediff = @benchmark M_evaluation_expr_tree.calcul_gradient_expr_tree2(obj,x)
 
 println("test du Hessien ")
 println(" - set-up des structures de résultats")

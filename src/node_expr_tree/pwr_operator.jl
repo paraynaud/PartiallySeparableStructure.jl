@@ -48,6 +48,9 @@ module power_operators
             return @fastmath @inbounds (T)( value_ch[1]^(op.index) ) :: T
     end
 
+    function _evaluate_node(op :: power_operator{Z}, value_ch :: T) where T <: Number where Z <: Number
+            return @fastmath (T)( value_ch^(op.index) ) :: T
+    end
 
     function _node_to_Expr(op :: power_operator{T}) where T <: Number
         return [:^, op.index]
