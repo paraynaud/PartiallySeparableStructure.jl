@@ -262,9 +262,8 @@ The result of the function is the triplet of the sparse matrix Gᵢ.
 
 
 """
-    evaluate_hessian(sps,x)
-evalutate the hessian of the partially separable function, stored in the sps structure
-at the point x. Return the result as a Hess_matrix.
+    struct_hessian(sps,x)
+evalutate the hessian of the partially separable function, stored in the sps structure at the point x. Return the Hessian in a particular structure : Hess_matrix.
 """
     function struct_hessian(sps :: SPS{T}, x :: AbstractVector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
@@ -273,20 +272,27 @@ at the point x. Return the result as a Hess_matrix.
         temp = Hess_matrix{Y}(t)
         for i in 1:l_elmt_fun # a voir si je laisse le array(view()) la ou non
             if sps.structure[i].type != implementation_type_expr.constant
-                ForwardDiff.hessian!(temp.arr[i].elmt_hess, M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), view(x, sps.structure[i].used_variable) )
+                @inbounds ForwardDiff.hessian!(temp.arr[i].elmt_hess, M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), view(x, sps.structure[i].used_variable) )
             end
         end
         return temp
     end
 
-
-    function struct_hessian!(sps :: SPS{ implementation_expr_tree.t_expr_tree}, x :: AbstractVector{Y}, G :: Hess_matrix{Y} )  where Y <: Number
-        map( elt_fun -> element_hessian{Y}(ForwardDiff.hessian!(G.arr[elt_fun.index].elmt_hess :: Array{Y,2}, M_evaluation_expr_tree.evaluate_expr_tree(elt_fun.fun::  implementation_expr_tree.t_expr_tree), view(x, elt_fun.used_variable :: Vector{Int}) )), sps.structure :: Vector{element_function{implementation_expr_tree.t_expr_tree} })
+"""
+    struct_hessian!(sps,x,H)
+Evalutate the hessian of the partially separable function, stored in the sps structure at the point x. Store the Hessian in a particular structure H :: Hess_matrix.
+"""
+    function struct_hessian!(sps :: SPS{T}, x :: AbstractVector{Y}, H :: Hess_matrix{Y} )  where Y <: Number where T
+        map( elt_fun -> element_hessian{Y}(ForwardDiff.hessian!(H.arr[elt_fun.index].elmt_hess :: Array{Y,2}, M_evaluation_expr_tree.evaluate_expr_tree(elt_fun.fun :: T), view(x, elt_fun.used_variable :: Vector{Int}) )), sps.structure :: Vector{element_function{T}})
     end
 
-    function struct_hessian!(sps :: SPS{T}, x :: AbstractVector{Y}, G :: Hess_matrix{Y} )  where Y <: Number where T
-        map( elt_fun -> element_hessian{Y}(ForwardDiff.hessian!(G.arr[elt_fun.index].elmt_hess :: Array{Y,2}, M_evaluation_expr_tree.evaluate_expr_tree(elt_fun.fun :: T), view(x, elt_fun.used_variable :: Vector{Int}) )), sps.structure :: Vector{element_function{T}})
+
+
+    function construct_Sparse_Hessian(sps :: SPS{T}, H :: Hess_matrix{Y} )  where Y <: Number where T
+        mapreduce(elt_fun :: element_function{T} -> elt_fun.U' * sparse(H.arr[elt_fun.index].elmt_hess) * elt_fun.U, +, sps.structure  )
     end
+
+
 
 """
     product_matrix_sps(sps,B,x)
@@ -294,16 +300,37 @@ This function make the product of the structure B which represents a symetric ma
 We need the structure sps for the variable used in each B[i], to replace B[i]*x[i] in the result vector.
 """
     product_matrix_sps(s_a :: struct_algo{T, Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number = product_matrix_sps(s_a.sps, s_a.B, x)
-    function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Z}, x :: Vector{Y}) where T where Z <: Number where Y <: Number
+    function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
-        vector_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).([1:sps.n_var;]) )
-         @Threads.threads for i in 1:l_elmt_fun
-            (rown, column, value) = findnz(sps.structure[i].U)
-            temp = B.arr[i].elmt_hess * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
-            atomic_add!.(vector_prl[column], temp)
+        vector_prl = Vector{Y}(zeros(Y, sps.n_var))
+        function f_inter!(a :: AbstractVector{Z}, b :: AbstractVector{Z}) where Z <: Number
+            l = length(a)
+            for i in 1:l
+                @inbounds a[i] += b[i]
+            end
         end
-        vector_res = (x -> x[]).(vector_prl) :: Vector{Y}
-        return vector_res
+        for i in 1:l_elmt_fun
+            @inbounds temp = B.arr[i].elmt_hess :: Array{Y,2} * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
+            f_inter!(view(vector_prl,sps.structure[i].used_variable), temp )
+        end
+        return vector_prl
+        # l_elmt_fun = length(sps.structure)
+        # vector_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).([1:sps.n_var;]) )
+        #  @Threads.threads for i in 1:l_elmt_fun
+        #     (rown, column, value) = findnz(sps.structure[i].U)
+        #     temp = B.arr[i].elmt_hess * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
+        #     atomic_add!.(vector_prl[column], temp)
+        # end
+        # vector_res = (x -> x[]).(vector_prl) :: Vector{Y}
+        # return vector_res
+    end
+
+    function hess_matrix_dot_vector(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
+        mapreduce(elt_fun :: element_function{T} -> elt_fun.U' * sparse(B.arr[elt_fun.index].elmt_hess * view(x, elt_fun.used_variable)) ,+, sps.structure)
+    end
+
+    function inefficient_product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
+        construct_Sparse_Hessian(sps,B) * x
     end
 
 """

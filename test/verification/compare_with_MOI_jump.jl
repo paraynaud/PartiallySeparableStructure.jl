@@ -19,8 +19,8 @@ m = Model()
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
-# @NLobjective(m, Min, sum( (x[j] + x[j+1])^2 for j in 1:n-1 ))
-@NLobjective(m, Min, sum( (x[j+1] + x[j])^2 for j in 1:n-1 ))
+@NLobjective(m, Min, sum( (x[j] + x[j+1])^3 for j in 1:n-1 ))
+# @NLobjective(m, Min, sum( (x[j+1] + sin(x[j])^2)^2 for j in 1:n-1 ))
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
 obj = MathOptInterface.objective_expr(evaluator)
@@ -131,7 +131,7 @@ end
 
 """ EVALUATION DES HESSIANS """
 
-# @testset "evaluation du Hessian par divers moyers" begin
+@testset "evaluation du Hessian par divers moyers" begin
 
 
     MOI_pattern = MathOptInterface.hessian_lagrangian_structure(evaluator)
@@ -145,40 +145,59 @@ end
     H3 = PartiallySeparableStructure.Hess_matrix{Float64}(t)
 #
     MOI_value_Hessian = Vector{ typeof(x[1]) }(undef,length(MOI_pattern))
-    # MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
-    # values = [x for x in MOI_value_Hessian]
-#
-    # MOI_half_hessian_en_x = sparse(row,column,values)
-    # MOI_hessian_en_x = Symmetric(MOI_half_hessian_en_x)
-    #
-    # SPS_Hessian_en_x = PartiallySeparableStructure.evaluate_hessian(SPS, x )
-    # Expr_Hessian_en_x = M_evaluation_expr_tree.calcul_Hessian_expr_tree(obj, x)
-    # #
-    # @test norm(MOI_hessian_en_x - Expr_Hessian_en_x, 2) < σ
-    # @test norm(sparse(MOI_hessian_en_x) - SPS_Hessian_en_x, 2) < σ
+    MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
+    values = [x for x in MOI_value_Hessian]
 
-    # on récupère le Hessian structuré du format SPS.
-    #Ensuite on calcul le produit entre le structure de donnée SPS_Structured_Hessian_en_x et y
-    # SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS, x)
-    # SPS_product_Hessian_en_x_et_y = PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)
+    MOI_half_hessian_en_x = sparse(row,column,values,n,n)
+    MOI_hessian_en_x = Symmetric(MOI_half_hessian_en_x)
+
+    SPS_Hessian_en_x = PartiallySeparableStructure.evaluate_hessian(SPS, x )
+    PartiallySeparableStructure.struct_hessian!(SPS, x, H)
+    sp_H = PartiallySeparableStructure.construct_Sparse_Hessian(SPS, H)
+    PartiallySeparableStructure.struct_hessian!(SPS2, x, H2)
+    sp_H2 = PartiallySeparableStructure.construct_Sparse_Hessian(SPS2, H2)
+
+    SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS, x)
+    sp_H_test = PartiallySeparableStructure.construct_Sparse_Hessian(SPS, SPS_Structured_Hessian_en_x)
+
+    @test norm(MOI_hessian_en_x - SPS_Hessian_en_x, 2) < σ
+    @test norm(MOI_hessian_en_x - sp_H, 2) < σ
+    @test norm(MOI_hessian_en_x - sp_H2, 2) < σ
+    @test norm(MOI_hessian_en_x - sp_H_test, 2) < σ
+    @test sp_H_test == sp_H
+
+
+
+
+    # # on récupère le Hessian structuré du format SPS.
+    # #Ensuite on calcul le produit entre le structure de donnée SPS_Structured_Hessian_en_x et y
+
+    SPS_product_Hessian_en_x_et_y = PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)
+
 
     v_tmp = Vector{ Float64 }(undef, length(MOI_pattern))
     MOI_Hessian_product_y = Vector{ typeof(y[1]) }(undef,n)
     MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_y, x, y, 1.0, zeros(0))
+    #
+    @test norm(MOI_Hessian_product_y - SPS_product_Hessian_en_x_et_y, 2) < σ
+    @test norm(MOI_Hessian_product_y - MOI_hessian_en_x*y, 2) < σ
 
 
 
-    bench_SPS_HESS_Expr = @benchmark PartiallySeparableStructure.struct_hessian(SPS, x)
-    @show "-2"
-    bench_SPS_HESS_expr_tree = @benchmark PartiallySeparableStructure.struct_hessian(SPS2, x)
-    @show "-1"
-    bench_SPS_HESS_expr_tree3! = @benchmark PartiallySeparableStructure.struct_hessian!(SPS, x, H3)
-    @show "0"
-    bench_SPS2_HESS_expr_tree! = @benchmark PartiallySeparableStructure.struct_hessian!(SPS2, x, H)
-    
-    # @test norm(MOI_Hessian_product_y - SPS_product_Hessian_en_x_et_y, 2) < σ
-    # @test norm(MOI_hessian_en_x*y - SPS_product_Hessian_en_x_et_y, 2) < σ
-    # @test norm(MOI_Hessian_product_y - MOI_hessian_en_x*y, 2) < σ
+    # @show "0"
+    # bench_product_matric_sps = @benchmark PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)
+    # @show "1"
+    # bench_dot_hess_matrix = @benchmark PartiallySeparableStructure.hess_matrix_dot_vector(SPS2, H2, y)
+    # @show "2"
+    # bench_MOI_hess_vector = @benchmark MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_y, x, y, 1.0, zeros(0))
+    # @show "-3"
+    # bench_SPS_HESS_Expr2 = @benchmark PartiallySeparableStructure.struct_hessian(SPS, x)
+    # @show "-2"
+    # bench_SPS_HESS_expr_tree2 = @benchmark PartiallySeparableStructure.struct_hessian(SPS2, x)
+    # @show "0"
+
+
+
 
 
 
@@ -189,10 +208,12 @@ end
     # bench_SPS_HESS_Expr = @benchmark SPS_Hessian_en_x = PartiallySeparableStructure.evaluate_hessian(SPS, x )
     # @show "1"
     # bench_SPS_HESS_struct_Expr = @benchmark SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS, x)
+    # @show "1.5"
+    # bench_SPS2_HESS_struct_expr_tree = @benchmark SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian(SPS2, x)
     # @show "2"
     # bench_SPS2_HESS_expr_tree! = @benchmark PartiallySeparableStructure.struct_hessian!(SPS2, x, H)
     # @show "3"
-    # bench_SPS_HESS_expr_tree! = @benchmark PartiallySeparableStructure.struct_hessian!(SPS, x, H)
+    # bench_SPS_HESS_Expr! = @benchmark PartiallySeparableStructure.struct_hessian!(SPS, x, H)
     # @show "4"
     # bench_MOI_Hessian = @benchmark MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x, 1.0, zeros(0))
     # @show "5"
@@ -202,7 +223,7 @@ end
     # @benchmark SPS_product_Hessian_en_x_et_y = PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)
     # prod1 = @benchmark SPS_product_Hessian_en_x_et_y = PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)
     # prod2 = @benchmark (MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_y, x, y, 1.0, zeros(0)))
-# end
+end
 
 
 
