@@ -13,7 +13,7 @@ module simple_operators
     using ..implementation_type_expr
     using ..trait_type_expr
 
-    using ..plus_operators
+    using ..plus_operators, ..minus_operators
 
     mutable struct simple_operator <: ab_ex_nd
         op :: Symbol
@@ -23,6 +23,8 @@ module simple_operators
     function create_node_expr(op :: Symbol)
         if op == :+
             plus_operators.plus_operator()
+        elseif op == :-
+            minus_operators.minus_operator()
         else
             return simple_operator(op)
         end

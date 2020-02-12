@@ -7,6 +7,7 @@ include("impl_constants.jl")
 include("impl_variables.jl")
 
 include("impl_plus.jl")
+include("impl_minus.jl")
 include("impl_simple_operators.jl")
 
 include("pwr_operator.jl")

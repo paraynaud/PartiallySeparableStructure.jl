@@ -21,6 +21,7 @@ using MathOptInterface
     @test abstract_expr_node.create_node_expr(:x, MathOptInterface.VariableIndex(5)) == abstract_expr_node.create_node_expr(:x, 5)
 
     @test abstract_expr_node.create_node_expr(:+) == plus_operators.plus_operator()
+    @test abstract_expr_node.create_node_expr(:-) == minus_operators.minus_operator()
     @test abstract_expr_node.create_node_expr(:*) == simple_operators.simple_operator(:*)
     @test abstract_expr_node.create_node_expr(:^,2, true ) == power_operators.power_operator(2)
     @test abstract_expr_node.create_node_expr(:^,[2]) == complex_operators.complex_operator(:^,[2])
@@ -31,14 +32,16 @@ end
 
     constant = abstract_expr_node.create_node_expr(4)
     variable = abstract_expr_node.create_node_expr(:x, 5)
-    simple_operator = abstract_expr_node.create_node_expr(:+)
+    simple_operator = abstract_expr_node.create_node_expr(:*)
+    plus = abstract_expr_node.create_node_expr(:+)
+    minus = abstract_expr_node.create_node_expr(:-)
     power_operator = abstract_expr_node.create_node_expr(:^,2, true )
-    collection = [constant, variable, simple_operator, power_operator]
+    collection = [constant, variable, simple_operator, power_operator, plus, minus]
 
-    @test trait_expr_node.is_expr_node.( vcat(collection,[:+, :*]) ) == [trait_expr_node.type_expr_node(), trait_expr_node.type_expr_node(), trait_expr_node.type_expr_node(), trait_expr_node.type_expr_node(), trait_expr_node.type_not_expr_node(), trait_expr_node.type_not_expr_node()]
-    @test trait_expr_node.node_is_operator.( collection ) == [false, false, true, true]
-    @test trait_expr_node.node_is_constant.( collection ) == [true, false, false, false]
-    @test trait_expr_node.node_is_variable.( collection ) == [false, true, false, false]
+    @test trait_expr_node.is_expr_node.( vcat(collection,[:+, :*]) ) == [trait_expr_node.type_expr_node(), trait_expr_node.type_expr_node(), trait_expr_node.type_expr_node(), trait_expr_node.type_expr_node(), trait_expr_node.type_expr_node(), trait_expr_node.type_expr_node(), trait_expr_node.type_not_expr_node(), trait_expr_node.type_not_expr_node()]
+    @test trait_expr_node.node_is_operator.( collection ) == [false, false, true, true, true, true ]
+    @test trait_expr_node.node_is_constant.( collection ) == [true, false, false, false, false, false]
+    @test trait_expr_node.node_is_variable.( collection ) == [false, true, false, false, false, false]
 
 
 
@@ -59,4 +62,28 @@ end
     @test trait_expr_node.node_is_variable.(coll_simple_op) == [false, false, false, false, false, false]
 
     @test trait_expr_node.get_var_index(variable) == 5
+end
+
+
+
+@testset "evaluation des noeuds" begin
+    constant = abstract_expr_node.create_node_expr(4.0)
+    variable = abstract_expr_node.create_node_expr(:x, 5)
+    product = abstract_expr_node.create_node_expr(:*)
+    plus = abstract_expr_node.create_node_expr(:+)
+    minus = abstract_expr_node.create_node_expr(:-)
+    power_operator = abstract_expr_node.create_node_expr(:^,2, true )
+    collection = [constant, variable, product, power_operator, plus, minus]
+
+    @test trait_expr_node.evaluate_node(constant,zeros(0)) == 4
+    @test trait_expr_node.evaluate_node(variable,zeros(5)) == 0
+    @test trait_expr_node.evaluate_node(variable, [1:5;]) == 5
+    @test trait_expr_node.evaluate_node(product, [1:5;]) == foldl(*, [1:5;])
+    @test trait_expr_node.evaluate_node(plus, [1:5;]) == sum([1:5;])
+    @test trait_expr_node.evaluate_node(minus, [1,5]) == -4
+    @test trait_expr_node.evaluate_node(minus, [1]) == -1
+    @test trait_expr_node.evaluate_node(power_operator, [1]) == 1
+    @test trait_expr_node.evaluate_node(power_operator, [2]) == 4
+    @test trait_expr_node._evaluate_node(power_operator, 2) == 4
+
 end
