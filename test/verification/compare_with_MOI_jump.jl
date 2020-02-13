@@ -92,6 +92,7 @@ end
     f = (y :: PartiallySeparableStructure.element_function{Expr} -> PartiallySeparableStructure.element_gradient{typeof(x[1])}(Vector{typeof(x[1])}(zeros(typeof(x[1]), length(y.used_variable)) )) )
     dif_grad = PartiallySeparableStructure.grad_vector{typeof(x[1])}( f.(SPS.structure) )
     dif_grad2 = PartiallySeparableStructure.grad_vector{typeof(x[1])}( f2.(SPS2.structure) )
+    g_res = Vector{Float64}(zeros(Float64,n))
 
 
     SPS_gradient_en_x = PartiallySeparableStructure.evaluate_gradient(SPS, x)
@@ -102,6 +103,7 @@ end
 
     g_test = PartiallySeparableStructure.build_gradient(SPS, dif_grad)
     g_test2 = PartiallySeparableStructure.build_gradient(SPS2, dif_grad2)
+    PartiallySeparableStructure.build_gradient!(SPS2, dif_grad, g_res)
 
     Expr_gradient_en_x = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj, x)
     expr_tree_gradient_en_x = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj2, x)
@@ -113,6 +115,8 @@ end
 
     @test norm(expr_tree_gradient_en_x - Expr_gradient_en_x,2) < σ
     @test norm(MOI_gradient_en_x - Expr_gradient_en_x,2) < σ
+    @test norm(MOI_gradient_en_x - new_grad_x,2) < σ
+    @test norm(MOI_gradient_en_x - g_res,2) < σ
 
     @test norm(SPS_gradient_en_x - Expr_gradient_en_x,2) < σ
     @test norm(SPS_gradient_en_x - MOI_gradient_en_x, 2) < σ

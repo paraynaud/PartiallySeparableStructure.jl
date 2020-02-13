@@ -212,14 +212,28 @@ The function grad_ni_to_n will be use to transform a element gradient of size ná
         return sum(g_temp)
     end
 
-    function grad_ni_to_n(g :: element_gradient{Y}, used_var :: Vector{Int}, n :: Int ) where Y
-        grad = zeros(Y,n)
-        sort!(used_var)
-        n = length(g.g_i)
-        for i in 1:n
+
+    function grad_ni_to_n(g :: element_gradient{Y}, used_var :: Vector{Int}, size_grad :: Int ) where Y
+        grad = zeros(Y,size_grad)
+        # sort!(used_var)
+        n_i = length(g.g_i)
+        for i in 1:n_i
             grad[used_var[i]] = g.g_i[i]
         end
         return grad
+    end
+
+    function build_gradient!(sps :: SPS{T}, g :: grad_vector{Y}, g_res :: AbstractVector{Y}) where T where Y <: Number
+        l_elmt_fun = length(sps.structure)
+        for i in 1:l_elmt_fun
+            grad_ni_to_n!(g.arr[i], sps.structure[i].used_variable, g_res)
+        end
+    end
+
+    function grad_ni_to_n!(g :: element_gradient{Y}, used_var :: Vector{Int}, g_res :: AbstractVector{Y}) where Y <: Number
+        for i in 1:length(g.g_i)
+            g_res[used_var[i]] += g.g_i[i]
+        end
     end
 
     function minus_grad_vec!(g1 :: grad_vector{T}, g2 :: grad_vector{T}, res :: grad_vector{T}) where T <: Number

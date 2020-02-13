@@ -13,7 +13,7 @@ println("\n\n Début script de dvpt\n\n")
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 10
+n = 10000
 m = Model()
 @variable(m, x[1:n])
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
@@ -109,18 +109,27 @@ println("test des mises à jour SR1 et BFGS")
     grad_x = PartiallySeparableStructure.grad_vector{typeof(x_init[1])}( f.(SPS2.structure) )
     grad_x_1 = PartiallySeparableStructure.grad_vector{typeof(x_init[1])}( f.(SPS2.structure) )
     grad_diff = PartiallySeparableStructure.grad_vector{typeof(x_init[1])}( f.(SPS2.structure) )
-    PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2, x_init, grad_x)
     PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2, x_2nd, grad_x_1)
 
-    @show gradient_de_x = PartiallySeparableStructure.build_gradient(SPS2, grad_x)
-    @show gradient_de_x_1 = PartiallySeparableStructure.build_gradient(SPS2, grad_x_1)
-    @show PartiallySeparableStructure.minus_grad_vec!(grad_x_1, grad_x, grad_diff)
+    println("on commence")
+    bench_compute_grad = @benchmark PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2, x_init, grad_x)
+println("1")
+    # bench_build_grad = @benchmark PartiallySeparableStructure.build_gradient(SPS2, grad_x)
+    g_res = Vector{Float64}(zeros(Float64,n))
+    bench_build_grad3 = @benchmark PartiallySeparableStructure.build_gradient!(SPS2, grad_x, g_res)
+    println("2")
+    bench_build_grad2 = @benchmark PartiallySeparableStructure.evaluate_gradient(SPS2, x)
 
-    PartiallySeparableStructure.update_SPS_SR1!(SPS2, exact_Hessian, approx_hessian2, grad_diff, s)
-    @show dif_gradient = PartiallySeparableStructure.build_gradient(SPS2, grad_diff)
-    @show Bs = PartiallySeparableStructure.product_matrix_sps(SPS2, approx_hessian2, s)
-    @show Bs2 = PartiallySeparableStructure.product_matrix_sps(SPS2, approx_hessian, s)
-    @show norm(Bs - dif_gradient, 2)
+error("fin")
+    # @show gradient_de_x = PartiallySeparableStructure.build_gradient(SPS2, grad_x)
+    # @show gradient_de_x_1 = PartiallySeparableStructure.build_gradient(SPS2, grad_x_1)
+    # @show PartiallySeparableStructure.minus_grad_vec!(grad_x_1, grad_x, grad_diff)
+    #
+    # PartiallySeparableStructure.update_SPS_SR1!(SPS2, exact_Hessian, approx_hessian2, grad_diff, s)
+    # @show dif_gradient = PartiallySeparableStructure.build_gradient(SPS2, grad_diff)
+    # @show Bs = PartiallySeparableStructure.product_matrix_sps(SPS2, approx_hessian2, s)
+    # @show Bs2 = PartiallySeparableStructure.product_matrix_sps(SPS2, approx_hessian, s)
+    # @show norm(Bs - dif_gradient, 2)
 
 
     #
