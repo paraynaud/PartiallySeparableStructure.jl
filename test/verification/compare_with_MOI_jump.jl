@@ -1,8 +1,8 @@
 using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
-# using Test, BenchmarkTools, ProfileView, InteractiveUtils
+using Test, BenchmarkTools, InteractiveUtils
+# using ProfileView
 
-
-# include("../../src/ordered_include.jl")
+include("../../src/ordered_include.jl")
 
 using ..PartiallySeparableStructure
 
@@ -16,11 +16,12 @@ n = 100
 
 m = Model()
 @variable(m, x[1:n])
-# @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 )
+# @NLobjective(m, Min, sum( x[j]^3 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4])^3 - (5+x[1])^2 )
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
-@NLobjective(m, Min, sum( (x[j] + x[j+1])^3 for j in 1:n-1 ))
-# @NLobjective(m, Min, sum( (x[j+1] + sin(x[j])^2)^2 for j in 1:n-1 ))
+# @NLobjective(m, Min, sum( (x[j] + x[j+1])^3 for j in 1:n-1 ))
+@NLobjective(m, Min, sum( (x[j+1] - sin(x[j])^2)^2   for j in 1:n-1 ) + cos(x[5])^4 + tan(x[7])*5 )
+# @NLobjective(m, Min, sum( (x[j] + x[j+1])^3 for j in 1:n-1 ))
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
 obj = MathOptInterface.objective_expr(evaluator)
@@ -57,9 +58,8 @@ x_test = [ x[1], x[2], x[1], x[2], x[1], x[2], x[1], x[2], x[1], x[2]]
     # MOI_obj_en_x = MathOptInterface.eval_objective( evaluator, x_test)
 
     Expr_obj_en_x = M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
-    M_evaluation_expr_tree.evaluate_expr_tree(obj2,x)
+    expr_tree_obj_en_x = M_evaluation_expr_tree.evaluate_expr_tree(obj2,x)
     M_evaluation_expr_tree.evaluate_expr_tree(obj3,x)
-    M_evaluation_expr_tree.evaluate_expr_tree(obj,x)
 
     @test abs(MOI_obj_en_x - Expr_obj_en_x) < σ
     @test abs(SPS_en_x - MOI_obj_en_x) < σ
@@ -80,14 +80,16 @@ x_test = [ x[1], x[2], x[1], x[2], x[1], x[2], x[1], x[2], x[1], x[2]]
     # bench_MOI = @benchmark MathOptInterface.eval_objective( evaluator, x)
 end
 
+# error("fin anticipé")
+
 
 """ EVALUATION DES GRADIENTS """
 
 @testset " evaluation du gradient par divers moyer" begin
     MOI_gradient_en_x = Vector{ typeof(x[1]) }(undef,n)
 
-    f2 = (y :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_gradient{typeof(x[1])}(Vector{typeof(x[1])}(undef, length(y.used_variable) )) )
-    f = (y :: PartiallySeparableStructure.element_function{Expr} -> PartiallySeparableStructure.element_gradient{typeof(x[1])}(Vector{typeof(x[1])}(undef, length(y.used_variable) )) )
+    f2 = (y :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_gradient{typeof(x[1])}(Vector{typeof(x[1])}(zeros(typeof(x[1]), length(y.used_variable)) )) )
+    f = (y :: PartiallySeparableStructure.element_function{Expr} -> PartiallySeparableStructure.element_gradient{typeof(x[1])}(Vector{typeof(x[1])}(zeros(typeof(x[1]), length(y.used_variable)) )) )
     dif_grad = PartiallySeparableStructure.grad_vector{typeof(x[1])}( f.(SPS.structure) )
     dif_grad2 = PartiallySeparableStructure.grad_vector{typeof(x[1])}( f2.(SPS2.structure) )
 
@@ -102,6 +104,16 @@ end
     g_test2 = PartiallySeparableStructure.build_gradient(SPS2, dif_grad2)
 
     Expr_gradient_en_x = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj, x)
+    expr_tree_gradient_en_x = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj2, x)
+
+    Expr_gradient_en_x_1 = M_evaluation_expr_tree.calcul_gradient_expr_tree(SPS.structure[1].fun, x)
+    expr_tree_gradient_en_x_1 = M_evaluation_expr_tree.calcul_gradient_expr_tree(SPS2.structure[1].fun, x)
+
+    new_grad_x = PartiallySeparableStructure.evaluate_gradient(SPS,x)
+
+    @test norm(expr_tree_gradient_en_x - Expr_gradient_en_x,2) < σ
+    @test norm(MOI_gradient_en_x - Expr_gradient_en_x,2) < σ
+
     @test norm(SPS_gradient_en_x - Expr_gradient_en_x,2) < σ
     @test norm(SPS_gradient_en_x - MOI_gradient_en_x, 2) < σ
     @test norm(SPS_gradient_en_x - SPS2_gradient_en_x, 2) < σ
@@ -223,4 +235,38 @@ end
     # @benchmark SPS_product_Hessian_en_x_et_y = PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)
     # prod1 = @benchmark SPS_product_Hessian_en_x_et_y = PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)
     # prod2 = @benchmark (MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_y, x, y, 1.0, zeros(0)))
+end
+
+
+
+@testset  "vérification des mises à jour SR1/BFGS " begin
+    x = ones(n)
+    x_1 = (x -> 2*x).(x)
+
+    f_approx = ( elm_fun :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_hessian{Float64}( Array{Float64,2}(zeros(Float64, length(elm_fun.used_variable), length(elm_fun.used_variable)) ) ) )
+    f = (y :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_gradient{typeof(x[1])}(Vector{typeof(x[1])}(undef, length(y.used_variable) )) )
+
+    exact_Hessian = PartiallySeparableStructure.Hess_matrix{Float64}(f_approx.(SPS2.structure))
+    approx_hessian = PartiallySeparableStructure.Hess_matrix{Float64}(f_approx.(SPS2.structure))
+
+    grad_x = PartiallySeparableStructure.grad_vector{typeof(x[1])}( f.(SPS2.structure) )
+    grad_x_1 = PartiallySeparableStructure.grad_vector{typeof(x[1])}( f.(SPS2.structure) )
+    grad_diff = PartiallySeparableStructure.grad_vector{typeof(x[1])}( f.(SPS2.structure) )
+
+
+    s = x_1 - x
+    PartiallySeparableStructure.struct_hessian!(SPS2, x, exact_Hessian)
+    PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2, x, grad_x)
+    PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2, x_1, grad_x_1)
+    PartiallySeparableStructure.minus_grad_vec!(grad_x_1, grad_x, grad_diff)
+
+    #calcul de l'approximation
+    PartiallySeparableStructure.update_SPS_SR1!(SPS2, exact_Hessian, approx_hessian, grad_diff, s)
+
+    # mettre les informations sous des formats comparable (Vector)
+    dif_gradient = PartiallySeparableStructure.build_gradient(SPS2, grad_diff)
+    Bs = PartiallySeparableStructure.product_matrix_sps(SPS2, approx_hessian, s)
+
+    #test
+    @test norm(Bs - dif_gradient, 2) < σ
 end

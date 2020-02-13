@@ -5,6 +5,7 @@ module PartiallySeparableStructure
     using ..implementation_expr_tree, ..Quasi_Newton_update
     using ForwardDiff, SparseArrays
     using Base.Threads
+    import Base.-
 
     mutable struct element_function{T}
         fun :: T
@@ -59,7 +60,7 @@ function _deduct_partially_separable_structure(expr_tree :: T , n :: Int) where 
 
     type_i = Vector{trait_type_expr.t_type_expr_basic}(undef, m_i)
     # type_i = algo_expr_tree._get_type_tree.(elmt_fun) :: Vector{trait_type_expr.t_type_expr_basic}
-    Threads.@threads for i in 1:m_i
+    for i in 1:m_i
         type_i[i] = algo_expr_tree.get_type_tree(elmt_fun[i])
     end
 
@@ -70,6 +71,7 @@ function _deduct_partially_separable_structure(expr_tree :: T , n :: Int) where 
         elmt_var_i[i] = algo_expr_tree.get_elemental_variable(elmt_fun[i])
         atomic_add!(length_vec, length(elmt_var_i[i]))
     end
+    sort!.(elmt_var_i) #ligne importante, met dans l'ordre les variables élémentaires. Utile pour les U_i et le N_to_Ni
 
     # U_i = algo_expr_tree.get_Ui.(elmt_var_i, n) :: Vector{SparseMatrixCSC{Int,Int}}
     U_i = Vector{SparseMatrixCSC{Int,Int}}(undef,m_i)
@@ -84,7 +86,7 @@ function _deduct_partially_separable_structure(expr_tree :: T , n :: Int) where 
 
     Sps = Vector{element_function{T}}(undef,m_i)
     Threads.@threads for i in 1:m_i
-        Sps[i] = element_function{T}(elmt_fun[i], type_i[i], elmt_var_i[i], U_i[i],i )
+        Sps[i] = element_function{T}(elmt_fun[i], type_i[i], elmt_var_i[i], U_i[i], i )
     end
 
     return SPS{T}(Sps, length_vec[], n)
@@ -107,6 +109,7 @@ function _deduct_partially_separable_structure(expr_tree :: implementation_expr_
         elmt_var_i[i] = algo_expr_tree.get_elemental_variable(elmt_fun[i])
         atomic_add!(length_vec, length(elmt_var_i[i]))
     end
+    sort!.(elmt_var_i) #ligne importante, met dans l'ordre les variables élémentaires. Utile pour les U_i et le N_to_Ni
 
     # U_i = algo_expr_tree.get_Ui.(elmt_var_i, n) :: Vector{SparseMatrixCSC{Int,Int}}
     U_i = Vector{SparseMatrixCSC{Int,Int}}(undef,m_i)
@@ -147,8 +150,7 @@ at the point x, return a vector of size n (the number of variable) which is the 
     function evaluate_gradient(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
         gradient_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).([1:sps.n_var;]) )
-         @Threads.threads for i in 1:l_elmt_fun
-         # for i in 1:l_elmt_fun
+         for i in 1:l_elmt_fun
             if isempty(sps.structure[i].U) == false
                 (row, column, value) = findnz(sps.structure[i].U)
                 temp = ForwardDiff.gradient(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable))  )
@@ -177,8 +179,6 @@ Compute the gradient of the partially separable structure sps, and store the res
 """
     function evaluate_SPS_gradient!(sps :: SPS{T}, x :: AbstractVector{Y}, g :: grad_vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
-        # @inbounds for i in 1:l_elmt_fun
-        # Threads.@threads for i in 1:l_elmt_fun
         for i in 1:l_elmt_fun
             if isempty(sps.structure[i].U) == false
                 element_gradient!(sps.structure[i].fun, view(x, sps.structure[i].used_variable), g.arr[i] )
@@ -221,6 +221,14 @@ The function grad_ni_to_n will be use to transform a element gradient of size n�
         end
         return grad
     end
+
+    function minus_grad_vec!(g1 :: grad_vector{T}, g2 :: grad_vector{T}, res :: grad_vector{T}) where T <: Number
+        l = length(g1.arr)
+        for i in 1:l
+            res.arr[i].g_i = g1.arr[i].g_i - g2.arr[i].g_i
+        end
+    end
+
 
 """
     evaluate_hessian(sps,x)
@@ -303,26 +311,18 @@ We need the structure sps for the variable used in each B[i], to replace B[i]*x[
     function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
         vector_prl = Vector{Y}(zeros(Y, sps.n_var))
-        function f_inter!(a :: AbstractVector{Z}, b :: AbstractVector{Z}) where Z <: Number
-            l = length(a)
-            for i in 1:l
-                @inbounds a[i] += b[i]
-            end
-        end
         for i in 1:l_elmt_fun
             @inbounds temp = B.arr[i].elmt_hess :: Array{Y,2} * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
             f_inter!(view(vector_prl,sps.structure[i].used_variable), temp )
         end
         return vector_prl
-        # l_elmt_fun = length(sps.structure)
-        # vector_prl = Vector{Threads.Atomic{Y}}((x-> Threads.Atomic{Y}(0)).([1:sps.n_var;]) )
-        #  @Threads.threads for i in 1:l_elmt_fun
-        #     (rown, column, value) = findnz(sps.structure[i].U)
-        #     temp = B.arr[i].elmt_hess * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
-        #     atomic_add!.(vector_prl[column], temp)
-        # end
-        # vector_res = (x -> x[]).(vector_prl) :: Vector{Y}
-        # return vector_res
+    end
+
+    function f_inter!(a :: AbstractVector{Z}, b :: AbstractVector{Z}) where Z <: Number
+        l = length(a)
+        for i in 1:l
+            @inbounds a[i] += b[i]
+        end
     end
 
     function hess_matrix_dot_vector(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
@@ -349,7 +349,9 @@ compute the product g⊤ x = ∑ Uᵢ⊤ gᵢ⊤ xᵢ. So we need the sps struct
     end
 
 """
-    Fonction ayant pour but de créer l'approximation SR1 de la structure SPS. Actuellement en suspend car je dois faire autre chose.
+update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
+    update the Hessian approximation Bₖ using the SR1 method, according to the sps partially separable structre. To make
+    the update, we need the vector y and s.
 """
     function update_SPS_SR1!(sps :: SPS{T}, B :: Hess_matrix{Y}, B_1 :: Hess_matrix{Y}, y :: Vector{Y}, s :: Vector{Y}) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
@@ -367,11 +369,11 @@ compute the product g⊤ x = ∑ Uᵢ⊤ gᵢ⊤ xᵢ. So we need the sps struct
     function update_SPS_SR1!(sps :: SPS{T}, B :: Hess_matrix{Y}, B_1 :: Hess_matrix{Y}, y :: grad_vector{Y}, s :: Vector{Y}) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
          # @Threads.threads for i in 1:l_elmt_fun
-         @inbounds for i in 1:l_elmt_fun
-            s_elem = Array(view(s, sps.structure[i].used_variable))
-            y_elem = y.arr[i].g_i
-            B_elem = B.arr[i].elmt_hess
-            B_elem_1 = B_1.arr[i].elmt_hess
+         for i in 1:l_elmt_fun
+            @inbounds  s_elem = Array(view(s, sps.structure[i].used_variable))
+            @inbounds y_elem = y.arr[i].g_i
+            @inbounds B_elem = B.arr[i].elmt_hess
+            @inbounds B_elem_1 = B_1.arr[i].elmt_hess
             Quasi_Newton_update.update_SR1!(s_elem, y_elem, B_elem, B_elem_1)
         end
     end

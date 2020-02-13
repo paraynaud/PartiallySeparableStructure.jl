@@ -53,7 +53,10 @@ module implementation_type_expr
             else
                 return more
             end
-        elseif _is_more(b)
+        elseif _is_cubic(a)
+            return more 
+        elseif _is_more(a)
+            return more
         end
     end
 

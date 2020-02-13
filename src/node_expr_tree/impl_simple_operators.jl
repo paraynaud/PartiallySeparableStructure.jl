@@ -82,8 +82,6 @@ module simple_operators
             else
                 return value_ch[1] - value_ch[2] :: T
             end
-        elseif _node_is_times(op)
-            return foldl(*, value_ch) :: T
         elseif _node_is_cos(op)
             length(value_ch) == 1 || error("more than one argument for cos")
             return cos(value_ch[1]) :: T
