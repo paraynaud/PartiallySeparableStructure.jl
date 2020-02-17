@@ -39,8 +39,14 @@ module PartiallySeparableStructure
 
     mutable struct struct_algo{T,Y <: Number}
         sps :: SPS{T}
-        B :: Hess_matrix{Y}
-        g :: grad_vector{Y}
+        B_k :: Hess_matrix{Y}
+        B_k1 :: Hess_matrix{Y}
+        g_k :: grad_vector{Y}
+        g_k1 :: grad_vector{Y}
+        y :: grad_vector{Y}
+        x_k :: AbstractVector{Y}
+        x_k1 :: AbstractVector{Y}
+        grad :: AbstractVector{Y}
     end
 
 """
@@ -392,6 +398,10 @@ update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
         end
     end
 
+    function update_SPS_SR1!(s_a :: struct_algo{T,Y}) where T where Y <: Number
+        update_SPS_SR1!(s_a.sps, s_a.B_k, s_a.B_k1, minus_grad_vec!(s_a.g_k1, s_a.g_k, s_a.y), s_a.x_k1 - s_a.x_k)
+
+    end
 
     export deduct_partially_separable_structure
 
