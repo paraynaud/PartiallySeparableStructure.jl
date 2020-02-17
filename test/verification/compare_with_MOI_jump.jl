@@ -2,7 +2,7 @@ using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
 using Test, BenchmarkTools, InteractiveUtils
 # using ProfileView
 
-# include("../../src/ordered_include.jl")
+include("../../src/ordered_include.jl")
 
 using ..PartiallySeparableStructure
 
@@ -12,7 +12,7 @@ println("\n\nCompare_With_MOI_JUMP\n\n")
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 100
+n = 1000
 
 m = Model()
 @variable(m, x[1:n])
@@ -135,15 +135,17 @@ end
     @test norm(SPS_gradient_en_y - MOI_gradient_en_y, 2)  < σ
 
     # g1 = @benchmark Expr_gradient_en_x = M_evaluation_expr_tree.calcul_gradient_expr_tree(obj, x)
-
-    # bench_grad_SPS = @benchmark PartiallySeparableStructure.evaluate_gradient(SPS, x)
-    # bench_grad_SPS2 = @benchmark PartiallySeparableStructure.evaluate_gradient(SPS2, x)
-    # bench_grad_MOI = @benchmark MathOptInterface.eval_objective_gradient(evaluator, MOI_gradient_en_x, x)
-    # bench_grad_SPS_struct = @benchmark PartiallySeparableStructure.evaluate_SPS_gradient!(SPS, x, dif_grad)
-    # bench_grad_SPS2_struct = @benchmark PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2, x, dif_grad2)
+    #
+    # bench_grad_SPS = @benchmark PartiallySeparableStructure.evaluate_gradient(SPS, x); println("SPS fait")
+    # bench_grad_SPS2 = @benchmark PartiallySeparableStructure.evaluate_gradient(SPS2, x); println("SPS2 fait")
+    # bench_grad_MOI = @benchmark MathOptInterface.eval_objective_gradient(evaluator, MOI_gradient_en_x, x); println("MOI fait")
+    # bench_grad_SPS_struct = @benchmark PartiallySeparableStructure.evaluate_SPS_gradient!(SPS, x, dif_grad); println("SPS! fait")
+    # bench_grad_SPS2_struct = @benchmark PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2, x, dif_grad2); println("SPS! fait")
+    #
+    # @benchmark PartiallySeparableStructure.build_gradient!(SPS2,dif_grad2, g_res)
 
 end
-
+# error("fin anticipé")
 
 """ EVALUATION DES HESSIANS """
 
@@ -202,6 +204,7 @@ end
 
     # @show "0"
     # bench_product_matric_sps = @benchmark PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)
+    # # bench_product_matric_sps2 = @benchmark PartiallySeparableStructure.product_matrix_sps(SPS2, H2, y)
     # @show "1"
     # bench_dot_hess_matrix = @benchmark PartiallySeparableStructure.hess_matrix_dot_vector(SPS2, H2, y)
     # @show "2"

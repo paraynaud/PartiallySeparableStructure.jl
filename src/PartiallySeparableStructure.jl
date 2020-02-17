@@ -37,17 +37,6 @@ module PartiallySeparableStructure
         arr :: Vector{element_gradient{T}}
     end
 
-    mutable struct struct_algo{T,Y <: Number}
-        sps :: SPS{T}
-        B_k :: Hess_matrix{Y}
-        B_k1 :: Hess_matrix{Y}
-        g_k :: grad_vector{Y}
-        g_k1 :: grad_vector{Y}
-        y :: grad_vector{Y}
-        x_k :: AbstractVector{Y}
-        x_k1 :: AbstractVector{Y}
-        grad :: AbstractVector{Y}
-    end
 
 """
     deduct_partially_separable_structure(expr_tree, n)
@@ -327,7 +316,6 @@ Evalutate the hessian of the partially separable function, stored in the sps str
 This function make the product of the structure B which represents a symetric matrix and the vector x.
 We need the structure sps for the variable used in each B[i], to replace B[i]*x[i] in the result vector.
 """
-    product_matrix_sps(s_a :: struct_algo{T, Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number = product_matrix_sps(s_a.sps, s_a.B, x)
     function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
         vector_prl = Vector{Y}(zeros(Y, sps.n_var))
@@ -357,7 +345,6 @@ We need the structure sps for the variable used in each B[i], to replace B[i]*x[
     product_vector_sps(sps, g, x)
 compute the product g⊤ x = ∑ Uᵢ⊤ gᵢ⊤ xᵢ. So we need the sps structure to get the Uᵢ.
 """
-    product_vector_sps(s_a :: struct_algo{T, Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number = product_vector_sps(s_a.sps, s_a.g, x)
     function product_vector_sps(sps :: SPS{T}, g :: grad_vector{Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number
         l_elmt_fun = length(sps.structure)
         res = Vector{Y}(undef,l_elmt_fun) #vecteur stockant le résultat des gradient élémentaire g_i * x_i
@@ -386,7 +373,7 @@ update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
         end
     end
 
-    function update_SPS_SR1!(sps :: SPS{T}, B :: Hess_matrix{Y}, B_1 :: Hess_matrix{Y}, y :: grad_vector{Y}, s :: Vector{Y}) where T where Y <: Number
+    function update_SPS_SR1!(sps :: SPS{T}, B :: Hess_matrix{Y}, B_1 :: Hess_matrix{Y}, y :: grad_vector{Y}, s :: AbstractVector{Y}) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
          # @Threads.threads for i in 1:l_elmt_fun
          for i in 1:l_elmt_fun
@@ -398,10 +385,7 @@ update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
         end
     end
 
-    function update_SPS_SR1!(s_a :: struct_algo{T,Y}) where T where Y <: Number
-        update_SPS_SR1!(s_a.sps, s_a.B_k, s_a.B_k1, minus_grad_vec!(s_a.g_k1, s_a.g_k, s_a.y), s_a.x_k1 - s_a.x_k)
 
-    end
 
     export deduct_partially_separable_structure
 
