@@ -219,6 +219,7 @@ The function grad_ni_to_n will be use to transform a element gradient of size n�
     end
 
     function build_gradient!(sps :: SPS{T}, g :: grad_vector{Y}, g_res :: AbstractVector{Y}) where T where Y <: Number
+        g_res[:] = zeros(Y, sps.n_var)
         l_elmt_fun = length(sps.structure)
         for i in 1:l_elmt_fun
             grad_ni_to_n!(g.arr[i], sps.structure[i].used_variable, g_res)
@@ -382,6 +383,7 @@ update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
             @inbounds B_elem = B.arr[i].elmt_hess
             @inbounds B_elem_1 = B_1.arr[i].elmt_hess
             Quasi_Newton_update.update_SR1!(s_elem, y_elem, B_elem, B_elem_1)
+            temporise_debug = 1
         end
     end
 

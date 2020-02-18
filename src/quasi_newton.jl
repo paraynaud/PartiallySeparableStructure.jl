@@ -26,7 +26,12 @@ to the SR1 update method.
         if cond
             @inbounds @fastmath num = Array{Y,2}( v * v')
             @inbounds @fastmath den = (v' * Δx) :: Y
-            @inbounds @fastmath B_1[:] = (B + num/den) :: Array{Y,2}
+            my_and(x :: Bool, y :: Bool) =  x && y :: Bool
+            if mapreduce(x -> isnan(x), my_and, num/den)
+                @inbounds @fastmath B_1[:] = B :: Array{Y,2}
+            else
+                @inbounds @fastmath B_1[:] = (B + num/den) :: Array{Y,2}
+            end
         else
             # println("les conditions d'update ne sont pas vérifiés")
             @inbounds @fastmath B_1[:] = B :: Array{Y,2}
