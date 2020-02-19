@@ -23,7 +23,7 @@ m = Model()
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 # @NLobjective(m, Min, sum( (x[j] + cos(x[j+1])^2)^4 for j in 1:n-1 ))
-@NLobjective(m, Min, sum( (x[j] + sin(x[j+1]))^4 for j in 1:n-1 ))
+@NLobjective(m, Min, sum( (x[j] + x[j+1])^4 for j in 1:n-1 ))
 # @NLobjective(m, Min, sum( (x[j] + x[j+1] + sin(x[j])^2 )^4  for j in 1:n-1 ))
 # @NLobjective(m, Min, sum( (x[j] + x[j+1]+ x[j+2] + x[j+3])^2   for j in 1:n-3 ))
 
@@ -46,11 +46,11 @@ obj2 = trait_expr_tree.transform_to_expr_tree(obj)
 # @show obj2 ==obj3
 # error("test copy")
 
-@code_warntype trait_expr_tree.transform_to_expr_tree(obj)
-@code_warntype trait_expr_tree.transform_to_expr_tree(obj2)
-
-@code_warntype PartiallySeparableStructure.deduct_partially_separable_structure(obj, n)
-@code_warntype PartiallySeparableStructure.deduct_partially_separable_structure(obj2, n)
+# @code_warntype trait_expr_tree.transform_to_expr_tree(obj)
+# @code_warntype trait_expr_tree.transform_to_expr_tree(obj2)
+#
+# @code_warntype PartiallySeparableStructure.deduct_partially_separable_structure(obj, n)
+# @code_warntype PartiallySeparableStructure.deduct_partially_separable_structure(obj2, n)
 
 
 res_sps = PartiallySeparableStructure.deduct_partially_separable_structure(obj2, n)
@@ -58,27 +58,28 @@ res_sps = PartiallySeparableStructure.deduct_partially_separable_structure(obj2,
 
 
 println("séparation ")
-
-@code_warntype Solver_SPS.alloc_struct_algo(obj,n)
+#
+# @code_warntype Solver_SPS.alloc_struct_algo(obj,n)
 @code_warntype Solver_SPS.alloc_struct_algo(obj2,n)
 
 empty_sps = Solver_SPS.alloc_struct_algo(obj,n)
-
-
-
-@code_warntype Solver_SPS.alloc_struct_algo(obj,n)
+s_a_sps = Solver_SPS.alloc_struct_algo(obj2,n)
 
 # x_k = rand(n)
 x_k = (x -> 200*x).(ones(n))
 x_k1 = (x -> 100*x).(rand(n))
 
-quad_approx_x_k = Solver_SPS.approx_quad(empty_sps, x_k)
+ quad_approx_x_k = Solver_SPS.approx_quad(empty_sps, x_k)
+
+# @code_warntype Solver_SPS.approx_quad(empty_sps, x_k)
 
 
+# @code_warntype Solver_SPS.init_struct_algo!(empty_sps, x_k, x_k1)
+# @code_warntype Solver_SPS.init_struct_algo!(s_a_sps, x_k, x_k1)
 
 # test = Solver_SPS.determine_xk1(empty_sps)
 # @show test
-# Solver_SPS.update_xk1!(empty_sps)
+# @code_warntype Solver_SPS.update_xk1!(empty_sps)
 # Solver_SPS.change_x_k1_x_k!(empty_sps)
 
 # Solver_SPS.init_struct_algo!(empty_sps, x_k, x_k1)
@@ -90,31 +91,7 @@ quad_approx_x_k = Solver_SPS.approx_quad(empty_sps, x_k)
 
 
 
-# println("début du solver")
-# point_initial = x_k1 = (x -> 100*x).(rand(n))
-# # struct_algo = Solver_SPS.solver_TR_SR1(obj, n, point_initial, Float64)
-# @code_warntype Solver_SPS.solver_TR_SR1(obj, n, point_initial, Float64)
-
-
-
-
-
-# MathOptInterface.eval_objective_gradient(evaluator, MOI_gradient_en_x, x_k)
-
-
-
-# MOI_gradient_en_x = Vector{typeof(x_k[1])}(undef, n)
-# MOI_pattern = MathOptInterface.hessian_lagrangian_structure(evaluator)
-# column = [x[1] for x in MOI_pattern]
-# row = [x[2]  for x in MOI_pattern]
-# MOI_value_Hessian = Vector{ typeof(x_k[1]) }(undef,length(MOI_pattern))
-# MathOptInterface.eval_hessian_lagrangian(evaluator, MOI_value_Hessian, x_k, 1.0, zeros(0))
-# values = [x for x in MOI_value_Hessian]
-# MOI_half_hessian_en_x = sparse(row,column,values,n,n)
-# MOI_hessian_en_x_sparse = Symmetric(MOI_half_hessian_en_x)
-# MOI_hessian_en_x = Array(MOI_hessian_en_x_sparse)
-#
-#
-# MOI_obj_en_x = MathOptInterface.eval_objective(evaluator, x_k)
-#
-# res = MOI_obj_en_x + MOI_gradient_en_x' * x_k + x_k' * MOI_hessian_en_x * x_k
+println("début du solver")
+point_initial = x_k1 = (x -> 100*x).(rand(n))
+struct_algo = Solver_SPS.solver_TR_SR1!(obj, n, point_initial, Float64)
+@code_warntype Solver_SPS.solver_TR_SR1!(obj, n, point_initial, Float64)

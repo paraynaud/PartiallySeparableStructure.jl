@@ -98,7 +98,7 @@ module Solver_SPS
         # allocation de la structure de donné contenant tout ce dont nous avons besoin pour l'algorithme
         algo_struct = struct_algo(sps, B_k, B_k1, g_k, grad_k, g_k1, y, grad_y, x_k, x_k1, (type)(0), (type)(0), Δ, η, η1, ϵ) :: struct_algo{T, type}
 
-        return algo_struct
+        return algo_struct :: struct_algo{T, type}
     end
 
 
@@ -208,9 +208,11 @@ module Solver_SPS
         s_a.f_xk = s_a.f_xk1
     end
 
-    update_xk1!(s_a :: struct_algo{T,Y}) where T where Y <: Number = _update_xk1!(s_a, trait_expr_tree.is_expr_tree(T))
-    _update_xk1!(s_a :: struct_algo{T,Y}, :: trait_expr_tree.type_expr_tree) where T where Y <: Number = _update_xk1!(s_a)
-    _update_xk1!(s_a :: struct_algo{T,Y}, :: trait_expr_tree.type_not_expr_tree) where T where Y <: Number = error("mal typé")
+
+update_xk1!(s_a :: struct_algo{T,Y}) where T where Y <: Number = _update_xk1!(s_a)
+    # update_xk1!(s_a :: struct_algo{T,Y}) where T where Y <: Number = _update_xk1!(s_a, trait_expr_tree.is_expr_tree(T))
+    # _update_xk1!(s_a :: struct_algo{T,Y}, :: trait_expr_tree.type_expr_tree) where T where Y <: Number = _update_xk1!(s_a)
+    # _update_xk1!(s_a :: struct_algo{T,Y}, :: trait_expr_tree.type_not_expr_tree) where T where Y <: Number = error("mal typé")
     function _update_xk1!(s_a :: struct_algo{T,Y}) where T where Y <: Number
         next_x = determine_xk1(s_a) :: Tuple{Array{Y,1},Krylov.SimpleStats{Y}}
         (ratio, f_next_x) = compute_ratio(s_a, next_x[1] :: Array{Y,1})
@@ -255,12 +257,13 @@ module Solver_SPS
             @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.f_xk norm(g,2) s_a.Δ
 
         end
+        #affichage final
         if cpt < 999
-            println("\n\n\nNous nous somme arrêté grâce à la première condition !!!\n\n\n")
+            println("\n\n\nNous nous somme arrêté grâce à un point stationnaire !!!\n\n\n")
             println("cpt,\tf_xk,\tnorm de g,\trayon puis x en dessous ")
             @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.f_xk norm(g,2) s_a.Δ
         else
-            println("\n\n\nNous nous sommes arrêté à cause du compteur \n\n\n ")
+            println("\n\n\nNous nous sommes arrêté à cause du nombre d'itération max \n\n\n ")
             println("cpt,\tf_xk,\tnorm de g,\trayon puis x en dessous ")
             @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.f_xk norm(g,2) s_a.Δ
 
@@ -268,9 +271,12 @@ module Solver_SPS
     end
 
 
-    function solver_TR_SR1(obj_Expr :: Expr, n :: Int, x_init :: AbstractVector{Y}, type=Float64 :: DataType ) where Y <: Number
-
-        s_a = alloc_struct_algo(obj_Expr :: Expr, n :: Int, type :: DataType ) :: struct_algo{implementation_expr_tree.t_expr_tree, type}
+    solver_TR_SR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, type=Float64 :: DataType ) where T where Y <: Number = _solver_TR_SR1!(obj_Expr, n, x_init, trait_expr_tree.is_expr_tree(T), type)
+    _solver_TR_SR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, :: trait_expr_tree.type_expr_tree, type=Float64 :: DataType) where T where Y <: Number = _solver_TR_SR1!(obj_Expr, n, x_init, type)
+    _solver_TR_SR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, :: trait_expr_tree.type_not_expr_tree, type=Float64 :: DataType) where T where Y <: Number = error("mal typé")
+    function _solver_TR_SR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, type=Float64 :: DataType ) where T where Y <: Number
+        work_obj = trait_expr_tree.transform_to_expr_tree(obj_Expr) :: implementation_expr_tree.t_expr_tree
+        s_a = alloc_struct_algo(work_obj, n :: Int, type :: DataType ) :: struct_algo{implementation_expr_tree.t_expr_tree, type}
 
         init_struct_algo!(s_a, x_init)
 
