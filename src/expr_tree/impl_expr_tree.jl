@@ -13,6 +13,8 @@ module implementation_expr_tree
     import ..interface_expr_tree._get_real_node, ..interface_expr_tree._transform_to_expr_tree
 
 
+
+
     t_expr_tree = type_node{ab_ex_nd}
 
 
@@ -71,9 +73,24 @@ module implementation_expr_tree
     end
 
     function _transform_to_expr_tree(ex :: t_expr_tree)
-        return ex
+        return ex :: t_expr_tree
     end
 
+
+
+    function Base.copy(ex :: t_expr_tree)
+        nd = trait_tree.get_node(ex)
+        ch = trait_tree.get_children(ex)
+        if isempty(ch)
+            leaf = abstract_expr_tree.create_expr_tree(abstract_expr_node.create_node_expr(nd))
+            return leaf
+        else
+            res_ch = Base.copy.(ch)
+            new_node = abstract_expr_node.create_node_expr(nd)
+            # @show res_ch, ch, nd, new_node
+            return create_expr_tree(new_node, res_ch)
+        end
+    end
 
 
     export t_expr_tree

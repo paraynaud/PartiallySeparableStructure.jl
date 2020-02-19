@@ -20,6 +20,10 @@ module constants
         return constant{T}(x)
     end
 
+    function create_node_expr(c :: constant{T} ) where T <: Number
+        return constant{T}(c.value)
+    end
+
 
     _node_is_operator( c :: constant{T}) where T <: Number = false
         _node_is_plus( c :: constant{T}) where T <: Number = false

@@ -1,6 +1,6 @@
 module trait_expr_tree
 
-    using ..abstract_expr_tree
+    using ..abstract_expr_tree, ..implementation_expr_tree
 
     import ..interface_expr_tree._get_expr_node, ..interface_expr_tree._get_expr_children, ..interface_expr_tree._inverse_expr_tree
     import ..implementation_expr_tree.t_expr_tree, ..interface_expr_tree._get_real_node
@@ -18,7 +18,13 @@ module trait_expr_tree
     is_expr_tree(a :: Expr) = type_expr_tree()
     is_expr_tree(a :: Number) = type_expr_tree()
     is_expr_tree(a :: Any) = type_not_expr_tree()
-
+    function is_expr_tree(t :: DataType)
+        if t == abstract_expr_tree.ab_ex_tr || t == t_expr_tree || t == Expr || t == Number
+            type_expr_tree()
+        else
+            type_not_expr_tree()
+        end
+    end
 
     get_expr_node(a) = _get_expr_node(a, is_expr_tree(a))
     _get_expr_node(a, :: type_not_expr_tree) = error(" This is not an expr tree")
@@ -75,9 +81,9 @@ Fonction à prendre avec des pincettes, pour le moment utiliser seulement sur le
 This function takes an argument expression_tree satisfying the trait is_expr_tree and return an expression tree of the type t_expr_tree.
 This function is usefull in our algorithms to synchronise all the types satisfying the trait is_expr_tree (like Expr) to the type t_expr_tree.
 """
-    transform_to_expr_tree(a) = _transform_to_expr_tree(is_expr_tree(a), a)
-    _transform_to_expr_tree(:: type_not_expr_tree, :: Any) = error("nous ne traitons pas un arbre d'expression")
-    _transform_to_expr_tree(:: type_expr_tree, a :: Any) = _transform_to_expr_tree(a)
+    transform_to_expr_tree(a :: T ) where T = _transform_to_expr_tree(is_expr_tree(T), a)
+    _transform_to_expr_tree(:: type_not_expr_tree, :: T) where T = error("nous ne traitons pas un arbre d'expression")
+    _transform_to_expr_tree(:: type_expr_tree, a :: T) where T = _transform_to_expr_tree(a) :: implementation_expr_tree.t_expr_tree
 
 
     transform_to_Expr(ex) = _transform_to_Expr( trait_expr_tree.is_expr_tree(ex), ex)

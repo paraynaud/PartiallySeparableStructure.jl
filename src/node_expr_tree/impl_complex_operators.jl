@@ -24,6 +24,10 @@ module complex_operators
         return complex_operator(op, args_sup)
     end
 
+    function create_node_expr(cp :: complex_operator)
+        return complex_operator(cp.op, cp.args)
+    end
+
     _node_is_operator( op :: complex_operator ) = true
     _node_is_plus( op :: complex_operator ) = (op.op == :+)
     _node_is_minus(op :: complex_operator ) = (op.op == :-)

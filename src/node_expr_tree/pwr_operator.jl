@@ -23,6 +23,10 @@ module power_operators
         return power_operator{T}(arg)
     end
 
+    function create_node_expr(op :: power_operator{T} ) where T <: Number
+        return power_operator{T}(op.index)
+    end
+
     _node_is_operator( op :: power_operator{T} ) where T <: Number= true
     _node_is_plus( op :: power_operator{T} ) where T <: Number = false
     _node_is_minus(op :: power_operator{T} ) where T <: Number = false

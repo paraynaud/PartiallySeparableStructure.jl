@@ -89,7 +89,7 @@ module algo_expr_tree
         else
             n = length(ch)
             ch_type =  Vector{implementation_type_expr.t_type_expr_basic}(undef,n)
-            Threads.@threads for i in 1:n
+            for i in 1:n
                 ch_type[i] = _get_type_tree(ch[i])
             end
             nd_op =  trait_expr_tree.get_expr_node(expr_tree)

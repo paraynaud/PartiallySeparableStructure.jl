@@ -18,6 +18,9 @@ module times_operators
 
     end
 
+    function create_node_expr(op :: time_operator)
+        return time_operator()
+    end
 
     _node_is_operator( op :: time_operator ) = true
     _node_is_plus( op :: time_operator ) = false

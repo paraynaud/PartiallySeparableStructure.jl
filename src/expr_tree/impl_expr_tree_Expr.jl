@@ -2,11 +2,14 @@ module implementation_expr_tree_Expr
 
     using ..abstract_expr_node
     using ..abstract_expr_tree
+    using ..implementation_expr_tree
 
     import ..abstract_expr_tree.create_expr_tree, ..abstract_expr_tree.create_Expr
 
     import ..interface_expr_tree._get_expr_node, ..interface_expr_tree._get_expr_children, ..interface_expr_tree._inverse_expr_tree
     import ..interface_expr_tree._get_real_node, ..interface_expr_tree._transform_to_expr_tree
+
+
 
 
     function create_expr_tree( ex :: Expr)
@@ -99,18 +102,18 @@ module implementation_expr_tree_Expr
 
 
     function _transform_to_expr_tree(ex :: Expr)
-        n_node = _get_expr_node(ex)
+        n_node = _get_expr_node(ex) :: abstract_expr_node.ab_ex_nd
         children = _get_expr_children(ex)
         if isempty(children)
-            return abstract_expr_tree.create_expr_tree(n_node)
+            return abstract_expr_tree.create_expr_tree(n_node) :: implementation_expr_tree.t_expr_tree
         else
-            n_children = _transform_to_expr_tree.(children)
-            return abstract_expr_tree.create_expr_tree(n_node, n_children)
+            n_children = _transform_to_expr_tree.(children) :: Vector{implementation_expr_tree.t_expr_tree}
+            return abstract_expr_tree.create_expr_tree(n_node, n_children) :: implementation_expr_tree.t_expr_tree
         end
     end
 
     function _transform_to_expr_tree(ex :: Number)
-        return abstract_expr_tree.create_expr_tree(abstract_expr_node.create_node_expr(ex))
+        return abstract_expr_tree.create_expr_tree(abstract_expr_node.create_node_expr(ex)) :: implementation_expr_tree.t_expr_tree
     end
 
 end

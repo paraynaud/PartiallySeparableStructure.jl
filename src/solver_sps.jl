@@ -29,22 +29,57 @@ module Solver_SPS
     end
 
 
+    #
+    # function alloc_struct_algo(obj_Expr :: Expr, n :: Int, type=Float64 :: DataType )
+    #     # transformation de l'Expr donné par JuMP en expr_tree plus rapide à traiter
+    #     obj = trait_expr_tree.transform_to_expr_tree(obj_Expr) :: implementation_expr_tree.t_expr_tree
+    #
+    #     # détéction de la structure partiellement séparable
+    #     sps = PartiallySeparableStructure.deduct_partially_separable_structure(obj,n) :: PartiallySeparableStructure.SPS{implementation_expr_tree.t_expr_tree}
+    #
+    #     # construction des structure de données nécessaire pour le gradient à l'itération k/k+1 et le différence des gradients
+    #     construct_element_grad = (y :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_gradient{type}(Vector{type}(zeros(type, length(y.used_variable)) )) )
+    #     g_k = PartiallySeparableStructure.grad_vector{type}( construct_element_grad.(sps.structure) )
+    #     g_k1 = PartiallySeparableStructure.grad_vector{type}( construct_element_grad.(sps.structure) )
+    #     y = PartiallySeparableStructure.grad_vector{type}( construct_element_grad.(sps.structure) )
+    #
+    #     # constructions des structures de données nécessaires pour le Hessien ou son approximation
+    #     construct_element_hess = ( elm_fun :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_hessian{type}( Array{type,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
+    #     B_k = PartiallySeparableStructure.Hess_matrix{type}(construct_element_hess.(sps.structure))
+    #     B_k1 = PartiallySeparableStructure.Hess_matrix{type}(construct_element_hess.(sps.structure))
+    #
+    #     #définition des 2 points xk et x_k1
+    #     x_k = Vector{type}(undef, n)
+    #     x_k1 = Vector{type}(undef, n)
+    #
+    #     #finally a real sized gradient
+    #     grad_k = Vector{type}(undef, n)
+    #     grad_y = Vector{type}(undef, n)
+    #
+    #     Δ = 1.0
+    #     η = 1e-3
+    #     η1 =  0.75
+    #     ϵ = 1e-6
+    #     # allocation de la structure de donné contenant tout ce dont nous avons besoin pour l'algorithme
+    #     algo_struct = struct_algo(sps, B_k, B_k1, g_k, grad_k, g_k1, y, grad_y, x_k, x_k1, (type)(0), (type)(0), Δ, η, η1, ϵ) :: struct_algo{implementation_expr_tree.t_expr_tree, type}
+    #
+    #     return algo_struct
+    # end
 
-    function alloc_struct_algo(obj_Expr :: Expr, n :: Int, type=Float64 :: DataType )
-        # transformation de l'Expr donné par JuMP en expr_tree plus rapide à traiter
-        obj = trait_expr_tree.transform_to_expr_tree(obj_Expr)
+
+    function alloc_struct_algo(obj :: T, n :: Int, type=Float64 :: DataType ) where T
 
         # détéction de la structure partiellement séparable
-        sps = PartiallySeparableStructure.deduct_partially_separable_structure(obj,n)
+        sps = PartiallySeparableStructure.deduct_partially_separable_structure(obj,n) :: PartiallySeparableStructure.SPS{T}
 
         # construction des structure de données nécessaire pour le gradient à l'itération k/k+1 et le différence des gradients
-        construct_element_grad = (y :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_gradient{type}(Vector{type}(zeros(type, length(y.used_variable)) )) )
+        construct_element_grad = (y :: PartiallySeparableStructure.element_function{T} -> PartiallySeparableStructure.element_gradient{type}(Vector{type}(zeros(type, length(y.used_variable)) )) )
         g_k = PartiallySeparableStructure.grad_vector{type}( construct_element_grad.(sps.structure) )
         g_k1 = PartiallySeparableStructure.grad_vector{type}( construct_element_grad.(sps.structure) )
         y = PartiallySeparableStructure.grad_vector{type}( construct_element_grad.(sps.structure) )
 
         # constructions des structures de données nécessaires pour le Hessien ou son approximation
-        construct_element_hess = ( elm_fun :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_hessian{type}( Array{type,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
+        construct_element_hess = ( elm_fun :: PartiallySeparableStructure.element_function{T} -> PartiallySeparableStructure.element_hessian{type}( Array{type,2}(undef, length(elm_fun.used_variable), length(elm_fun.used_variable) )) )
         B_k = PartiallySeparableStructure.Hess_matrix{type}(construct_element_hess.(sps.structure))
         B_k1 = PartiallySeparableStructure.Hess_matrix{type}(construct_element_hess.(sps.structure))
 
@@ -61,7 +96,7 @@ module Solver_SPS
         η1 =  0.75
         ϵ = 1e-6
         # allocation de la structure de donné contenant tout ce dont nous avons besoin pour l'algorithme
-        algo_struct = struct_algo(sps, B_k, B_k1, g_k, grad_k, g_k1, y, grad_y, x_k, x_k1, (type)(0), (type)(0), Δ, η, η1, ϵ) :: struct_algo{implementation_expr_tree.t_expr_tree, type}
+        algo_struct = struct_algo(sps, B_k, B_k1, g_k, grad_k, g_k1, y, grad_y, x_k, x_k1, (type)(0), (type)(0), Δ, η, η1, ϵ) :: struct_algo{T, type}
 
         return algo_struct
     end
@@ -173,8 +208,10 @@ module Solver_SPS
         s_a.f_xk = s_a.f_xk1
     end
 
-
-    function update_xk1!(s_a :: struct_algo{T,Y}) where T where Y <: Number
+    update_xk1!(s_a :: struct_algo{T,Y}) where T where Y <: Number = _update_xk1!(s_a, trait_expr_tree.is_expr_tree(T))
+    _update_xk1!(s_a :: struct_algo{T,Y}, :: trait_expr_tree.type_expr_tree) where T where Y <: Number = _update_xk1!(s_a)
+    _update_xk1!(s_a :: struct_algo{T,Y}, :: trait_expr_tree.type_not_expr_tree) where T where Y <: Number = error("mal typé")
+    function _update_xk1!(s_a :: struct_algo{T,Y}) where T where Y <: Number
         next_x = determine_xk1(s_a) :: Tuple{Array{Y,1},Krylov.SimpleStats{Y}}
         (ratio, f_next_x) = compute_ratio(s_a, next_x[1] :: Array{Y,1})
         if ratio > s_a.η
@@ -239,7 +276,7 @@ module Solver_SPS
 
         iterations_TR!(s_a)
 
-        return s_a
+        return s_a :: struct_algo{implementation_expr_tree.t_expr_tree, type}
     end
 
 

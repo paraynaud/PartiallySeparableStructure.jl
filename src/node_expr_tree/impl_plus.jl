@@ -19,6 +19,10 @@ module plus_operators
     end
 
 
+    function create_node_expr(  op :: plus_operator )
+        return plus_operator()
+    end
+
     _node_is_operator( op :: plus_operator ) = true
     _node_is_plus( op :: plus_operator ) = true
     _node_is_minus(op :: plus_operator ) = false

@@ -30,6 +30,10 @@ module variables
         return variable(n, id.value)
     end
 
+    function create_node_expr(v :: variable)
+        return variable(v.name, v.index)
+    end
+
     _node_is_operator( v :: variable) = false
     _node_is_plus( v :: variable) = false
     _node_is_minus(v :: variable) = false
