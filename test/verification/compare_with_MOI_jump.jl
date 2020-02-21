@@ -12,7 +12,7 @@ println("\n\nCompare_With_MOI_JUMP\n\n")
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 10
+n = 1000
 
 m = Model()
 @variable(m, x[1:n])
