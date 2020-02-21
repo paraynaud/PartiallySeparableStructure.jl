@@ -4,6 +4,7 @@ using ..abstract_expr_node, ..trait_expr_node
 
 using ..variables
 using ..constants
+using ..plus_operators, ..minus_operators, ..times_operators, ..sinus_operators, ..tan_operators, ..power_operators
 using ..simple_operators
 using ..complex_operators
 
@@ -23,6 +24,9 @@ using MathOptInterface
     @test abstract_expr_node.create_node_expr(:+) == plus_operators.plus_operator()
     @test abstract_expr_node.create_node_expr(:-) == minus_operators.minus_operator()
     @test abstract_expr_node.create_node_expr(:*) == times_operators.time_operator()
+    @test abstract_expr_node.create_node_expr(:sin) == sinus_operators.sinus_operator()
+    @test abstract_expr_node.create_node_expr(:tan) == tan_operators.tan_operator()
+
     @test abstract_expr_node.create_node_expr(:^,2, true ) == power_operators.power_operator(2)
     @test abstract_expr_node.create_node_expr(:^,[2]) == complex_operators.complex_operator(:^,[2])
 

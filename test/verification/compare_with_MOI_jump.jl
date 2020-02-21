@@ -12,7 +12,7 @@ println("\n\nCompare_With_MOI_JUMP\n\n")
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 1000
+n = 10
 
 m = Model()
 @variable(m, x[1:n])
@@ -20,12 +20,14 @@ m = Model()
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 # @NLobjective(m, Min, sum( x[j]^2 * x[j+1]^2 for j in 1:n-1 ) + x[1]*5 + sin(x[4]) - (5+x[1])^2 + cos(x[6]) + tan(x[7]) )
 # @NLobjective(m, Min, sum( (x[j] + x[j+1])^3 for j in 1:n-1 ))
-@NLobjective(m, Min, sum( (x[j+1] - sin(x[j])^2)^2   for j in 1:n-1 ) + cos(x[5])^4 + tan(x[7])*5 )
+# @NLobjective(m, Min, sum( exp(x[j])*exp(x[j+1]) for j in 1:n-1 ))
+@NLobjective(m, Min, exp(x[1]) +  sum( (x[j+1] - sin(x[j])^2)^2   for j in 1:n-1 ) + cos(x[5])^4 + tan(x[7])*5 )
 # @NLobjective(m, Min, sum( (x[j] + x[j+1])^3 for j in 1:n-1 ))
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
 obj = MathOptInterface.objective_expr(evaluator)
 
+# error("fin")
 #définition d'un premier vecteur d'une valeur aléatoire entre -50 et 50
 # t :: DataType = Float64
 # x = (α -> α - 50).( (β -> 100 * β).(rand(BigFloat, n)) )
@@ -190,17 +192,19 @@ end
     # # on récupère le Hessian structuré du format SPS.
     # #Ensuite on calcul le produit entre le structure de donnée SPS_Structured_Hessian_en_x et y
 
-    SPS_product_Hessian_en_x_et_y = PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)
+
+    @testset "test du produit" begin
+        SPS_product_Hessian_en_x_et_y = PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)
 
 
-    v_tmp = Vector{ Float64 }(undef, length(MOI_pattern))
-    MOI_Hessian_product_y = Vector{ typeof(y[1]) }(undef,n)
-    MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_y, x, y, 1.0, zeros(0))
-    #
-    @test norm(MOI_Hessian_product_y - SPS_product_Hessian_en_x_et_y, 2) < σ
-    @test norm(MOI_Hessian_product_y - MOI_hessian_en_x*y, 2) < σ
+        v_tmp = Vector{ Float64 }(undef, length(MOI_pattern))
+        MOI_Hessian_product_y = Vector{ typeof(y[1]) }(undef,n)
+        MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_y, x, y, 1.0, zeros(0))
+        #
+        @test norm(MOI_Hessian_product_y - SPS_product_Hessian_en_x_et_y, 2) < σ
+        @test norm(MOI_Hessian_product_y - MOI_hessian_en_x*y, 2) < σ
 
-
+    end
 
     # @show "0"
     # bench_product_matric_sps = @benchmark PartiallySeparableStructure.product_matrix_sps(SPS, SPS_Structured_Hessian_en_x, y)

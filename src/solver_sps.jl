@@ -164,7 +164,8 @@ module Solver_SPS
         PartiallySeparableStructure.evaluate_SPS_gradient!(s_a.sps, s_a.x_k, s_a.g_k)
         PartiallySeparableStructure.build_gradient!(s_a.sps, s_a.g_k, s_a.grad_k)
 
-        PartiallySeparableStructure.struct_hessian!(s_a.sps, s_a.x_k, s_a.B_k)
+        # PartiallySeparableStructure.struct_hessian!(s_a.sps, s_a.x_k, s_a.B_k)
+        PartiallySeparableStructure.id_hessian!(s_a.sps, s_a.B_k)
 
         s_a.f_xk = PartiallySeparableStructure.evaluate_SPS(s_a.sps, x_k)
 
@@ -187,6 +188,7 @@ module Solver_SPS
         n = s_a.sps.n_var
         opB(B) = LinearOperators.LinearOperator(n, n, true, true, x -> PartiallySeparableStructure.product_matrix_sps(s_a.sps, B, x) )
         cg_res = Krylov.cg(opB(s_a.B_k), - s_a.grad_k, radius = s_a.Δ) :: Tuple{Array{Y,1},Krylov.SimpleStats{Y}}
+        # @show cg_res
         return cg_res :: Tuple{Array{Y,1},Krylov.SimpleStats{Y}}
     end
 
@@ -223,22 +225,23 @@ update_xk1!(s_a :: struct_algo{T,Y}) where T where Y <: Number = _update_xk1!(s_
             PartiallySeparableStructure.minus_grad_vec!(s_a.g_k1, s_a.g_k, s_a.y)
             PartiallySeparableStructure.update_SPS_SR1!(s_a.sps, s_a.B_k, s_a.B_k1, s_a.y, s_k) #on obtient notre nouveau B_k1
             s_a.f_xk1 = f_next_x
-            println("\n\nOn change de point!!\n\n")
+            # println("\n\nOn change de point!!\n\n")
+            # @show s_a.x_k, s_a.x_k1
             change_x_k1_x_k!(s_a)
         else
             # changement par référence, la structure ne bouge donc pas
-            println("changement par référence, la structure ne bouge donc pas")
+            # println("changement par référence, la structure ne bouge donc pas")
         end
 
         if ratio >= s_a.η1
             if norm(s_k) < 0.8 * s_a.Δ
                 # le rayon ne bouge pas
             else
-                println("le rayon augmente")
+                # println("le rayon augmente")
                 s_a.Δ = s_a.Δ * 2
             end
         elseif ratio <= s_a.η
-            println("le rayon diminue")
+            # println("le rayon diminue")
             s_a.Δ = 1/2 * s_a.Δ
         end
 
@@ -246,10 +249,12 @@ update_xk1!(s_a :: struct_algo{T,Y}) where T where Y <: Number = _update_xk1!(s_
 
 
     function iterations_TR!(s_a :: struct_algo{T,Y}) where T where Y <: Number
+        cpt_max = 1000
         cpt = 1
-        g = Vector{Y}(ones(Y, s_a.sps.n_var) )
-        # norm_g = (x :: PartiallySeparableStructure.grad_vector{Y} ->  )
-        while ( ( norm(g) > s_a.ϵ + s_a.sps.n_var * s_a.ϵ^2 )  &&  cpt < 1000 )
+        g = Vector{Y}(ones(Y, s_a.sps.n_var) ) #initialisé avec des 1 pour passer le test de la boucle while
+        @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.f_xk norm(g,2) s_a.Δ
+
+        while ( ( norm(g) > s_a.ϵ + s_a.sps.n_var * s_a.ϵ^2 )  &&  cpt < cpt_max )
             update_xk1!(s_a)
             # @printf "%3d %8.1e %7.1e %7.1e %8.1e %7.1e \n" cpt s_a.f_xk norm(g,2) s_a.Δ pk norm(sk,2)
             cpt = cpt + 1
@@ -258,7 +263,7 @@ update_xk1!(s_a :: struct_algo{T,Y}) where T where Y <: Number = _update_xk1!(s_
 
         end
         #affichage final
-        if cpt < 999
+        if cpt < cpt_max
             println("\n\n\nNous nous somme arrêté grâce à un point stationnaire !!!\n\n\n")
             println("cpt,\tf_xk,\tnorm de g,\trayon puis x en dessous ")
             @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.f_xk norm(g,2) s_a.Δ
