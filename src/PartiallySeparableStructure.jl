@@ -298,6 +298,15 @@ We need the structure sps for the variable used in each B[i], to replace B[i]*x[
         return vector_prl
     end
 
+    function product_matrix_sps!(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: AbstractVector{Y}, Bx :: AbstractVector{Y}) where T where Y <: Number
+        l_elmt_fun = length(sps.structure)
+        Bx .= (zeros(Y, sps.n_var))
+        for i in 1:l_elmt_fun
+            @inbounds temp = B.arr[i].elmt_hess :: Array{Y,2} * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
+            f_inter!(view(Bx, sps.structure[i].used_variable), temp )
+        end
+    end
+
     function f_inter!(a :: AbstractVector{Z}, b :: AbstractVector{Z}) where Z <: Number
         l = length(a)
         for i in 1:l
@@ -305,10 +314,13 @@ We need the structure sps for the variable used in each B[i], to replace B[i]*x[
         end
     end
 
+    #nul
     function hess_matrix_dot_vector(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
-        mapreduce(elt_fun :: element_function{T} -> elt_fun.U' * sparse(B.arr[elt_fun.index].elmt_hess * view(x, elt_fun.used_variable)) ,+, sps.structure)
+        #utilisation de sparse car elt_fun.U' est un sparseArray et le produit entre les sparseArray est plus rapide
+        mapreduce(elt_fun :: element_function{T} -> elt_fun.U' * sparse(B.arr[elt_fun.index].elmt_hess * view(x, elt_fun.used_variable)), + , sps.structure)
     end
 
+    #nul
     function inefficient_product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
         construct_Sparse_Hessian(sps,B) * x
     end

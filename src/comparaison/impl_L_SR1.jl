@@ -1,6 +1,6 @@
 module implementation_L_SR1
 
-    using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
+    using JuMP, MathOptInterface, LinearAlgebra, SparseArrays, NLPModellsjuMP
     using Test, BenchmarkTools, ProfileView, InteractiveUtils, Printf
 
 
@@ -12,14 +12,6 @@ module implementation_L_SR1
     using ..implementation_expr_tree, ..M_evaluation_expr_tree
     using ..trait_expr_tree
 
-
-    # function compute_ratio(x :: AbstractVector{Y}, f_x :: Y, s :: AbstractVector{Y}, obj :: implementation_expr_tree.t_expr_tree, mk)  where Y <: Number
-    #     f_next_x = M_evaluation_expr_tree.evaluate_expr_tree(obj, x+s) :: Y
-    #     num = f_x - f_next_x :: Y
-    #     @show s
-    #     den = f_x - mk(s) :: Y
-    #     return num/den :: Y
-    # end
 
     function compute_ratio(x :: AbstractVector{Y}, f_x :: Y, s :: Vector{Y}, obj :: implementation_expr_tree.t_expr_tree, B :: LSR1Operator{Float64}, g :: AbstractVector{Y})  where Y <: Number
         quad_model_s =  f_x + g' * s + 1/2 *  ((B * s)' * s) :: Y
@@ -98,6 +90,6 @@ module implementation_L_SR1
         return (x, cpt , mean_rho, mean_rad)
     end
 
-
+# utiliser les fonctions de JuMP.
 
 end #fin du module

@@ -19,4 +19,6 @@ include("PartiallySeparableStructure.jl")
 
 include("solver_sps.jl")
 
+include("abs_nlp_model_sps.jl")
+
 include("comparaison/ordered_include.jl")
