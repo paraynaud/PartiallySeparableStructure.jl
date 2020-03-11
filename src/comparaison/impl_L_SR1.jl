@@ -1,6 +1,6 @@
 module implementation_L_SR1
 
-    using JuMP, MathOptInterface, LinearAlgebra, SparseArrays, NLPModellsjuMP
+    using JuMP, MathOptInterface, LinearAlgebra, SparseArrays#, NLPModelsjuMP
     using Test, BenchmarkTools, ProfileView, InteractiveUtils, Printf
 
 

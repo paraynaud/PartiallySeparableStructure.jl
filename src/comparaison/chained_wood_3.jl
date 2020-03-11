@@ -1,7 +1,7 @@
 # using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
 # using Test, BenchmarkTools, ProfileView, InteractiveUtils
 
-using NLPModels, JuMP, MathOptInterface
+using NLPModels, JuMP, MathOptInterface, NLPModelsJuMP
 using Printf
 
 include("../ordered_include.jl")
@@ -43,8 +43,10 @@ end
 
 # g = NLPModels.grad(nlp, x)
 # @show g
+nlp = MathOptNLPModel(m)
 nlp2 = Test_NLP_model.SPS_Model(obj,n)
 
 B = LSR1Operator(n, scaling=true) :: LSR1Operator{Float64} #scaling=true
-(x_f,cpt)  = solver_L_SR1_JuMP(nlp2, B, point_initial)
-@show NLPModels.obj(nlp,x_f)
+(x_f,cpt)  = solver_L_SR1_Ab_NLP(nlp, B, point_initial)
+println("faux ensuite")
+(x_f,cpt)  = solver_L_SR1_Ab_NLP(nlp2, B, point_initial)

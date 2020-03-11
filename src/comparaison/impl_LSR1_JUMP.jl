@@ -51,22 +51,24 @@ end
         x = x_init
         g = Vector{T}(undef,length(x_init))
         g = NLPModels.grad!(nlp, x, g)
-        B = LSR1Operator(n, scaling=true) :: LSR1Operator{Float64} #scaling=true 
+        B = LSR1Operator(n, scaling=true) :: LSR1Operator{Float64} #scaling=true
         b = true
         (Δ, ϵ, cpt) = (1.0, 10^-6, 0)
         f_xk = NLPModels.obj(nlp, x)
+        @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
+
         while (norm(g,2) > ϵ + n * ϵ^2) && cpt < cpt_max  # stop condition
             cpt = cpt + 1
-            # @show cpt, f_xk, Δ, norm(g,2)
-            @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
-
 
             cg_res = Krylov.cg(B, - g, radius = Δ)
 
             sk = cg_res[1]  # we compute the potential next point
 
             (pk, f_temp) = compute_ratio(x, f_xk, sk, nlp, B, g) # we compute the ratio
-            println("norme de s_k: ", norm(sk, 2), "  ratio: ", pk)
+            if (mod(cpt,50) == 0)
+                @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
+                println("norme de s_k: ", norm(sk, 2), "  ratio: ", pk)
+            end
 
             Δ = upgrade_TR_LSR1!(pk, x, sk, g, B, nlp, Δ) # we upgrade x,g,B,∆
             if  pk > η
@@ -77,3 +79,15 @@ end
         @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
         return (x, cpt)
     end
+
+
+    #
+    # function loop()
+    #     a = 0
+    #     while (a < 1000)
+    #        if (mod(a,50) == 0)
+    #            @show a
+    #        end
+    #        a = a + 1
+    #       end
+    # end

@@ -9,15 +9,13 @@ include("../ordered_include.jl")
 using ..Test_NLP_model
 
 # include("impl_LSR1_JUMP.jl")
-include("impl_Tr_Cg_Ab.jl")
 
 σ = 10e-5
-n = 10000
+n = 100
 m = Model()
 @variable(m, x[1:n])
-@NLobjective(m, Min, sum( 100 * (x[Integer(2*j-1)]^2 - x[Integer(2*j)])^2 + (x[Integer(2*j-1)] - 1)^2 + 90 * (x[Integer(2*j+1)]^2 - x[Integer(2*j+2)])^2 + (x[Integer(2*j+1)] -1)^2 + 10 * (x[Integer(2*j)] + x[Integer(2*j+2)] - 2)^2 + (x[Integer(2*j)] - x[Integer(2*j+2)]^2 * 0.1)  for j in 1:((n-2)/2) )) #rosenbrock function
+@NLobjective(m, Min, sum( 100 * (x[Integer(2*j-1)]^2 - x[Integer(2*j)])^2 + (x[Integer(2*j-1)] - 1)^2 + 90 * (x[Integer(2*j+1)]^2 - x[Integer(2*j+2)])^2 + (x[Integer(2*j+1)] -1)^2 + 10 * (x[Integer(2*j)] + x[Integer(2*j+2)] - 2)^2 + (x[Integer(2*j)] - x[Integer(2*j+2)])^2 * 0.1  for j in 1:((n-2)/2) )) #rosenbrock function
 evaluator = JuMP.NLPEvaluator(m)
-obj = MathOptInterface.objective_expr(evaluator)
 
 nlp = MathProgNLPModel(m)
 
@@ -43,9 +41,7 @@ end
 
 
 # g = NLPModels.grad(nlp, x)
-# @show g
-nlp2 = Test_NLP_model.SPS_Model(obj,n)
+# @show gnlp2 = Test_NLP_model.SPS_Model(obj,n)
 
 B = LSR1Operator(n, scaling=true) :: LSR1Operator{Float64} #scaling=true
-(x_f,cpt)  = solver_L_SR1_JuMP(nlp, B, point_initial)
-@show NLPModels.obj(nlp,x_f)
+(x_f,cpt) = solver_L_SR1_JuMP(nlp, B, point_initial)

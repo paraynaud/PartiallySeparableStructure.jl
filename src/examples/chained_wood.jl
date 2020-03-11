@@ -1,7 +1,6 @@
 using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
 using Test, BenchmarkTools, ProfileView, InteractiveUtils
 
-
 include("../../src/ordered_include.jl")
 
 using ..PartiallySeparableStructure
@@ -13,10 +12,12 @@ using ..M_evaluation_expr_tree
 
 
 σ = 10e-5
-n = 10000
+n = 100
 m = Model()
 @variable(m, x[1:n])
 @NLobjective(m, Min, sum( 100 * ( x[Integer(2*j-1)]^2 - x[Integer(2*j)] )^2 + ( x[Integer(2*j-1)] - 1 )^2 + 90 * ( x[Integer(2*j+1)]^2 - x[Integer(2*j+2)] )^2 + (x[Integer(2*j+1)] - 1)^2 + 10 * (x[Integer(2*j)] + x[Integer(2*j+2)] - 2)^2 + (x[Integer(2*j)] - x[Integer(2*j+2)])^2 * 0.1  for j in 1:((n-2)/2) )) #rosenbrock function
+
+
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
 obj = MathOptInterface.objective_expr(evaluator)
@@ -44,30 +45,34 @@ for i in 1:n
     end
 end
 
-
-# point_initial = ones(Float64, n)
- y = ones(Float64, n)
-
-println("fin points ")
-
-s_a = Solver_SPS.alloc_struct_algo(obj,n)
-println("fin alloc")
-Solver_SPS.init_struct_algo!(s_a, point_initial)
-
-println("fin SolverSPS")
-
-res1 = PartiallySeparableStructure.product_matrix_sps(s_a.sps, s_a.B_k, y)
-# res2 = PartiallySeparableStructure.hess_matrix_dot_vector(s_a.sps, s_a.B_k, y)
-res2 = Vector{Float64}(undef,n)
-PartiallySeparableStructure.product_matrix_sps!(s_a.sps, s_a.B_k, y, res2)
-@show norm(res1 - res2,2)
-
-println("les benchmarks")
-
-b1 = @benchmark PartiallySeparableStructure.product_matrix_sps(s_a.sps, s_a.B_k, y)
-b2 = @benchmark PartiallySeparableStructure.product_matrix_sps!(s_a.sps, s_a.B_k, y, res2)
-# b2 = @benchmark PartiallySeparableStructure.hess_matrix_dot_vector(s_a.sps, s_a.B_k, y) #nul
-# b3 = @benchmark PartiallySeparableStructure.inefficient_product_matrix_sps(s_a.sps, s_a.B_k, y)
-# struct_algo = Solver_SPS.solver_TR_SR1!(obj, n, point_initial, Float64)
+struct_algo = Solver_SPS.solver_TR_SR1!(obj, n, point_initial, Float64)
 
 # Juno.@enter Solver_SPS.solver_TR_SR1!(obj, n, point_initial, Float64)
+
+
+
+
+
+# point_initial = ones(Float64, n)
+#  y = ones(Float64, n)
+#
+# println("fin points ")
+#
+# s_a = Solver_SPS.alloc_struct_algo(obj,n)
+# println("fin alloc")
+# Solver_SPS.init_struct_algo!(s_a, point_initial)
+#
+# println("fin SolverSPS")
+#
+# res1 = PartiallySeparableStructure.product_matrix_sps(s_a.sps, s_a.B_k, y)
+# # res2 = PartiallySeparableStructure.hess_matrix_dot_vector(s_a.sps, s_a.B_k, y)
+# res2 = Vector{Float64}(undef,n)
+# PartiallySeparableStructure.product_matrix_sps!(s_a.sps, s_a.B_k, y, res2)
+# @show norm(res1 - res2,2)
+#
+# println("les benchmarks")
+#
+# b1 = @benchmark PartiallySeparableStructure.product_matrix_sps(s_a.sps, s_a.B_k, y)
+# b2 = @benchmark PartiallySeparableStructure.product_matrix_sps!(s_a.sps, s_a.B_k, y, res2)
+# b2 = @benchmark PartiallySeparableStructure.hess_matrix_dot_vector(s_a.sps, s_a.B_k, y) #nul
+# b3 = @benchmark PartiallySeparableStructure.inefficient_product_matrix_sps(s_a.sps, s_a.B_k, y)
