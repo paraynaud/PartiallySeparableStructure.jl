@@ -8,7 +8,7 @@ module implementation_L_SR1
 
     using LinearOperators, Krylov
 
-    using ..PartiallySeparableStructure, ..Solver_SPS
+    using ..PartiallySeparableStructure
     using ..implementation_expr_tree, ..M_evaluation_expr_tree
     using ..trait_expr_tree
 

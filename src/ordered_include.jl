@@ -17,8 +17,9 @@ include("quasi_newton.jl")
 # le coeur du module
 include("PartiallySeparableStructure.jl")
 
-include("solver_sps.jl")
+include("solver_sps_3.jl")
+# include("solver_sps.jl")
+# include("abs_nlp_model_sps.jl")
 
-include("abs_nlp_model_sps.jl")
 
 include("comparaison/ordered_include.jl")

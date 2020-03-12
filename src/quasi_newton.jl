@@ -33,7 +33,7 @@ to the SR1 update method.
                 @inbounds @fastmath B_1[:] = (B + num/den) :: Array{Y,2}
             end
         else
-            # println("les conditions d'update ne sont pas vérifiés")
+            println("les conditions d'update ne sont pas vérifiés")
             @inbounds @fastmath B_1[:] = B :: Array{Y,2}
         end
     end
