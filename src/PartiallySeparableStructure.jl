@@ -292,7 +292,8 @@ We need the structure sps for the variable used in each B[i], to replace B[i]*x[
         l_elmt_fun = length(sps.structure)
         vector_prl = Vector{Y}(zeros(Y, sps.n_var))
         for i in 1:l_elmt_fun
-            @inbounds temp = B.arr[i].elmt_hess :: Array{Y,2} * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
+            # @inbounds temp = B.arr[i].elmt_hess :: Array{Y,2} * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
+            temp = B.arr[i].elmt_hess :: Array{Y,2} * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
             f_inter!(view(vector_prl,sps.structure[i].used_variable), temp )
         end
         return vector_prl
@@ -302,7 +303,8 @@ We need the structure sps for the variable used in each B[i], to replace B[i]*x[
         l_elmt_fun = length(sps.structure)
         Bx .= (zeros(Y, sps.n_var))
         for i in 1:l_elmt_fun
-            @inbounds temp = B.arr[i].elmt_hess :: Array{Y,2} * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
+            # @inbounds emp = B.arr[i].elmt_hess :: Array{Y,2} * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
+            emp = B.arr[i].elmt_hess :: Array{Y,2} * Array(view(x, sps.structure[i].used_variable)) :: Vector{Y}
             f_inter!(view(Bx, sps.structure[i].used_variable), temp )
         end
     end
@@ -310,7 +312,8 @@ We need the structure sps for the variable used in each B[i], to replace B[i]*x[
     function f_inter!(a :: AbstractVector{Z}, b :: AbstractVector{Z}) where Z <: Number
         l = length(a)
         for i in 1:l
-            @inbounds a[i] += b[i]
+            # @inbounds a[i] += b[i]
+            a[i] += b[i]
         end
     end
 

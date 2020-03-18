@@ -19,22 +19,26 @@ to the SR1 update method.
         ω = 1e-8
         @inbounds @fastmath v = y - B * Δx :: Vector{Y}
 
-        @inbounds @fastmath cond_left = abs( Δx' * v )
-        @inbounds @fastmath cond_right = ω * norm(Δx,2) * norm(v,2)
-        @inbounds @fastmath cond = (cond_left >= cond_right) :: Bool
+        @fastmath @inbounds cond_left = abs( Δx' * v )
+        @fastmath @inbounds cond_right = ω * norm(Δx,2) * norm(v,2)
+        @fastmath @inbounds cond = (cond_left >= cond_right) :: Bool
 
         if cond
-            @inbounds @fastmath num = Array{Y,2}( v * v')
-            @inbounds @fastmath den = (v' * Δx) :: Y
-            my_and(x :: Bool, y :: Bool) =  x && y :: Bool
-            if mapreduce(x -> isnan(x), my_and, num/den)
-                @inbounds @fastmath B_1[:] = B :: Array{Y,2}
+            @fastmath @inbounds num = Array{Y,2}( v * v')
+            @fastmath @inbounds den = (v' * Δx) :: Y
+            @fastmath num_den = num/den
+            my_or(x :: Bool, y :: Bool) =  x || y :: Bool
+            isInf(x) = (x == Inf) || (x == -Inf)
+            b1 = mapreduce(x -> isnan(x), my_or, num_den)
+            b2 = mapreduce(x -> isInf(x), my_or, num_den)
+            if b1 || b2
+                # print("x")
+                @inbounds B_1[:] = B :: Array{Y,2}
             else
-                @inbounds @fastmath B_1[:] = (B + num/den) :: Array{Y,2}
+                @fastmath @inbounds B_1[:] = (B + num_den) :: Array{Y,2}
             end
         else
-            println("les conditions d'update ne sont pas vérifiés")
-            @inbounds @fastmath B_1[:] = B :: Array{Y,2}
+            @inbounds B_1[:] = B :: Array{Y,2}
         end
     end
 

@@ -47,31 +47,44 @@ end
     function solver_L_SR1_Ab_NLP(nlp :: AbstractNLPModel, B :: AbstractLinearOperator{T}, x_init :: AbstractVector{T}) where T <: Number
         # opB(nlp,x) = LinearOperators.LinearOperator( n, n, true, true, y -> NLPModels.hprod(nlp,x,y) )
         η = 1e-3
-        cpt_max = 10000
-        x = Vector{T}(undef,length(x_init))
+        cpt_max = 1000000
+        n = length(x_init)
+        x = Vector{T}(undef,n)
         x .= x_init
         g = Vector{T}(undef,length(x_init))
         g = NLPModels.grad!(nlp, x, g)
         (Δ, ϵ, cpt) = (1.0, 10^-6, 0)
         f_xk = NLPModels.obj(nlp, x)
+        @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
         while (norm(g,2) > ϵ + n * ϵ^2) && cpt < cpt_max  # stop condition
             cpt = cpt + 1
 
-            @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
 
             cg_res = Krylov.cg(B, - g, radius = Δ)
 
             sk = cg_res[1]  # result of the linear system solved by Krylov.cg
 
             (pk, f_temp) = compute_ratio(x, f_xk, sk, nlp, B, g) # we compute the ratio
-            println("norme de s_k: ", norm(sk, 2), "  ratio: ", pk)
+            # println("norme de s_k: ", norm(sk, 2), "  ratio: ", pk)
 
             Δ = upgrade_TR_SR1!(pk, x, sk, g, B, nlp, Δ) # we upgrade x,g,B,∆
             if  pk > η
                 f_xk = f_temp
             end
+            if mod(cpt,5000) == 0
+                @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
+            end
         end
 
-        @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
+        if cpt < cpt_max
+            println("\n\n\nNous nous somme arrêté grâce à un point stationnaire !!!\n\n\n")
+            println("cpt,\tf_xk,\tnorm de g,\trayon puis x en dessous ")
+            @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
+        else
+            println("\n\n\nNous nous sommes arrêté à cause du nombre d'itération max \n\n\n ")
+            println("cpt,\tf_xk,\tnorm de g,\trayon puis x en dessous ")
+            @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
+        end
+
         return (x, cpt)
     end

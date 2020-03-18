@@ -47,7 +47,7 @@ end
     function solver_L_SR1_JuMP(nlp :: AbstractNLPModel, x_init :: AbstractVector{T}) where T <: Number
         # opB(nlp,x) = LinearOperators.LinearOperator( n, n, true, true, y -> NLPModels.hprod(nlp,x,y) )
         η = 1e-3
-        cpt_max = 100000
+        cpt_max = 1000000
         x = x_init
         g = Vector{T}(undef,length(x_init))
         g = NLPModels.grad!(nlp, x, g)
