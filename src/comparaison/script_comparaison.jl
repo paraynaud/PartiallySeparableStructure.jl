@@ -2,7 +2,8 @@ include("../ordered_include.jl")
 
 include("chained_wood.jl")
 include("rosenbrock.jl")
-
+include("chained_powel.jl")
+include("chained_cragg_levy.jl")
 
 using ..My_SPS_Model_Module
 
@@ -10,44 +11,46 @@ using ..My_SPS_Model_Module
 
 
 #partie pour rosenbrock
-# n_array = [100,500,1000, 2000, 3000, 5000, 10000, 20000]
-n_array = [100,200]
-
-io_ros_p = open("src/comparaison/results/rosenbrock_p.txt","w")
-close(io_ros_p)
-io_ros_l = open("src/comparaison/results/rosenbrock_l.txt","w")
-close(io_ros_l)
-for i in n_array
-    println(" \n\n nouveau modèle à ", i, " variables")
-    (m,evaluator,obj) = create_Rosenbrock_JuMP_Model(i)
-    println("fin de la définition du modèle JuMP")
-    initial_point = create_initial_point_Rosenbrock(i)
-    println("fin de la définition du point iniitial")
-
-
-    valp, tp, bytesp, gctimep, memallocsp = @timed My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)
-    fxp = MathOptInterface.eval_objective(evaluator, valp[2].tpl_x[Int(valp[2].index)])
-    io_ros_p = open("src/comparaison/results/rosenbrock_p.txt","a")
-    @printf(io_ros_p, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, valp[1], fxp, tp, gctimep,  memallocsp.allocd )
-    # println(io_ros_p, i,"\t&\t", valp[1],"\t&\t", tp,"\t&\t", gctimep,"\t&\t", memallocsp.allocd)
-    close(io_ros_p)
-
-
-    nlp = MathOptNLPModel(m)
-    B = LSR1Operator(i, scaling=true) :: LSR1Operator{Float64} #scaling=true
-    vall, tl, bytesl, gctimel, memallocsl = @timed solver_L_SR1_Ab_NLP(nlp, B, initial_point)
-    fxl = MathOptInterface.eval_objective(evaluator, vall[1])
-    io_ros_l = open("src/comparaison/results/rosenbrock_l.txt","a")
-    @printf(io_ros_l, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, vall[2], fxl, tl, gctimel,  memallocsl.allocd )
-    # println(io_ros_l, i,"\t&\t", vall[2],"\t&\t", tl,"\t&\t", gctimel,"\t&\t", memallocsl.allocd)
-    close(io_ros_l)
-end
+n_array = [100,500,1000, 2000, 3000, 5000, 10000]
+# n_array = [100,200]
 
 
 
-println("fin de la boucle")
+# io_ros_p = open("src/comparaison/results/rosenbrock_p.txt","w")
+# close(io_ros_p)
+# io_ros_l = open("src/comparaison/results/rosenbrock_l.txt","w")
+# close(io_ros_l)
+# for i in n_array
+#     println(" \n\n nouveau modèle à ", i, " variables")
+#     (m,evaluator,obj) = create_Rosenbrock_JuMP_Model(i)
+#     println("fin de la définition du modèle JuMP")
+#     initial_point = create_initial_point_Rosenbrock(i)
+#     println("fin de la définition du point iniitial")
+#
+#
+#     valp, tp, bytesp, gctimep, memallocsp = @timed My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)
+#     fxp = MathOptInterface.eval_objective(evaluator, valp[2].tpl_x[Int(valp[2].index)])
+#     io_ros_p = open("src/comparaison/results/rosenbrock_p.txt","a")
+#     @printf(io_ros_p, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, valp[1], fxp, tp, gctimep,  memallocsp.allocd )
+#     # println(io_ros_p, i,"\t&\t", valp[1],"\t&\t", tp,"\t&\t", gctimep,"\t&\t", memallocsp.allocd)
+#     close(io_ros_p)
+#
+#
+#     nlp = MathOptNLPModel(m)
+#     B = LSR1Operator(i, scaling=true) :: LSR1Operator{Float64} #scaling=true
+#     vall, tl, bytesl, gctimel, memallocsl = @timed solver_L_SR1_Ab_NLP(nlp, B, initial_point)
+#     fxl = MathOptInterface.eval_objective(evaluator, vall[1])
+#     io_ros_l = open("src/comparaison/results/rosenbrock_l.txt","a")
+#     @printf(io_ros_l, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, vall[2], fxl, tl, gctimel,  memallocsl.allocd )
+#     # println(io_ros_l, i,"\t&\t", vall[2],"\t&\t", tl,"\t&\t", gctimel,"\t&\t", memallocsl.allocd)
+#     close(io_ros_l)
+# end
+#
+#
+#
+# println("fin de la boucle")
 
-
+# n_array = [100,500,1000, 2000, 3000, 5000, 10000, 20000, 100000]
 
 io_chwoo_p = open("src/comparaison/results/chained_wood_p.txt","w")
 io_chwoo_l = open("src/comparaison/results/chained_wood_l.txt","w")
@@ -55,7 +58,7 @@ close(io_chwoo_p)
 close(io_chwoo_l)
 
 for i in n_array
-    println(" \n\n nouveau modèle à ", i, " variables")
+    println(" \n\n nouveau modèle chained wood à ", i, " variables")
     (m,evaluator,obj) = create_chained_wood_JuMP_Model(i)
     println("fin de la définition du modèle JuMP")
     initial_point = create_initial_point_chained_wood(i)
@@ -72,7 +75,6 @@ for i in n_array
     nlp = MathOptNLPModel(m)
     B = LSR1Operator(i, scaling=true) :: LSR1Operator{Float64} #scaling=true
     vall, tl, bytesl, gctimel, memallocsl = @timed solver_L_SR1_Ab_NLP(nlp, B, initial_point)
-    # println(io_chwoo_l, i,"\t&\t", vall[2],"\t&\t", tl,"\t&\t", gctimel,"\t&\t", memallocsl.allocd)
     fxl = MathOptInterface.eval_objective(evaluator, vall[1])
     # println(io_chwoo_l, i,"\t&\t", vall[2],"\t&\t", tl,"\t&\t", gctimel,"\t&\t", memallocsl.allocd)
     io_chwoo_l = open("src/comparaison/results/chained_wood_l.txt","a")
@@ -81,14 +83,95 @@ for i in n_array
 end
 
 
+i = 5000
+initial_point = create_initial_point_chained_wood(i)
+(m,evaluator,obj) = create_chained_wood_JuMP_Model(i)
 
-# io = open("myfile.txt", "w")
-# println(io, "test1")
-# close(io)
-#
-# io = open("myfile.txt", "a")
-# println(io, "test2")
-# close(io)
+valp, tp, bytesp, gctimep, memallocsp = @timed My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)
+fxp = MathOptInterface.eval_objective(evaluator, valp[2].tpl_x[Int(valp[2].index)])
+io_chwoo_p = open("src/comparaison/results/chained_wood_p.txt","a")
+@printf(io_chwoo_p, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, valp[1], fxp, tp, gctimep,  memallocsp.allocd )
+close(io_chwoo_p)
+
+
+nlp = MathOptNLPModel(m)
+B = LSR1Operator(i, scaling=true) :: LSR1Operator{Float64} #scaling=true
+vall, tl, bytesl, gctimel, memallocsl = @timed solver_L_SR1_Ab_NLP(nlp, B, initial_point)
+fxl = MathOptInterface.eval_objective(evaluator, vall[1])
+io_chwoo_l = open("src/comparaison/results/chained_wood_l.txt","a")
+@printf(io_chwoo_l, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, vall[2], fxl, tl, gctimel,  memallocsl.allocd )
+close(io_chwoo_l)
+
+
+io_chpow_p = open("src/comparaison/results/chained_powel_p.txt","w")
+io_chpow_l = open("src/comparaison/results/chained_powel_l.txt","w")
+close(io_chpow_p)
+close(io_chpow_l)
+
+for i in n_array
+    println(" \n\n nouveau modèle chained powel à ", i, " variables")
+    (m,evaluator,obj) = create_chained_Powel_JuMP_Model(i)
+    println("fin de la définition du modèle JuMP")
+    initial_point = create_initial_point_chained_Powel(i)
+    println("fin de la définition du point iniitial")
+
+
+    valp, tp, bytesp, gctimep, memallocsp = @timed My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)
+    # println(io_chwoo_p, i, "\t&\t", valp[1],"\t&\t", tp, "\t&\t", gctimep,"\t&\t", memallocsp.allocd)
+    fxp = MathOptInterface.eval_objective(evaluator, valp[2].tpl_x[Int(valp[2].index)])
+    io_chpow_p = open("src/comparaison/results/chained_powel_p.txt","a")
+    @printf(io_chpow_p, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, valp[1], fxp, tp, gctimep,  memallocsp.allocd )
+    close(io_chpow_p)
+
+    nlp = MathOptNLPModel(m)
+    B = LSR1Operator(i, scaling=true) :: LSR1Operator{Float64} #scaling=true
+    vall, tl, bytesl, gctimel, memallocsl = @timed solver_L_SR1_Ab_NLP(nlp, B, initial_point)
+    # println(io_chwoo_l, i,"\t&\t", vall[2],"\t&\t", tl,"\t&\t", gctimel,"\t&\t", memallocsl.allocd)
+    fxl = MathOptInterface.eval_objective(evaluator, vall[1])
+    # println(io_chwoo_l, i,"\t&\t", vall[2],"\t&\t", tl,"\t&\t", gctimel,"\t&\t", memallocsl.allocd)
+    io_chpow_l = open("src/comparaison/results/chained_powel_l.txt","a")
+    @printf(io_chpow_l, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, vall[2], fxl, tl, gctimel,  memallocsl.allocd )
+    close(io_chpow_l)
+end
+
+
+
+
+n_array = [100,500,1000, 2000, 3000, 5000, 10000]
+
+io_chcrag_levy_p = open("src/comparaison/results/chained_cragg_levy_p.txt","w")
+io_chcrag_levy_l = open("src/comparaison/results/chained_cragg_levy_l.txt","w")
+close(io_chcrag_levy_p)
+close(io_chcrag_levy_l)
+
+# n_array = [ 5000, 10000]
+for i in n_array
+    println(" \n\n nouveau modèle chained cragg levy à ", i, " variables")
+    (m,evaluator,obj) = create_chained_cragg_levy_JuMP_Model(i)
+    println("fin de la définition du modèle JuMP")
+    initial_point = create_initial_point_chained_cragg_levy(i)
+    println("fin de la définition du point iniitial")
+
+
+    # valp, tp, bytesp, gctimep, memallocsp = @timed My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)
+    # # println(io_chwoo_p, i, "\t&\t", valp[1],"\t&\t", tp, "\t&\t", gctimep,"\t&\t", memallocsp.allocd)
+    # fxp = MathOptInterface.eval_objective(evaluator, valp[2].tpl_x[Int(valp[2].index)])
+    # io_chcrag_levy_p = open("src/comparaison/results/chained_cragg_levy_p.txt","a")
+    # @printf(io_chcrag_levy_p, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, valp[1], fxp, tp, gctimep,  memallocsp.allocd )
+    # close(io_chcrag_levy_p)
+
+    nlp = MathOptNLPModel(m)
+    B = LSR1Operator(i, scaling=true) :: LSR1Operator{Float64} #scaling=true
+    vall, tl, bytesl, gctimel, memallocsl = @timed solver_L_SR1_Ab_NLP(nlp, B, initial_point)
+    # println(io_chwoo_l, i,"\t&\t", vall[2],"\t&\t", tl,"\t&\t", gctimel,"\t&\t", memallocsl.allocd)
+    fxl = MathOptInterface.eval_objective(evaluator, vall[1])
+    # println(io_chwoo_l, i,"\t&\t", vall[2],"\t&\t", tl,"\t&\t", gctimel,"\t&\t", memallocsl.allocd)
+    io_chcrag_levy_l = open("src/comparaison/results/chained_cragg_levy_l.txt","a")
+    @printf(io_chcrag_levy_l, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, vall[2], fxl, tl, gctimel,  memallocsl.allocd )
+    close(io_chcrag_levy_l)
+end
+
+
 
 
 

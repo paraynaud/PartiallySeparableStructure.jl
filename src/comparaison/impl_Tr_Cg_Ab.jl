@@ -47,7 +47,7 @@ end
     function solver_L_SR1_Ab_NLP(nlp :: AbstractNLPModel, B :: AbstractLinearOperator{T}, x_init :: AbstractVector{T}) where T <: Number
         # opB(nlp,x) = LinearOperators.LinearOperator( n, n, true, true, y -> NLPModels.hprod(nlp,x,y) )
         η = 1e-3
-        cpt_max = 1000000
+        cpt_max = 500000
         n = length(x_init)
         x = Vector{T}(undef,n)
         x .= x_init

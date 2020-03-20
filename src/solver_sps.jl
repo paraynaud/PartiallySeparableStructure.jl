@@ -173,7 +173,7 @@ module My_SPS_Model_Module
     #fonction traitant le coeur de l'algorithme, réalise principalement la boucle qui incrémente un compteur et met à jour la structure d'algo par effet de bord
     # De plus on effectue tous les affichage par itération dans cette fonction raison des printf
     function iterations_TR!(s_a :: struct_algo{T,Y}) where T where Y <: Number
-        cpt_max = 1000000
+        cpt_max = 200000
         cpt = 1 :: Int64
         n = s_a.sps.n_var
         # opB(s_a) = LinearOperators.LinearOperator(n, n, true, true, x -> PartiallySeparableStructure.product_matrix_sps(s_a.sps, s_a.tpl_B[s_a.index], x) )
