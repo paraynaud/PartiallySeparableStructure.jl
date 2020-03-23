@@ -179,13 +179,10 @@ module My_SPS_Model_Module
         # opB(s_a) = LinearOperators.LinearOperator(n, n, true, true, x -> PartiallySeparableStructure.product_matrix_sps(s_a.sps, s_a.tpl_B[s_a.index], x) )
         opB(s :: struct_algo{T,Y}) = LinearOperators.LinearOperator(n, n, true, true, x -> PartiallySeparableStructure.product_matrix_sps(s.sps, s.tpl_B[Int(s.index)], x) ) :: LinearOperator{Y}
         @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.tpl_f[Int(s_a.index)] norm(s_a.grad,2) s_a.Δ
-        b = true
-        while ( ( norm(s_a.grad) > s_a.ϵ + s_a.sps.n_var * s_a.ϵ^2 )  &&  cpt < cpt_max )
-            b = update_xk1!(s_a, opB(s_a))
+        n_g_init = norm(s_a.grad,2)
+        while ( (norm(s_a.grad,2) > s_a.ϵ ) && (norm(s_a.grad,2) > s_a.ϵ * n_g_init)  &&  cpt < cpt_max )
+            update_xk1!(s_a, opB(s_a))
             cpt = cpt + 1
-            if b == false
-                return cpt
-            end
             if mod(cpt,500) == 0
                 @printf "\n%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.tpl_f[Int(s_a.index)] norm(s_a.grad,2) s_a.Δ
             end
@@ -195,11 +192,11 @@ module My_SPS_Model_Module
         if cpt < cpt_max
             println("\n\n\nNous nous somme arrêté grâce à un point stationnaire !!!")
             println("cpt,\tf_xk,\tnorm de g,\trayon puis x en dessous ")
-            @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.tpl_f[Int(s_a.index)]  norm(s_a.grad,2) s_a.Δ
+            @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n\n\n" cpt s_a.tpl_f[Int(s_a.index)]  norm(s_a.grad,2) s_a.Δ
         else
             println("\n\n\nNous nous sommes arrêté à cause du nombre d'itération max ")
             println("cpt,\tf_xk,\tnorm de g,\trayon ")
-            @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.tpl_f[Int(s_a.index)]  norm(s_a.grad,2) s_a.Δ
+            @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n\n\n" cpt s_a.tpl_f[Int(s_a.index)]  norm(s_a.grad,2) s_a.Δ
         end
 
         return cpt

@@ -56,7 +56,8 @@ end
         (Δ, ϵ, cpt) = (1.0, 10^-6, 0)
         f_xk = NLPModels.obj(nlp, x)
         @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
-        while (norm(g,2) > ϵ + n * ϵ^2) && cpt < cpt_max  # stop condition
+        n_g_init = norm(g,2)
+        while (norm(g,2) > ϵ) && (norm(g,2) > ϵ * n_g_init)  && cpt < cpt_max  # stop condition
             cpt = cpt + 1
 
 
