@@ -13,6 +13,8 @@ module variables
     import  ..interface_expr_node._evaluate_node, ..interface_expr_node._change_from_N_to_Ni!
     import ..interface_expr_node._cast_constant!, ..interface_expr_node._node_to_Expr
 
+    import  ..interface_expr_node._evaluate_node2
+
     using ..implementation_type_expr
 
     import Base.(==)
@@ -62,11 +64,17 @@ module variables
          return x[v.index] :: T
     end
 
-
     function _evaluate_node(v :: variable, dic :: Dict{Int,T}) where T <: Number
         return dic[v.index] :: T
     end
 
+    function _evaluate_node(v :: variable, x :: AbstractVector{T}) where T <: Number
+        return x[v.index] :: T
+    end
+
+    function _evaluate_node2(v :: variable, x :: AbstractVector{T}) where T <: Number
+         return x[v.index] :: T
+    end
 
     function _change_from_N_to_Ni!(v :: variable, dic_new_var :: Dict{Int,Int})
         v.index = dic_new_var[v.index]

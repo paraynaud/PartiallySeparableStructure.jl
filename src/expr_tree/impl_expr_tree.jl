@@ -13,7 +13,7 @@ module implementation_expr_tree
     import ..interface_expr_tree._get_real_node, ..interface_expr_tree._transform_to_expr_tree
 
 
-
+    using StaticArrays
 
     t_expr_tree = type_node{ab_ex_nd}
 
@@ -39,10 +39,14 @@ module implementation_expr_tree
         end
     end
 
-    function create_expr_tree(field :: ab_ex_nd, children :: Vector{ type_node{ab_ex_nd}} )
-        return t_expr_tree(field, children)
-    end
+# a = rand(30)
+# b = [ a[i] for i in 1:length(a) ]
+# c =  @SVector [ a[i] for i in 1:length(a) ]
 
+
+function create_expr_tree(field :: ab_ex_nd, children :: Vector{ type_node{ab_ex_nd}} )
+    return t_expr_tree(field, children)
+end
 
     function create_expr_tree(field :: ab_ex_nd )
         return t_expr_tree(field, [])

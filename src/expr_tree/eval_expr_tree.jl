@@ -33,26 +33,55 @@ module M_evaluation_expr_tree
         end
     end
 
+    # function _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x  :: AbstractVector{T}) where T <: Number
+    #     if trait_expr_node.node_is_operator(expr_tree.field :: trait_expr_node.ab_ex_nd) :: Bool == false
+    #         return trait_expr_node._evaluate_node(expr_tree.field, x) :: T
+    #     else
+    #         if trait_expr_node.node_is_plus(expr_tree.field) :: Bool
+    #             return mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children) :: T
+    #         elseif trait_expr_node.node_is_power(expr_tree.field)
+    #             return trait_expr_node._evaluate_node(expr_tree.field, _evaluate_expr_tree(expr_tree.children[1],x) :: T)
+    #         else
+    #             n = length(expr_tree.children)
+    #             temp = Vector{T}(undef, n)
+    #             map!( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, temp, expr_tree.children)
+    #             return trait_expr_node._evaluate_node(expr_tree.field,  temp) :: T
+    #         end
+    #     end
+    # end
     function _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x  :: AbstractVector{T}) where T <: Number
         if trait_expr_node.node_is_operator(expr_tree.field :: trait_expr_node.ab_ex_nd) :: Bool == false
-            return trait_expr_node._evaluate_node(expr_tree.field, x) :: T
+            return trait_expr_node._evaluate_node(expr_tree.field, x)
         else
-            if trait_expr_node.node_is_plus(expr_tree.field) :: Bool
-                return mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, + , expr_tree.children) :: T
-            elseif trait_expr_node.node_is_power(expr_tree.field)
-                return trait_expr_node._evaluate_node(expr_tree.field, _evaluate_expr_tree(expr_tree.children[1],x) :: T)
-            else
-                n = length(expr_tree.children)
-                temp = Vector{T}(undef, n)
-                map!( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) :: T, temp, expr_tree.children)
-                return trait_expr_node._evaluate_node(expr_tree.field,  temp) :: T
-            end
+            n = length(expr_tree.children)
+            temp = Vector{T}(undef, n)
+            map!( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree(y,x) , temp, expr_tree.children)
+            return trait_expr_node._evaluate_node(expr_tree.field,  temp)
         end
     end
 
 
 
 
+
+    # evaluate_expr_tree(a :: Any) = (x :: AbstractVector{} -> evaluate_expr_tree(a,x) )
+    # evaluate_expr_tree(a :: Any, elmt_var :: Vector{Int}) = (x :: AbstractVector{} -> evaluate_expr_tree(a,view(x,elmt_var) ) )
+    evaluate_expr_tree2(a :: implementation_expr_tree.t_expr_tree, x :: AbstractVector{T})  where T <: Number = _evaluate_expr_tree2(a, trait_expr_tree.is_expr_tree(a), x)
+    _evaluate_expr_tree2(a :: implementation_expr_tree.t_expr_tree, :: trait_expr_tree.type_not_expr_tree, x :: AbstractVector{T})  where T <: Number = error(" This is not an Expr tree")
+    _evaluate_expr_tree2(a :: implementation_expr_tree.t_expr_tree, :: trait_expr_tree.type_expr_tree, x :: AbstractVector{T}) where T <: Number = _evaluate_expr_tree2(a, x)
+    function _evaluate_expr_tree2(expr_tree :: implementation_expr_tree.t_expr_tree , x  :: AbstractVector{T}) where T <: Number
+        n_children = length(expr_tree.children)
+        if n_children == 0
+            return trait_expr_node._evaluate_node2(expr_tree.field,  x) :: T
+        elseif n_children == 1
+            temp = Vector{T}(undef,1)
+            temp[1] = _evaluate_expr_tree2( expr_tree.children[1],  x) :: T
+            return trait_expr_node._evaluate_node2(expr_tree.field, temp) :: T
+        else
+            field = expr_tree.field
+            return mapreduce( y :: implementation_expr_tree.t_expr_tree  -> _evaluate_expr_tree2(y, x) :: T , trait_expr_node._evaluate_node2(field) , expr_tree.children :: Vector{implementation_expr_tree.t_expr_tree} ) :: T
+        end
+    end
 
     calcul_gradient_expr_tree(a :: Any, x :: Vector{}) = _calcul_gradient_expr_tree(a, is_expr_tree(a), x )
     _calcul_gradient_expr_tree(a :: Any,:: trait_expr_tree.type_not_expr_tree, x :: Vector{}) = error("ce n'est pas un arbre d'expression")

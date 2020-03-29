@@ -12,6 +12,8 @@ module tan_operators
 
     import ..interface_expr_node._get_type_node, ..interface_expr_node._evaluate_node
 
+    import  ..interface_expr_node._evaluate_node2
+
     using ..implementation_type_expr
 
 
@@ -54,6 +56,11 @@ module tan_operators
     (==)(a :: tan_operator, b :: tan_operator) = true
 
     function _evaluate_node(op :: tan_operator, value_ch :: AbstractVector{T}) where T <: Number
+        length(value_ch) == 1 || error("more than one argument for tan")
+        return tan(value_ch[1]) :: T
+    end
+
+    function _evaluate_node2(op :: tan_operator, value_ch :: AbstractVector{T}) where T <: Number
         length(value_ch) == 1 || error("more than one argument for tan")
         return tan(value_ch[1]) :: T
     end

@@ -9,14 +9,16 @@ using ..My_SPS_Model_Module
 
 
 #partie pour rosenbrock
-n_array = [100,500,1000, 2000, 3000, 5000, 10000]
-# n_array = [100,500,1000]
+# n_array = [100,500,1000, 2000, 3000, 5000, 10000]
+n_array = [100,200,300]
 #
-# i=100000
+# i=1000
 # (m,evaluator,obj) = create_Rosenbrock_JuMP_Model(i)
 # println("fin de la définition du modèle JuMP")
 # initial_point = create_initial_point_Rosenbrock(i)
 # valp, tp, bytesp, gctimep, memallocsp = @timed My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)
+# @show tp
+# error("fin anticipé")
 
 
 io_ros_p = open("src/comparaison/results/rosenbrock_p.txt","w")

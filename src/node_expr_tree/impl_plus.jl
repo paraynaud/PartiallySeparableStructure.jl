@@ -12,6 +12,8 @@ module plus_operators
 
     import ..interface_expr_node._get_type_node, ..interface_expr_node._evaluate_node
 
+    import  ..interface_expr_node._evaluate_node2
+
     import Base.==
 
     mutable struct plus_operator <: ab_ex_nd
@@ -46,13 +48,22 @@ module plus_operators
 
     (==)(a :: plus_operator, b :: plus_operator) = true
 
-    function _evaluate_node(op :: plus_operator, value_ch :: Vector{T}) where T <: Number
-        if length(value_ch) > 1
-            return sum(value_ch) :: T
-        else
-            error("probleme operateur plus ")
-        end
+    # function _evaluate_node(op :: plus_operator, value_ch :: Vector{T}) where T <: Number
+    #     if length(value_ch) > 1
+    #         return sum(value_ch) :: T
+    #     else
+    #         error("probleme operateur plus ")
+    #     end
+    # end
+
+    function _evaluate_node(op :: plus_operator, value_ch :: AbstractVector{T}) where T <: Number
+        return sum(value_ch) 
     end
+
+    function _evaluate_node2(op :: plus_operator, value_ch :: AbstractVector{T}) where T <: Number
+        return sum(value_ch) :: T
+    end
+
 
     function _evaluate_node(op :: plus_operator, value_ch :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number
         if length(value_ch) > 1

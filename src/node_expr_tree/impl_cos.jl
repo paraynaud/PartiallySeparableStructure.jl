@@ -12,6 +12,8 @@ module cos_operators
 
     import ..interface_expr_node._get_type_node, ..interface_expr_node._evaluate_node
 
+    import  ..interface_expr_node._evaluate_node2
+
     using ..implementation_type_expr
 
 
@@ -58,6 +60,10 @@ module cos_operators
         return cos(value_ch[1]) :: T
     end
 
+    function _evaluate_node2(op :: cos_operator, value_ch :: AbstractVector{T}) where T <: Number
+        length(value_ch) == 1 || error("more than one argument for tan")
+        return cos(value_ch[1]) :: T
+    end
 
     function _node_to_Expr(op :: cos_operator)
         return [:cos]

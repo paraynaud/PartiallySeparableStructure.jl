@@ -12,6 +12,8 @@ module power_operators
 
     import ..interface_expr_node._get_type_node, ..interface_expr_node._evaluate_node
 
+    import  ..interface_expr_node._evaluate_node2
+
     import Base.==
 
     mutable struct power_operator{T <: Number} <: ab_ex_nd
@@ -48,6 +50,16 @@ module power_operators
     (==)(a :: power_operator{T}, b :: power_operator{T}) where T <: Number = ( a.index == b.index)
 
     function _evaluate_node(op :: power_operator{Z}, value_ch :: Vector{T}) where T <: Number where Z <: Number
+            length(value_ch) == 1 || error("power has more than one argument")
+            return @fastmath @inbounds (T)( value_ch[1]^(op.index) ) :: T
+    end
+
+    function _evaluate_node(op :: power_operator{Z}, value_ch :: AbstractVector{T}) where T <: Number where Z <: Number
+            length(value_ch) == 1 || error("power has more than one argument")
+            return @fastmath @inbounds (T)( value_ch[1]^(op.index) ) :: T
+    end
+
+    function _evaluate_node2(op :: power_operator{Z}, value_ch :: AbstractVector{T}) where T <: Number where Z <: Number
             length(value_ch) == 1 || error("power has more than one argument")
             return @fastmath @inbounds (T)( value_ch[1]^(op.index) ) :: T
     end

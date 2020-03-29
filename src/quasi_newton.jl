@@ -21,25 +21,36 @@ to the SR1 update method.
 
         @fastmath @inbounds cond_left = abs( Δx' * v )
         @fastmath @inbounds cond_right = ω * norm(Δx,2) * norm(v,2)
-        @fastmath @inbounds cond = (cond_left >= cond_right) :: Bool
+        @fastmath @inbounds cond = (cond_left > cond_right) :: Bool
 
         if cond
             @fastmath @inbounds num = Array{Y,2}( v * v')
             @fastmath @inbounds den = (v' * Δx) :: Y
             @fastmath num_den = num/den
-            my_or(x :: Bool, y :: Bool) =  x || y :: Bool
-            isInf(x) = (x == Inf) || (x == -Inf)
-            b1 = mapreduce(x -> isnan(x), my_or, num_den)
-            b2 = mapreduce(x -> isInf(x), my_or, num_den)
-            if b1 || b2
-                # print("x")
-                @inbounds B_1[:] = B :: Array{Y,2}
-            else
-                @fastmath @inbounds B_1[:] = (B + num_den) :: Array{Y,2}
-            end
+            @fastmath @inbounds B_1[:] = (B + num_den) :: Array{Y,2}
         else
             @inbounds B_1[:] = B :: Array{Y,2}
         end
+        #
+        # if cond
+        #     @fastmath @inbounds num = Array{Y,2}( v * v')
+        #     @fastmath @inbounds den = (v' * Δx) :: Y
+        #     @fastmath num_den = num/den
+        #     my_or(x :: Bool, y :: Bool) =  x || y :: Bool
+        #     isInf(x) = (x == Inf) || (x == -Inf)
+        #     b1 = mapreduce(x -> isnan(x), my_or, num_den)
+        #     b2 = mapreduce(x -> isInf(x), my_or, num_den)
+        #     if b1 || b2
+        #         # println("num / denum / : ", num," \t", den, "\t", num_den)
+        #         # println("cond_left/condright/cond/v : ", cond_left, "\t", cond_right, "\t", cond, "\t", v)
+        #         # println("y/B/Δx : ", y, "\t", B, "\t", Δx)
+        #         @inbounds B_1[:] = B :: Array{Y,2}
+        #     else
+        #         @fastmath @inbounds B_1[:] = (B + num_den) :: Array{Y,2}
+        #     end
+        # else
+        #     @inbounds B_1[:] = B :: Array{Y,2}
+        # end
     end
 
     function update_SR1!(x :: Vector{Y}, x_1 :: Vector{Y},

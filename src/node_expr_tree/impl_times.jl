@@ -12,6 +12,8 @@ module times_operators
 
     import ..interface_expr_node._get_type_node, ..interface_expr_node._evaluate_node
 
+    import  ..interface_expr_node._evaluate_node2
+
     import Base.==
 
     mutable struct time_operator <: ab_ex_nd
@@ -45,6 +47,9 @@ module times_operators
         return foldl(*,value_ch)
     end
 
+    function _evaluate_node2(op :: time_operator, value_ch :: AbstractVector{T}) where T <: Number
+        return foldl(*,value_ch)
+    end
 
     function _node_to_Expr(op :: time_operator)
         return [:*]

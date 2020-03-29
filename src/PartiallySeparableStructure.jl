@@ -195,6 +195,13 @@ The function grad_ni_to_n will be use to transform a element gradient of size n�
         end
     end
 
+
+"""
+    minus_grad_vec!(g1,g2,res)
+Store in res: g1 minus g2, but g1 and g2 have a particular structure which is grad_vector{T}.
+We need this operation to have the difference for each element gradient for TR method.
+g1 = gₖ and g2 = gₖ₋₁.
+"""
     function minus_grad_vec!(g1 :: grad_vector{T}, g2 :: grad_vector{T}, res :: grad_vector{T}) where T <: Number
         l = length(g1.arr)
         for i in 1:l
@@ -317,12 +324,14 @@ We need the structure sps for the variable used in each B[i], to replace B[i]*x[
         end
     end
 
+
+
+
     #nul
     function hess_matrix_dot_vector(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
         #utilisation de sparse car elt_fun.U' est un sparseArray et le produit entre les sparseArray est plus rapide
         mapreduce(elt_fun :: element_function{T} -> elt_fun.U' * sparse(B.arr[elt_fun.index].elmt_hess * view(x, elt_fun.used_variable)), + , sps.structure)
     end
-
     #nul
     function inefficient_product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
         construct_Sparse_Hessian(sps,B) * x

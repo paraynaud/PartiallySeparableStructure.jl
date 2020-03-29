@@ -11,6 +11,8 @@ module trait_expr_node
 
     using ..trait_type_expr
 
+    import  ..interface_expr_node._evaluate_node2
+
 
     struct type_expr_node end
     struct type_not_expr_node end
@@ -118,6 +120,13 @@ module trait_expr_node
     _evaluate_node(a, ::type_not_expr_node, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}}}) where T <: Number = error("This node is not a expr node")
 
 
+
+    evaluate_node2(a, x :: Vector{T}) where T <: Number = _evaluate_node2(a, is_expr_node(a), x)
+    _evaluate_node2(a, ::type_expr_node, x:: Vector{T}) where T <: Number = _evaluate_node2(a, x)
+    _evaluate_node2(a, ::type_not_expr_node, x :: Vector{T}) where T <: Number = error("This node is not a expr node")
+    _evaluate_node2(a :: abstract_expr_node.ab_ex_nd) = ( (x :: T where T <: Number, y :: T where T <: Number) -> _evaluate_node2(a, [x,y]) )
+
+
     # change_from_N_to_Ni!(a :: , dic_new_var :: Dict{Int,Int}) = _change_from_N_to_Ni!(a, is_expr_node(a), dic_new_var)
     change_from_N_to_Ni!(a, dic_new_var :: Dict{Int,Int}) = _change_from_N_to_Ni!(a, is_expr_node(a), dic_new_var)
     _change_from_N_to_Ni!(a, ::type_expr_node, dic_new_var :: Dict{Int,Int}) = _change_from_N_to_Ni!(a, dic_new_var)
@@ -140,13 +149,16 @@ end  # module trait_expr_node
 
 
 
-
-
-
-
-
-
-
+#
+# f6(x ) = ( (y::T,z::T) where T <: Number -> x+y+z )
+# f6(5)
+#
+#
+# f7(x) = ( (y:: T where T <: Number, z :: T where T <: Number) -> x + y + z )
+# f7(4)
+#
+# mapreduce(x -> x+1, f7(2), rand(5))
+#
 
 
 

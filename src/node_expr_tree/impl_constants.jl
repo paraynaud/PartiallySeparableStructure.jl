@@ -10,6 +10,8 @@ module constants
 
     using ..implementation_type_expr
 
+    import  ..interface_expr_node._evaluate_node2
+
     import Base.==
 
     mutable struct constant{T <: Number} <: ab_ex_nd
@@ -54,6 +56,14 @@ module constants
 
     function _evaluate_node(c :: constant{Y}, dic :: Dict{Int, T where T <: Number}) where Y <: Number
         return c.value :: Y
+    end
+
+    function _evaluate_node(c :: constant{Y}, x :: AbstractVector{T}) where Y <: Number where T <: Number
+        return (T)(c.value) :: T
+    end
+
+    function _evaluate_node2(c :: constant{Y}, x :: AbstractVector{T}) where Y <: Number where T <: Number
+        return (T)(c.value) :: T
     end
 
     _change_from_N_to_Ni!(v :: Number, dic_new_var :: Dict{Int,Int}) = ()

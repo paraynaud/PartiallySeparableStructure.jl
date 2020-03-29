@@ -41,6 +41,32 @@ obj2 = trait_expr_tree.transform_to_expr_tree(obj)
 obj3 = trait_expr_tree.transform_to_expr_tree(obj)
 SPS2 = PartiallySeparableStructure.deduct_partially_separable_structure(obj3, n)
 
+
+println("comparasion des évaluations")
+
+
+b_eval1 = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj, x)
+b_eval2 = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2, x)
+b_eval3 = @benchmark M_evaluation_expr_tree.evaluate_expr_tree2(obj2, x)
+@profview M_evaluation_expr_tree.evaluate_expr_tree2(obj2, x)
+@profview @benchmark M_evaluation_expr_tree.evaluate_expr_tree2(obj2, x)
+error("fin anticipé")
+
+
+using StaticArrays
+
+mutable struct type_node{T}
+    field :: T
+    children :: AbstractArray{T}
+end
+
+
+
+x = @SVector zeros(type_node{Int64},0)
+a = type_node{Int64}(5 :: Int64, x)
+
+v1 = SVector(1, 2, 3)
+
 println("- set up des données fini")
 
 println("- Début des test")
