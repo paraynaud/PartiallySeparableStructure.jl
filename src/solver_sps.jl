@@ -46,7 +46,11 @@ module My_SPS_Model_Module
     end
 
 
-
+"""
+    alloc_struct_algo(obj, n, type)
+Alloc the structure needed for the whole Trust Region algorithm, which include the gradients vectors and Hessian approximations,
+the vectors to store the points xₖ and xₖ₋₁, some constants Δ, η... and the Partially separable structure of the obj function.
+"""
     function alloc_struct_algo(obj :: T, n :: Int, type=Float64 :: DataType ) where T
 
         # détéction de la structure partiellement séparable
@@ -91,6 +95,16 @@ module My_SPS_Model_Module
     end
 
 
+    function init_gradient_compiled_reverse()
+
+    end 
+
+"""
+    init_struct_algo(struct_algo, x )
+Once the structure is allocated, we can use init_struct to init the structure struct_algo at the point x, which is the initial point
+of the algorithm.
+When the initialisation is done we can start the algorithme.
+"""
     function init_struct_algo!( s_a :: struct_algo{T,Y},
                                 x_k :: AbstractVector{Y}) where T where Y <: Number
 
@@ -107,8 +121,13 @@ module My_SPS_Model_Module
 
     end
 
-
-
+"""
+    other_index(i)
+ i ∈ {1,2}. We use a trick to avoid useless copy of gradients and Hessians in the structure of the algorithm. So we need and index
+ in the structure of the algorithm. The function other_index return the other index.
+ The index is an enumerate type.
+ If the index is currently to 1 (fst) in the structure s_a then other_index(s_a) return 2 (snd), and in the other case return 1  (fst)
+"""
     function other_index( s_a :: struct_algo{T,Y}) where T where Y <: Number
         if s_a.index == fst
             return snd :: indice

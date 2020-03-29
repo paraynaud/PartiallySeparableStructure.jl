@@ -51,9 +51,9 @@ module minus_operators
 
     function _evaluate_node(op :: minus_operator, value_ch :: AbstractVector{T}) where T <: Number
         if length(value_ch) == 1
-            return - value_ch[1] :: T
+            return - value_ch[1]
         else
-            return (value_ch[1] - value_ch[2]) :: T
+            return (value_ch[1] - value_ch[2])
         end
     end
 

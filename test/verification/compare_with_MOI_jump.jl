@@ -12,7 +12,7 @@ println("\n\nCompare_With_MOI_JUMP\n\n")
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 1000
+n = 10000
 
 m = Model()
 @variable(m, x[1:n])
@@ -44,7 +44,7 @@ obj3 = trait_expr_tree.transform_to_expr_tree(obj)
 SPS2 = PartiallySeparableStructure.deduct_partially_separable_structure(obj3, n)
 
 ones_ = ones(n)
-# error("arret")
+
 println("fin des initialisations")
 
 """ EVALUATION DES FONCTIONS """

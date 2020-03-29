@@ -57,7 +57,7 @@ module cos_operators
 
     function _evaluate_node(op :: cos_operator, value_ch :: AbstractVector{T}) where T <: Number
         length(value_ch) == 1 || error("more than one argument for tan")
-        return cos(value_ch[1]) :: T
+        return cos(value_ch[1]) 
     end
 
     function _evaluate_node2(op :: cos_operator, value_ch :: AbstractVector{T}) where T <: Number

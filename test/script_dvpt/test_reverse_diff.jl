@@ -76,7 +76,7 @@ println("\n\n Début script de dvpt\n\n")
 n = 10000
 m = Model()
 @variable(m, x[1:n])
-@NLobjective(m, Min, sum( (x[j] + x[j+1])^3 for j in 1:n-1 ))
+@NLobjective(m, Min, sum( (x[j] + x[j+1] + x[j+2] + x[j+3] + x[j+4])^3 for j in 1:n-4 ))
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
 
@@ -93,28 +93,24 @@ SPS = PartiallySeparableStructure.deduct_partially_separable_structure(obj, n)
 SPS2 = PartiallySeparableStructure.deduct_partially_separable_structure(obj3, n)
 
 
+# error("fin")
+
+println("comparaison sur le gradient ")
 f2 = M_evaluation_expr_tree.evaluate_expr_tree(obj2)
-# pre-record a GradientTape for `f` using inputs of shape 100x100 with Float64 elements
-const f_tape2 = GradientTape(f2, rand(n))
-
-# compile `f_tape` into a more optimized representation
-const compiled_f_tape2 = compile(f_tape2)
-
-# some inputs and work buffers to play around with
+f_tape2 = GradientTape(f2, rand(n))
+compiled_f_tape2 = compile(f_tape2)
 a2 = rand(n)
 inputs2 = a2
 results2 = similar(a2)
-all_results2 = DiffResults.GradientResult(results2)
-cfg = GradientConfig(inputs2)
-
-
-
 benchgrad = @benchmark gradient!(results2, compiled_f_tape2, inputs2)
-benchgrad2 =  @benchmark M_evaluation_expr_tree.calcul_gradient_expr_tree(obj2, inputs2)
 
 f = (x :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_gradient{typeof(inputs2[1])}( Vector{typeof(inputs2[1])}(undef, length(x.used_variable) )) )
 grad_x = PartiallySeparableStructure.grad_vector{typeof(inputs2[1])}( f.(SPS2.structure) )
 benchgrad3 =  @benchmark PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2,inputs2,grad_x)
+
+
+grad_n = Vector{typeof(inputs2[1])}(undef,n)
+bench_build_grad = @benchmark PartiallySeparableStructure.build_gradient!(SPS2, grad_x, grad_n)
 
 
 using ForwardDiff: GradientConfig, Chunk, gradient!
@@ -122,6 +118,14 @@ using ForwardDiff
 
 
 
-results3 = similar(inputs2)
-cfg10 = ForwardDiff.GradientConfig(f2, x, Chunk{10}());
-benchgrad4 =  @benchmark ForwardDiff.gradient!(results3,f2,inputs2,cfg10)
+#lent
+# results3 = similar(inputs2)
+# cfg10 = ForwardDiff.GradientConfig(f2, x, Chunk{10}());
+# benchgrad4 =  @benchmark ForwardDiff.gradient!(results3,f2,inputs2,cfg10)
+# benchgrad2 =  @benchmark M_evaluation_expr_tree.calcul_gradient_expr_tree(obj2, inputs2)
+# benchgrad5 =  @benchmark PartiallySeparableStructure.evaluate_SPS_gradient2!(SPS2,inputs2,grad_x)
+
+println("comparaison sur l'évaluation de la fonction")
+bench_eval1 = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj,inputs2)
+bench_eval2 = @benchmark M_evaluation_expr_tree.evaluate_expr_tree(obj2,inputs2)
+bench_eval3 = @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2,inputs2)

@@ -69,7 +69,7 @@ module variables
     end
 
     function _evaluate_node(v :: variable, x :: AbstractVector{T}) where T <: Number
-        return x[v.index] :: T
+        return x[v.index] 
     end
 
     function _evaluate_node2(v :: variable, x :: AbstractVector{T}) where T <: Number

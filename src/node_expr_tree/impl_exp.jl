@@ -57,7 +57,7 @@ module exp_operators
 
     function _evaluate_node(op :: exp_operator, value_ch :: AbstractVector{T}) where T <: Number
         length(value_ch) == 1 || error("more than one argument for exp")
-        @fastmath return exp(value_ch[1]) :: T
+        @fastmath return exp(value_ch[1]) 
     end
 
     function _evaluate_node2(op :: exp_operator, value_ch :: AbstractVector{T}) where T <: Number

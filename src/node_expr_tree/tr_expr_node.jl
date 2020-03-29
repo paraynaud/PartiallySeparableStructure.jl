@@ -110,6 +110,7 @@ module trait_expr_node
 
 
     evaluate_node(a, x :: Vector{T}) where T <: Number = _evaluate_node(a, is_expr_node(a), x)
+
     _evaluate_node(a, ::type_expr_node, x:: Vector{T}) where T <: Number = _evaluate_node(a, x)
     _evaluate_node(a, ::type_not_expr_node, x :: Vector{T}) where T <: Number = error("This node is not a expr node")
     evaluate_node(a, x :: Dict{Int,Number}) = _evaluate_node(a, is_expr_node(a), x)
@@ -119,7 +120,9 @@ module trait_expr_node
     _evaluate_node(a, ::type_expr_node, x:: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}}}) where T <: Number = _evaluate_node(a, x)
     _evaluate_node(a, ::type_not_expr_node, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}}}) where T <: Number = error("This node is not a expr node")
 
-
+    evaluate_node(a, x :: AbstractVector{T}) where T <: Number = _evaluate_node(a, is_expr_node(a), x)
+    _evaluate_node(a, ::type_expr_node, x:: AbstractVector{T}) where T <: Number = _evaluate_node(a, x)
+    _evaluate_node(a, ::type_not_expr_node, x :: AbstractVector{T}) where T <: Number = error("This node is not a expr node")
 
     evaluate_node2(a, x :: Vector{T}) where T <: Number = _evaluate_node2(a, is_expr_node(a), x)
     _evaluate_node2(a, ::type_expr_node, x:: Vector{T}) where T <: Number = _evaluate_node2(a, x)

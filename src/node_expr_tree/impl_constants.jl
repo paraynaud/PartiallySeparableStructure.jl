@@ -45,21 +45,17 @@ module constants
 
     (==)(a :: constant{T}, b :: constant{T}) where T <: Number = (a.value == b.value)
 
-    function _evaluate_node(c :: constant{Y}, x :: Vector{T}) where Y <: Number where T <: Number
-        return (T)(c.value) :: T
-    end
 
     function _evaluate_node(c :: constant{Y}, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where Y <: Number where T <: Number
         return (T)(c.value) :: T
     end
-
 
     function _evaluate_node(c :: constant{Y}, dic :: Dict{Int, T where T <: Number}) where Y <: Number
         return c.value :: Y
     end
 
     function _evaluate_node(c :: constant{Y}, x :: AbstractVector{T}) where Y <: Number where T <: Number
-        return (T)(c.value) :: T
+        return (c.value)
     end
 
     function _evaluate_node2(c :: constant{Y}, x :: AbstractVector{T}) where Y <: Number where T <: Number

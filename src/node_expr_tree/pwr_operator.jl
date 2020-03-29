@@ -49,14 +49,14 @@ module power_operators
 
     (==)(a :: power_operator{T}, b :: power_operator{T}) where T <: Number = ( a.index == b.index)
 
-    function _evaluate_node(op :: power_operator{Z}, value_ch :: Vector{T}) where T <: Number where Z <: Number
-            length(value_ch) == 1 || error("power has more than one argument")
-            return @fastmath @inbounds (T)( value_ch[1]^(op.index) ) :: T
-    end
+    # function _evaluate_node(op :: power_operator{Z}, value_ch :: Vector{T}) where T <: Number where Z <: Number
+    #         length(value_ch) == 1 || error("power has more than one argument")
+    #         return @fastmath @inbounds (T)( value_ch[1]^(op.index) ) :: T
+    # end
 
     function _evaluate_node(op :: power_operator{Z}, value_ch :: AbstractVector{T}) where T <: Number where Z <: Number
             length(value_ch) == 1 || error("power has more than one argument")
-            return @fastmath @inbounds (T)( value_ch[1]^(op.index) ) :: T
+            return @inbounds ( value_ch[1]^(op.index) )
     end
 
     function _evaluate_node2(op :: power_operator{Z}, value_ch :: AbstractVector{T}) where T <: Number where Z <: Number

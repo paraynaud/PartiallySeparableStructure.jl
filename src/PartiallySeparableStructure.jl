@@ -3,7 +3,7 @@ module PartiallySeparableStructure
     using ..implementation_type_expr
     using ..algo_expr_tree, ..trait_expr_tree, ..trait_type_expr, ..M_evaluation_expr_tree
     using ..implementation_expr_tree, ..Quasi_Newton_update
-    using ForwardDiff, SparseArrays, LinearAlgebra
+    using ForwardDiff, SparseArrays, LinearAlgebra, ReverseDiff
     using Base.Threads
     import Base.-
 
@@ -19,6 +19,7 @@ module PartiallySeparableStructure
         structure :: Vector{element_function{T}}
         vec_length :: Int
         n_var :: Int
+        compiled_gradients :: Vector{ReverseDiff.CompiledTape}
     end
 
     mutable struct element_hessian{T <: Number}
@@ -84,7 +85,20 @@ function _deduct_partially_separable_structure(expr_tree :: T , n :: Int) where 
         Sps[i] = element_function{T}(elmt_fun[i], type_i[i], elmt_var_i[i], U_i[i], i )
     end
 
-    return SPS{T}(Sps, length_vec[], n)
+    compiled_gradients = map(x -> compiled_grad_of_elmt_fun(x), Sps)
+
+
+    return SPS{T}(Sps, length_vec[], n, compiled_gradients)
+end
+
+
+
+function compiled_grad_of_elmt_fun(elmt_fun :: element_function{T}) where T
+    f = M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun)
+    n = length(elmt_fun.used_variable)
+    f_tape = ReverseDiff.GradientTape(f, rand(n))
+    compiled_f_tape = ReverseDiff.compile(f_tape)
+    return compiled_f_tape
 end
 
 
@@ -97,6 +111,7 @@ f(x) = ∑fᵢ(xᵢ), so we compute independently each fᵢ(xᵢ) and we return 
         # on utilise un mapreduce de manière à ne pas allouer un tableau temporaire, on utilise l'opérateur + pour le reduce car cela correspond
         # à la définition des fonctions partiellement séparable.
         mapreduce(elmt_fun :: element_function{T} -> M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun, view(x, elmt_fun.used_variable)) :: Y, + , sps.structure :: Vector{element_function{T}})
+        #les solutions à base de boucle for sont plus lente même avec @Thread.thread
     end
 
 
@@ -134,25 +149,46 @@ at the point x, return a vector of size n (the number of variable) which is the 
 """
     evaluate_SPS_gradient!(sps,x,g)
 Compute the gradient of the partially separable structure sps, and store the result in the grad_vector structure g.
+Using ReversDiff package. Good behaviour with Threads.@threads.
 """
     function evaluate_SPS_gradient!(sps :: SPS{T}, x :: AbstractVector{Y}, g :: grad_vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
         for i in 1:l_elmt_fun
-            if isempty(sps.structure[i].U) == false
-                element_gradient!(sps.structure[i].fun, view(x, sps.structure[i].used_variable), g.arr[i] )
+            if isempty(sps.structure[i].used_variable) == false  #fonction element ayant au moins une variable
+                element_gradient!(sps.compiled_gradients[i], view(x, sps.structure[i].used_variable), g.arr[i] )
             end
         end
     end
 
 """
-    element_gradient!(expr_tree, x, g)
-Compute the element grandient of the function represents by expr_tree according to the vector x, and store the result in the vector g
+    evaluate_SPS_gradient2!(sps,x,g)
+Compute the gradient of the partially separable structure sps, and store the result in the grad_vector structure g.
+Using ForwardDiff package. Bad behaviour with Threads.@threads.
 """
-    function element_gradient!( expr_tree :: Y, x :: AbstractVector{T}, g :: element_gradient{T} ) where T <: Number where Y
-        ForwardDiff.gradient!(g.g_i, M_evaluation_expr_tree.evaluate_expr_tree(expr_tree), x  )
+    function evaluate_SPS_gradient2!(sps :: SPS{T}, x :: AbstractVector{Y}, g :: grad_vector{Y} ) where T where Y <: Number
+        l_elmt_fun = length(sps.structure)
+        for i in 1:l_elmt_fun
+            if isempty(sps.structure[i].used_variable) == false  #fonction element ayant au moins une variable
+                element_gradient2!(sps.structure[i].fun, view(x, sps.structure[i].used_variable), g.arr[i] )
+            end
+        end
     end
 
+"""
+    element_gradient!(compil_tape, x, g)
+Compute the element grandient from the compil_tape compiled before according to the vector x, and store the result in the vector g
+"""
+    function element_gradient!( compiled_tape :: ReverseDiff.CompiledTape, x :: AbstractVector{T}, g :: element_gradient{T} ) where T <: Number where Y
+        ReverseDiff.gradient!(g.g_i, compiled_tape, x)
+    end
 
+"""
+    element_gradient2!(expr_tree, x, g)
+Compute the element grandient of the function represents by expr_tree according to the vector x, and store the result in the vector g
+"""
+    function element_gradient2!( expr_tree :: Y, x :: AbstractVector{T}, g :: element_gradient{T} ) where T <: Number where Y
+        ForwardDiff.gradient!(g.g_i, M_evaluation_expr_tree.evaluate_expr_tree(expr_tree), x  )
+    end
 """
     build_gradient(sps, g)
 Constructs a vector of size n from the list of element gradient of the sps structure which has numerous element gradient of size nᵢ.

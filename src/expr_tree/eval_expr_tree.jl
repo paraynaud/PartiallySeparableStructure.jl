@@ -17,19 +17,14 @@ module M_evaluation_expr_tree
     _evaluate_expr_tree(a, :: trait_expr_tree.type_expr_tree, x :: AbstractVector{T}) where T <: Number = _evaluate_expr_tree(a, x)
     function _evaluate_expr_tree(expr_tree :: Y, x  :: AbstractVector{T}) where T <: Number where Y
         nd = trait_expr_tree._get_expr_node(expr_tree)
-        ch = trait_expr_tree._get_expr_children(expr_tree)
         if  trait_expr_node.node_is_operator(nd) == false
-            # @show expr_tree, nd
-            res = trait_expr_node.evaluate_node(nd, x) :: T
-            return res
+            trait_expr_node.evaluate_node(nd, x)
         else
+            ch = trait_expr_tree._get_expr_children(expr_tree)
             n = length(ch)
             temp = Vector{T}(undef,n)
-            for i in 1:n
-                temp[i] = evaluate_expr_tree(ch[i],x) :: T
-            end
-            res = trait_expr_node.evaluate_node(nd, temp) :: T
-            return res
+            map!(y -> evaluate_expr_tree(y,x), temp, ch)
+            trait_expr_node.evaluate_node(nd, temp)
         end
     end
 
