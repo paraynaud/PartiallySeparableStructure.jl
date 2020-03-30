@@ -12,7 +12,7 @@ println("\n\nCompare_With_MOI_JUMP\n\n")
 
 #Définition d'un modèle JuMP
 σ = 10e-5
-n = 10000
+n = 100
 
 m = Model()
 @variable(m, x[1:n])
@@ -31,11 +31,12 @@ obj = MathOptInterface.objective_expr(evaluator)
 #définition d'un premier vecteur d'une valeur aléatoire entre -50 et 50
 # t :: DataType = Float64
 # x = (α -> α - 50).( (β -> 100 * β).(rand(BigFloat, n)) )
-x = (α -> α - 50).( (β -> 100 * β).( rand(n) ) )
+# x = (α -> α - 50).( (β -> 100 * β).( rand(n) ) )
 # x_MOI = (α -> α - 50).( (β -> 100 * β).(rand(Float64, n)) )
 # x = ones(n)
-y = (β -> 100 * β).(rand(n))
-
+# y = (β -> 100 * β).(rand(n))
+x = ones(n)
+y = zeros(n)
 # détection de la structure partiellement séparable
 SPS = PartiallySeparableStructure.deduct_partially_separable_structure(obj, n)
 
