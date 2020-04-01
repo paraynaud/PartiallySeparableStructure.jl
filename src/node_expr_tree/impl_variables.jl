@@ -11,7 +11,7 @@ module variables
     import ..implementation_type_expr.t_type_expr_basic
     import ..interface_expr_node._get_type_node, ..interface_expr_node._get_var_index
     import  ..interface_expr_node._evaluate_node, ..interface_expr_node._change_from_N_to_Ni!
-    import ..interface_expr_node._cast_constant!, ..interface_expr_node._node_to_Expr
+    import ..interface_expr_node._cast_constant!, ..interface_expr_node._node_to_Expr, ..interface_expr_node._node_to_Expr2
 
     import  ..interface_expr_node._evaluate_node2
 
@@ -57,7 +57,7 @@ module variables
 
 
     function _evaluate_node(v :: variable, x :: Vector{T}) where T <: Number
-         return x[v.index] :: T
+         return @inbounds x[v.index] :: T
     end
 
     function _evaluate_node(v :: variable, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number
@@ -69,7 +69,7 @@ module variables
     end
 
     function _evaluate_node(v :: variable, x :: AbstractVector{T}) where T <: Number
-        return x[v.index] 
+        return @inbounds x[v.index]
     end
 
     function _evaluate_node2(v :: variable, x :: AbstractVector{T}) where T <: Number
@@ -99,6 +99,10 @@ module variables
 
     function _node_to_Expr(v :: variable)
         return Expr(:ref, v.name,  MathOptInterface.VariableIndex(v.index))
+    end
+
+    function _node_to_Expr2(v :: variable)
+        return Expr(:ref, v.name,  v.index)
     end
 
     _cast_constant!(v :: variable, t :: DataType) = ()

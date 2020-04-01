@@ -94,6 +94,14 @@ This function is usefull in our algorithms to synchronise all the types satisfyi
     end
 
 
+    transform_to_Expr2(ex) = _transform_to_Expr2( trait_expr_tree.is_expr_tree(ex), ex)
+    _transform_to_Expr2( :: trait_expr_tree.type_expr_tree, ex) = _transform_to_Expr2(ex)
+    _transform_to_Expr2( :: trait_expr_tree.type_not_expr_tree, ex) = error("notre parametre n'est pas un arbre d'expression")
+    function _transform_to_Expr2(ex)
+        return abstract_expr_tree.create_Expr2(ex)
+    end
+
+
     expr_tree_to_create(expr_tree_to_create, expr_tree_of_good_type) = _expr_tree_to_create(expr_tree_to_create, expr_tree_of_good_type, is_expr_tree(expr_tree_to_create), is_expr_tree(expr_tree_of_good_type))
     _expr_tree_to_create(a, b, :: type_not_expr_tree, :: Any) = error("le type de l'arbre d'origine ne satisfait pas le trait")
     _expr_tree_to_create(a, b, :: Any, :: type_not_expr_tree) = error("le type de l'arbre que l'on cherche à créer ne satisfait pas le trait")

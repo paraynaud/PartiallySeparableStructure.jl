@@ -1,0 +1,34 @@
+31-03-20; 21h05
+###### noter que j'ai lancé le @profview directement sans un première exectuion de l'algorithme, peut-être qu'il faut prendre ces résultats avec des pincettes ####
+Nous nous trouvons donc dans la fonction _solver_TR_PSR1
+- Le début (sommet le plus haut) est composé uniquement de fonctions de la librairie standard.
+- Vient ensuite la déduction de la strucutre partiellement séparable. Cela est du à la transformation de Expr sur mon type d'arbre.
+- Juste avant la zone plus plate on voit également une évaluation eval_expr_tree, qui est brève (en terme de temps) comparé à ce qui est avat et ce qui est après.
+- 1) le bloc suivant update_xk1  ligne 161 qui correspond à la recherche du gradient conjugué est qui est la première chose prenant relativement du temps.
+  La cause principale semble être le produit Hessien vecteur. Il est sensé être utilisé intensivement à ce moment là est c'est apparemment le cas.
+  Ligne 339 qui correspond au produit du Hessien elementaire avec le vecteur view.
+- 2) Viens ensuite une évaluation de la structure partiellement séparable via PartiallySeparableStructure.evaluate_SPS, qui prend un temps considérable
+  de l'orde de produite Hessien vecteur. On voit clairement apparaître la profondeur de l'abre partiellement séparable en terme d'appel de fonctions.
+- 3 )
+  - on passe ensuite un peu de temps à faire l'évaluation de l'approximation quadratique
+  - un peu de temps sur le calcul du gardient elementaire
+  - un peu de temps sur la mise à jour SR1
+----> en terme de temps 1) ~ 2) ~ 3)
+
+
+
+31-03-20; 22h12
+###### Pour avoir au moins la première compilation j'ai lancé la méthode une premiere fois dans le vent qui je l'ai lancé une seconde fois pour avoir un Profileview différent ####
+Le graph reste similaire, cependant j'ai noté que si la une fonction f est appelé plusieur fois d'affilé, la couleurs ne change pas
+et on peut avoir l'impression qu'elle est lente alors qu'elle est juste appelé plusieur fois.
+Je pense que c'est le cas dans cg (c'est logique), car product_hess_matrix est également appelé dans mon approximation quadratique
+mon produit Hessien-vecteur n'est peut etre pas très rapide, cependant il est prend bien moins de temps que mon évaluation de fonction.
+
+
+
+Conclusion actuelle :
+Lors d'une itération de ma méthode, la majorité du temps est dédié à cg et l'évaluation de la fonciton objectif.
+
+
+Remarque :
+C'est frustrant de savoir que l'évaluation du gradient est plus rapide que l'évaluation de la fonction

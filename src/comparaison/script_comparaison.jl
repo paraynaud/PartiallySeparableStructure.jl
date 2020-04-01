@@ -7,24 +7,30 @@ include("chained_cragg_levy.jl")
 
 using ..My_SPS_Model_Module
 
+using JSOSolvers
 
+
+using ProfileView
 #partie pour rosenbrock
 # n_array = [100,500,1000, 2000, 3000, 5000, 10000]
 n_array = [100,200,300]
 #
-# i=1000
-# (m,evaluator,obj) = create_Rosenbrock_JuMP_Model(i)
-# println("fin de la définition du modèle JuMP")
-# initial_point = create_initial_point_Rosenbrock(i)
+i=1000
+(m,evaluator,obj) = create_Rosenbrock_JuMP_Model(i)
+println("fin de la définition du modèle JuMP")
+initial_point = create_initial_point_Rosenbrock(i)
 # valp, tp, bytesp, gctimep, memallocsp = @timed My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)
 # @show tp
-# error("fin anticipé")
+My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)
+@profview My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)
+error("fin anticipé")
 
 
 io_ros_p = open("src/comparaison/results/rosenbrock_p.txt","w")
 close(io_ros_p)
 io_ros_l = open("src/comparaison/results/rosenbrock_l.txt","w")
 close(io_ros_l)
+res=0
 for i in n_array
     println(" \n\n nouveau modèle rosenbrock à ", i, " variables")
     (m,evaluator,obj) = create_Rosenbrock_JuMP_Model(i)
@@ -42,16 +48,19 @@ for i in n_array
 
 
     nlp = MathOptNLPModel(m)
-    B = LSR1Operator(i, scaling=true) :: LSR1Operator{Float64} #scaling=true
-    vall, tl, bytesl, gctimel, memallocsl = @timed solver_L_SR1_Ab_NLP(nlp, B, initial_point)
-    fxl = MathOptInterface.eval_objective(evaluator, vall[1])
-    io_ros_l = open("src/comparaison/results/rosenbrock_l.txt","a")
-    @printf(io_ros_l, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, vall[2], fxl, tl, gctimel,  memallocsl.allocd )
-    # println(io_ros_l, i,"\t&\t", vall[2],"\t&\t", tl,"\t&\t", gctimel,"\t&\t", memallocsl.allocd)
-    close(io_ros_l)
+    # B = LSR1Operator(i, scaling=true) :: LSR1Operator{Float64} #scaling=true
+    # vall, tl, bytesl, gctimel, memallocsl = @timed solver_L_SR1_Ab_NLP(nlp, B, initial_point)
+    # fxl = MathOptInterface.eval_objective(evaluator, vall[1])
+    # io_ros_l = open("src/comparaison/results/rosenbrock_l.txt","a")
+    # @printf(io_ros_l, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, vall[2], fxl, tl, gctimel,  memallocsl.allocd )
+    # # println(io_ros_l, i,"\t&\t", vall[2],"\t&\t", tl,"\t&\t", gctimel,"\t&\t", memallocsl.allocd)
+    # close(io_ros_l)
+
+    # nlp.meta.x0 = copy(initial_point)
+    @show JSOSolvers.trunk(nlp,x = initial_point, max_eval=20000, nm_itmax=20000)
 end
 
-
+error("fin test trunk")
 
 # println("fin de la boucle")
 

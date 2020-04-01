@@ -97,7 +97,7 @@ the vectors to store the points xₖ and xₖ₋₁, some constants Δ, η... an
 
     function init_gradient_compiled_reverse()
 
-    end 
+    end
 
 """
     init_struct_algo(struct_algo, x )
@@ -155,6 +155,9 @@ When the initialisation is done we can start the algorithme.
 
 
     function update_xk1!(s_a :: struct_algo{T,Y}, B :: LinearOperator{Y}) where T where Y <: Number
+        # atol = sqrt(eps(Float64))
+        # rtol = sqrt(eps(Float64))
+        # (s_k, info) = Krylov.cg(B, - s_a.grad, atol=atol, rtol=rtol, radius = s_a.Δ, itmax=max(2*s_a.sps.n_var,50)) :: Tuple{Array{Y,1},Krylov.SimpleStats{Y}}
         (s_k, info) = Krylov.cg(B, - s_a.grad, radius = s_a.Δ) :: Tuple{Array{Y,1},Krylov.SimpleStats{Y}}
         (ρₖ, fxₖ₊₁) = compute_ratio(s_a, s_k :: Vector{Y})
         # println("norme de s_k: ", norm(s_k, 2), "  ρₖ: ", ρₖ)

@@ -23,7 +23,7 @@ module M_evaluation_expr_tree
             ch = trait_expr_tree._get_expr_children(expr_tree)
             n = length(ch)
             temp = Vector{T}(undef,n)
-            map!(y -> evaluate_expr_tree(y,x), temp, ch)
+            @inbounds map!(y -> evaluate_expr_tree(y,x), temp, ch)
             trait_expr_node.evaluate_node(nd, temp)
         end
     end

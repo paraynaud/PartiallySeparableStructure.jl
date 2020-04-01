@@ -4,7 +4,7 @@ module implementation_expr_tree
     using ..abstract_expr_tree
     using ..trait_tree
 
-    import ..abstract_expr_tree.create_expr_tree, ..abstract_expr_tree.create_Expr
+    import ..abstract_expr_tree.create_expr_tree, ..abstract_expr_tree.create_Expr, ..abstract_expr_tree.create_Expr2
     import ..interface_expr_tree._inverse_expr_tree
 
     import ..implementation_tree.type_node
@@ -25,6 +25,27 @@ module implementation_expr_tree
             return trait_expr_node.node_to_Expr(nd)
         else
             children_Expr = create_Expr.(ch)
+            node_Expr = trait_expr_node.node_to_Expr(nd)
+            #défférenciation entre les opérateurs simple :+, :- et compliqué comme :^2
+            #premier cas, les cas simple :+, :-
+            if length(node_Expr) == 1
+                return Expr(:call, node_Expr[1], children_Expr...)
+            #les cas compliqués, pour le moment :^
+            elseif length(node_Expr) == 2
+                return Expr(:call, node_Expr[1], children_Expr..., node_Expr[2])
+            else
+                error("non traité")
+            end
+        end
+    end
+
+    function create_Expr2(t :: t_expr_tree)
+        nd = trait_tree.get_node(t)
+        ch = trait_tree.get_children(t)
+        if isempty(ch)
+            return trait_expr_node.node_to_Expr2(nd)
+        else
+            children_Expr = create_Expr2.(ch)
             node_Expr = trait_expr_node.node_to_Expr(nd)
             #défférenciation entre les opérateurs simple :+, :- et compliqué comme :^2
             #premier cas, les cas simple :+, :-

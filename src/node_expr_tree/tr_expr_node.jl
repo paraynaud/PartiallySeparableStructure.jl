@@ -7,7 +7,7 @@ module trait_expr_node
     import ..interface_expr_node._node_is_sin, ..interface_expr_node._node_is_cos, ..interface_expr_node._node_is_tan
     import ..interface_expr_node._get_type_node, ..interface_expr_node._get_var_index
     import ..interface_expr_node._evaluate_node, ..interface_expr_node._change_from_N_to_Ni!
-    import ..interface_expr_node._cast_constant!, ..interface_expr_node._node_to_Expr
+    import ..interface_expr_node._cast_constant!, ..interface_expr_node._node_to_Expr, ..interface_expr_node._node_to_Expr2
 
     using ..trait_type_expr
 
@@ -141,7 +141,9 @@ module trait_expr_node
     _node_to_Expr(a, ::type_expr_node) = _node_to_Expr(a)
     _node_to_Expr(a, ::type_not_expr_node) = error("This node is not a expr node")
 
-
+    node_to_Expr2(a) = _node_to_Expr2(a, is_expr_node(a))
+    _node_to_Expr2(a, ::type_expr_node) = _node_to_Expr2(a)
+    _node_to_Expr2(a, ::type_not_expr_node) = error("This node is not a expr node")
 
     cast_constant!(a, t :: DataType) = _cast_constant!(a, is_expr_node(a), t)
     _cast_constant!(a, ::type_expr_node, t :: DataType) = _cast_constant!(a, t)
