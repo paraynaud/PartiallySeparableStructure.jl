@@ -31,26 +31,6 @@ to the SR1 update method.
         else
             @inbounds B_1[:] = B :: Array{Y,2}
         end
-        #
-        # if cond
-        #     @fastmath @inbounds num = Array{Y,2}( v * v')
-        #     @fastmath @inbounds den = (v' * Δx) :: Y
-        #     @fastmath num_den = num/den
-        #     my_or(x :: Bool, y :: Bool) =  x || y :: Bool
-        #     isInf(x) = (x == Inf) || (x == -Inf)
-        #     b1 = mapreduce(x -> isnan(x), my_or, num_den)
-        #     b2 = mapreduce(x -> isInf(x), my_or, num_den)
-        #     if b1 || b2
-        #         # println("num / denum / : ", num," \t", den, "\t", num_den)
-        #         # println("cond_left/condright/cond/v : ", cond_left, "\t", cond_right, "\t", cond, "\t", v)
-        #         # println("y/B/Δx : ", y, "\t", B, "\t", Δx)
-        #         @inbounds B_1[:] = B :: Array{Y,2}
-        #     else
-        #         @fastmath @inbounds B_1[:] = (B + num_den) :: Array{Y,2}
-        #     end
-        # else
-        #     @inbounds B_1[:] = B :: Array{Y,2}
-        # end
     end
 
     function update_SR1!(x :: Vector{Y}, x_1 :: Vector{Y},
@@ -66,10 +46,10 @@ function that builde the next approximation of the Hessian, which will be stored
 between 2 points, the difference of the gradient of the associate points, and the previous approximation of the Hessian. The approximation is made according
 to the BFGS update method.
 """
-    function update_BFGS!(Δx :: Vector{Y}, #difference between to points
-                        y :: Vector{Y}, #diffrence of the gradient between each point
-                        B :: Array{Y,2}, #current approcimation of the Hessian
-                        B_1 :: Array{Y,2}) where Y <: Number #Array that will store the next approximation of the Hessian
+    function update_BFGS!(Δx :: AbstractVector{Y}, #difference between to points
+                        y :: AbstractVector{Y}, #diffrence of the gradient between each point
+                        B :: AbstractArray{Y,2}, #current approcimation of the Hessian
+                        B_1 :: AbstractArray{Y,2}) where Y <: Number #Array that will store the next approximation of the Hessian
 
         ω = 1e-8
         α = 1 / (y' * Δx)
@@ -87,9 +67,9 @@ to the BFGS update method.
         end
     end
 
-    function update_BFGS!(x :: Vector{Y}, x_1 :: Vector{Y},
-                        g :: Vector{Y}, g_1 :: Vector{Y},
-                        B :: Array{Y,2}, B_1 :: Array{Y,2}) where Y <: Number
+    function update_BFGS!(x :: AbstractVector{Y}, x_1 :: AbstractVector{Y},
+                        g :: AbstractVector{Y}, g_1 :: AbstractVector{Y},
+                        B :: AbstractArray{Y,2}, B_1 :: AbstractArray{Y,2}) where Y <: Number
         update_BFGS!(x_1 - x, g_1 - g, B, B_1)
     end
 

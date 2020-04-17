@@ -56,8 +56,8 @@ module plus_operators
     #     end
     # end
 
-    function _evaluate_node(op :: plus_operator, value_ch :: AbstractVector{T}) where T <: Number
-        return @fastmath sum(value_ch) 
+    @inline function _evaluate_node(op :: plus_operator, value_ch :: AbstractVector{T}) where T <: Number
+        return @fastmath sum(value_ch)
     end
 
     function _evaluate_node2(op :: plus_operator, value_ch :: AbstractVector{T}) where T <: Number

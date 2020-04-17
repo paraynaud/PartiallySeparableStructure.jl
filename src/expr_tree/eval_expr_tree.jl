@@ -10,12 +10,12 @@ module M_evaluation_expr_tree
     # IMPORTANT La fonction evaluate_expr_tree garde le type des variables,
     # Il faut cependant veiller à modifier les constantes dans les expressions pour qu'elles
     # n'augmentent pas le type
-    evaluate_expr_tree(a :: Any) = (x :: AbstractVector{} -> evaluate_expr_tree(a,x) )
-    evaluate_expr_tree(a :: Any, elmt_var :: Vector{Int}) = (x :: AbstractVector{} -> evaluate_expr_tree(a,view(x,elmt_var) ) )
-    evaluate_expr_tree(a :: Any, x :: AbstractVector{T})  where T <: Number = _evaluate_expr_tree(a, trait_expr_tree.is_expr_tree(a), x)
-    _evaluate_expr_tree(a, :: trait_expr_tree.type_not_expr_tree, x :: AbstractVector{T})  where T <: Number = error(" This is not an Expr tree")
-    _evaluate_expr_tree(a, :: trait_expr_tree.type_expr_tree, x :: AbstractVector{T}) where T <: Number = _evaluate_expr_tree(a, x)
-    function _evaluate_expr_tree(expr_tree :: Y, x  :: AbstractVector{T}) where T <: Number where Y
+    @inline evaluate_expr_tree(a :: Any) = (x :: AbstractVector{} -> evaluate_expr_tree(a,x) )
+    @inline evaluate_expr_tree(a :: Any, elmt_var :: Vector{Int}) = (x :: AbstractVector{} -> evaluate_expr_tree(a,view(x,elmt_var) ) )
+    @inline evaluate_expr_tree(a :: Any, x :: AbstractVector{T})  where T <: Number = _evaluate_expr_tree(a, trait_expr_tree.is_expr_tree(a), x)
+    @inline _evaluate_expr_tree(a, :: trait_expr_tree.type_not_expr_tree, x :: AbstractVector{T})  where T <: Number = error(" This is not an Expr tree")
+    @inline _evaluate_expr_tree(a, :: trait_expr_tree.type_expr_tree, x :: AbstractVector{T}) where T <: Number = _evaluate_expr_tree(a, x)
+    @inline function _evaluate_expr_tree(expr_tree :: Y, x  :: AbstractVector{T}) where T <: Number where Y
         nd = trait_expr_tree._get_expr_node(expr_tree)
         if  trait_expr_node.node_is_operator(nd) == false
             trait_expr_node.evaluate_node(nd, x)
@@ -44,7 +44,7 @@ module M_evaluation_expr_tree
     #         end
     #     end
     # end
-    function _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x  :: AbstractVector{T}) where T <: Number
+    @inline function _evaluate_expr_tree(expr_tree :: implementation_expr_tree.t_expr_tree , x  :: AbstractVector{T}) where T <: Number
         if trait_expr_node.node_is_operator(expr_tree.field :: trait_expr_node.ab_ex_nd) :: Bool == false
             return trait_expr_node._evaluate_node(expr_tree.field, x)
         else

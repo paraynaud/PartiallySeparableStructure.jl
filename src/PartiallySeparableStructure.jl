@@ -92,7 +92,10 @@ function _deduct_partially_separable_structure(expr_tree :: T , n :: Int) where 
 end
 
 
-
+"""
+    compiled_grad_of_elmt_fun(elmt_fun)
+Return  the GradientTape compiled to speed up the ReverseDiff computation of the elmt_fun gradient in the future
+"""
 function compiled_grad_of_elmt_fun(elmt_fun :: element_function{T}) where T
     f = M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun)
     n = length(elmt_fun.used_variable)
@@ -119,6 +122,7 @@ f(x) = ∑fᵢ(xᵢ), so we compute independently each fᵢ(xᵢ) and we return 
     evaluate_gradient(sps,x)
 evalutate the gradient of the partially separable function f = ∑ fι, stored in the sps structure
 at the point x, return a vector of size n (the number of variable) which is the gradient.
+Première version de la fonction inutile car inefficace.
 """
     function evaluate_gradient(sps :: SPS{T}, x :: Vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
@@ -134,22 +138,12 @@ at the point x, return a vector of size n (the number of variable) which is the 
         return gradient
     end
 
-    function evaluate_gradient(sps :: SPS{T}, x :: Vector{BigFloat} ) where T
-        l_elmt_fun = length(sps.structure)
-        gradient = Vector{BigFloat}(zeros(BigFloat, sps.n_var))
-        for i in 1:l_elmt_fun
-            (rown, column, value) = findnz(sps.structure[i].U)
-            temp = ForwardDiff.gradient(M_evaluation_expr_tree.evaluate_expr_tree(sps.structure[i].fun), Array(view(x, sps.structure[i].used_variable)) )
-            gradient[column] = gradient[column] + temp
-        end
-        return gradient
-    end
-
 
 """
     evaluate_SPS_gradient!(sps,x,g)
 Compute the gradient of the partially separable structure sps, and store the result in the grad_vector structure g.
-Using ReversDiff package. Not obvious good behaviour with Threads.@threads, sometime yes sometime .
+Using ReversDiff package. Not obvious good behaviour with Threads.@threads, sometime yes sometime no.
+Noted that we use the previously compiled GradientTape in element_gradient! that use ReverseDiff.
 """
     function evaluate_SPS_gradient!(sps :: SPS{T}, x :: AbstractVector{Y}, g :: grad_vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
@@ -161,9 +155,19 @@ Using ReversDiff package. Not obvious good behaviour with Threads.@threads, some
     end
 
 """
+element_gradient!(compil_tape, x, g)
+Compute the element grandient from the compil_tape compiled before according to the vector x, and store the result in the vector g
+Use of ReverseDiff
+"""
+    function element_gradient!( compiled_tape :: ReverseDiff.CompiledTape, x :: AbstractVector{T}, g :: element_gradient{T} ) where T <: Number where Y
+        ReverseDiff.gradient!(g.g_i, compiled_tape, x)
+    end
+
+"""
     evaluate_SPS_gradient2!(sps,x,g)
 Compute the gradient of the partially separable structure sps, and store the result in the grad_vector structure g.
 Using ForwardDiff package. Bad behaviour with Threads.@threads.
+This was the previous version using ForwardDiff. The actual version using ReverseDiff is more efficient.
 """
     function evaluate_SPS_gradient2!(sps :: SPS{T}, x :: AbstractVector{Y}, g :: grad_vector{Y} ) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
@@ -173,47 +177,25 @@ Using ForwardDiff package. Bad behaviour with Threads.@threads.
             end
         end
     end
-
-"""
-    element_gradient!(compil_tape, x, g)
-Compute the element grandient from the compil_tape compiled before according to the vector x, and store the result in the vector g
-"""
-    function element_gradient!( compiled_tape :: ReverseDiff.CompiledTape, x :: AbstractVector{T}, g :: element_gradient{T} ) where T <: Number where Y
-        ReverseDiff.gradient!(g.g_i, compiled_tape, x)
-    end
-
 """
     element_gradient2!(expr_tree, x, g)
-Compute the element grandient of the function represents by expr_tree according to the vector x, and store the result in the vector g
+Compute the element grandient of the function represents by expr_tree according to the vector x, and store the result in the vector g.
+This was the previous version using ForwardDiff. The actual version using ReverseDiff is more efficient.
 """
     function element_gradient2!( expr_tree :: Y, x :: AbstractVector{T}, g :: element_gradient{T} ) where T <: Number where Y
         ForwardDiff.gradient!(g.g_i, M_evaluation_expr_tree.evaluate_expr_tree(expr_tree), x  )
     end
+
+
 """
     build_gradient(sps, g)
 Constructs a vector of size n from the list of element gradient of the sps structure which has numerous element gradient of size nᵢ.
 The purpose of the function is to gather these element gradient into a real gradient of size n.
-The function grad_ni_to_n will be use to transform a element gradient of size nᵢ to a element gradient of size n.
+The function grad_ni_to_n! will add element gradient of size nᵢ at the right inside the gradient of size n.
 """
     function build_gradient(sps :: SPS{T}, g :: grad_vector{Y}) where T where Y <: Number
-        l_elmt_fun = length(sps.structure)
-        n = sps.n_var
-        f = (x -> Vector{Y}(zeros(Y,n)))
-        g_temp = Vector{ Vector{Y} }( f.([1:l_elmt_fun;]))
-        for i in 1:l_elmt_fun
-            g_temp[i] = grad_ni_to_n(g.arr[i], sps.structure[i].used_variable, n)
-        end
-        return sum(g_temp)
-    end
-
-
-    function grad_ni_to_n(g :: element_gradient{Y}, used_var :: Vector{Int}, size_grad :: Int ) where Y
-        grad = zeros(Y,size_grad)
-        # sort!(used_var)
-        n_i = length(g.g_i)
-        for i in 1:n_i
-            grad[used_var[i]] = g.g_i[i]
-        end
+        grad = Vector{Y}(undef, sps.n_var)
+        build_gradient!(sps, g, grad)
         return grad
     end
 
@@ -311,7 +293,10 @@ Evalutate the hessian of the partially separable function, stored in the sps str
     end
 
 
-
+"""
+    id_hessian!(sps, B)
+Construct a kinf of Id Hessian, it will initialize each element Hessian Bᵢ with an Id matrix, B =  ∑ᵢᵐ Uᵢᵀ Bᵢ Uᵢ
+"""
     function id_hessian!(sps :: SPS{T}, H :: Hess_matrix{Y} )  where Y <: Number where T
         for i in 1:length(sps.structure)
             nᵢ = length(sps.structure[i].used_variable)
@@ -319,7 +304,10 @@ Evalutate the hessian of the partially separable function, stored in the sps str
         end
     end
 
-
+"""
+construct_Sparse_Hessian(sps, B)
+Build from the Partially separable Structure sps and the Hessian approximation B a SpaseArray which represent B in other form.
+"""
     function construct_Sparse_Hessian(sps :: SPS{T}, H :: Hess_matrix{Y} )  where Y <: Number where T
         mapreduce(elt_fun :: element_function{T} -> elt_fun.U' * sparse(H.arr[elt_fun.index].elmt_hess) * elt_fun.U, +, sps.structure  )
     end
@@ -331,43 +319,25 @@ Evalutate the hessian of the partially separable function, stored in the sps str
 This function make the product of the structure B which represents a symetric matrix and the vector x.
 We need the structure sps for the variable used in each B[i], to replace B[i]*x[i] in the result vector.
 """
-    # function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
-    #     l_elmt_fun = length(sps.structure)
-    #     vector_prl = Vector{Y}(zeros(Y, sps.n_var))
-    #     for i in 1:l_elmt_fun
-    #         temp = B.arr[i].elmt_hess :: Array{Y,2} * view(x, sps.structure[i].used_variable) :: SubArray{Float64,1,Array{Float64,1},Tuple{Array{Int64,1}},false}
-    #         f_inter!(vector_prl, sps.structure[i].used_variable, temp )
-    #     end
-    #     return vector_prl
-    # end
-
     function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
-        vector_prl = Vector{Y}(zeros(Y, sps.n_var))
-        for i in sps.structure
-            temp = B.arr[i.index].elmt_hess :: Array{Y,2} * view(x, i.used_variable) :: SubArray{Float64,1,Array{Float64,1},Tuple{Array{Int64,1}},false}
-            f_inter!(vector_prl, i.used_variable, temp )
-        end
-        return vector_prl
+        Bx = Vector{Y}(undef, sps.n_var)
+        product_matrix_sps(sps,B,x, Bx)
+        return Bx
     end
 
-    # function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
-    #     function fun_inter(ab1 :: AbstractVector{Z}, tpl :: Tuple{AbstractVector{Z},Vector{Int}}) where Z <: Number
-    #         @inbounds view(ab1,tpl[2]) .+= tpl[1]
-    #         return ab1
-    #     end
-    #     res = mapfoldl(elmt_fun :: element_function{T} -> (B.arr[elmt_fun.index].elmt_hess :: Array{Y,2} * view(x, elmt_fun.used_variable) :: SubArray{Float64,1,Array{Float64,1},Tuple{Array{Int64,1}},false}, elmt_fun.used_variable), fun_inter ,sps.structure; init=zeros(Y,sps.n_var) )
-    #     return res
-    # end
-
+"""
+    product_matrix_sps!(sps,B,x,Bx)
+This function make the product of the structure B which represents a symetric matrix and the vector x, the result is stored in Bx.
+We need the structure sps for the variable used in each B[i], to replace B[i]*x[i] in the result vector by using f_inter!.
+"""
     function product_matrix_sps!(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: AbstractVector{Y}, Bx :: AbstractVector{Y}) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
         Bx .= (zeros(Y, sps.n_var))
         for i in 1:l_elmt_fun
-            temp = B.arr[i].elmt_hess :: Array{Y,2} * view(x, sps.structure[i].used_variable) :: SubArray{Float64,1,Array{Float64,1},Tuple{Array{Int64,1}},false}
+            temp = B.arr[i].elmt_hess :: Array{Y,2} * view(x, sps.structure[i].used_variable) :: SubArray{Y,1,Array{Y,1},Tuple{Array{Int64,1}},false}
             f_inter!(Bx, sps.structure[i].used_variable, temp )
         end
     end
-
 
     function f_inter!(res :: AbstractVector{Z}, indices ::  AbstractVector{Int}, values :: AbstractVector{Z}) where Z <: Number
         l = length(indices)
@@ -377,19 +347,21 @@ We need the structure sps for the variable used in each B[i], to replace B[i]*x[
     end
 
 
-    #nul
+#= Fonction faisant la même chose mais moins efficacement (nul) =#
+    #=
     function hess_matrix_dot_vector(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
         #utilisation de sparse car elt_fun.U' est un sparseArray et le produit entre les sparseArray est plus rapide
         mapreduce(elt_fun :: element_function{T} -> elt_fun.U' * sparse(B.arr[elt_fun.index].elmt_hess * view(x, elt_fun.used_variable)), + , sps.structure)
     end
-    #nul
     function inefficient_product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
         construct_Sparse_Hessian(sps,B) * x
     end
+    =#
 
 """
     product_vector_sps(sps, g, x)
 compute the product g⊤ x = ∑ Uᵢ⊤ gᵢ⊤ xᵢ. So we need the sps structure to get the Uᵢ.
+On ne s'en sert pas en pratique mais peut-être pratique pour faire des vérifications
 """
     function product_vector_sps(sps :: SPS{T}, g :: grad_vector{Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number
         l_elmt_fun = length(sps.structure)
@@ -419,11 +391,16 @@ update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
         end
     end
 
+"""
+update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
+    update the Hessian approximation Bₖ using the SR1 method, according to the sps partially separable structre. To make
+    the update, we need the grad_vector y and the vector s. B, B_1 and y use structure linked with the partially separable structure stored in sps.
+"""
     function update_SPS_SR1!(sps :: SPS{T}, B :: Hess_matrix{Y}, B_1 :: Hess_matrix{Y}, y :: grad_vector{Y}, s :: AbstractVector{Y}) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
          # @Threads.threads for i in 1:l_elmt_fun
          for i in 1:l_elmt_fun
-            @inbounds  s_elem = Array(view(s, sps.structure[i].used_variable))
+            @inbounds s_elem = Array(view(s, sps.structure[i].used_variable))
             @inbounds y_elem = y.arr[i].g_i
             @inbounds B_elem = B.arr[i].elmt_hess
             @inbounds B_elem_1 = B_1.arr[i].elmt_hess
@@ -433,7 +410,7 @@ update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
     end
 
 
-""" fonciton non utilisé maintenant """
+""" fonction non utilisé maintenant """
 
 
     function f_inter!(a :: AbstractVector{Z}, b :: AbstractVector{Z}) where Z <: Number
@@ -445,6 +422,24 @@ update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
     # function f_inter!(res :: AbstractVector{Z}, indices ::  AbstractVector{Int}, values :: AbstractVector{Z}) where Z <: Number
     #     @inbounds view(res,indices) .+= values
     # end
+    # function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
+    #     l_elmt_fun = length(sps.structure)
+    #     vector_prl = Vector{Y}(zeros(Y, sps.n_var))
+    #     for i in 1:l_elmt_fun
+    #         temp = B.arr[i].elmt_hess :: Array{Y,2} * view(x, sps.structure[i].used_variable) :: SubArray{Float64,1,Array{Float64,1},Tuple{Array{Int64,1}},false}
+    #         f_inter!(vector_prl, sps.structure[i].used_variable, temp )
+    #     end
+    #     return vector_prl
+    # end
+    # function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
+    #     function fun_inter(ab1 :: AbstractVector{Z}, tpl :: Tuple{AbstractVector{Z},Vector{Int}}) where Z <: Number
+    #         @inbounds view(ab1,tpl[2]) .+= tpl[1]
+    #         return ab1
+    #     end
+    #     res = mapfoldl(elmt_fun :: element_function{T} -> (B.arr[elmt_fun.index].elmt_hess :: Array{Y,2} * view(x, elmt_fun.used_variable) :: SubArray{Float64,1,Array{Float64,1},Tuple{Array{Int64,1}},false}, elmt_fun.used_variable), fun_inter ,sps.structure; init=zeros(Y,sps.n_var) )
+    #     return res
+    # end
+
 
 
     export deduct_partially_separable_structure

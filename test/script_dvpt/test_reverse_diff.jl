@@ -1,12 +1,13 @@
-using ReverseDiff: GradientTape, GradientConfig, gradient, gradient!, compile
+# using ReverseDiff: GradientTape, GradientConfig, gradient, gradient!, compile
+#
+# using DiffResults
 
-using DiffResults
 
 
-
-using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
-using Test, BenchmarkTools, ProfileView, InteractiveUtils
-
+using JuMP, MathOptInterface
+# using LinearAlgebra, SparseArrays
+# using Test, BenchmarkTools, ProfileView, InteractiveUtils
+using NLPModels, JSOSolvers, NLPModelsJuMP
 
 include("../../src/ordered_include.jl")
 
@@ -20,7 +21,7 @@ println("\n\n Début script de dvpt\n\n")
 n = 10000
 m = Model()
 @variable(m, x[1:n])
-@NLobjective(m, Min, sum( (x[j] + x[j+1] + x[j+2] + x[j+3] + x[j+4])^3 for j in 1:n-4 ))
+@NLobjective(m, Min, sum( (x[j] + x[j+1] + x[j+2] + x[j+3] + x[j+4])^4 for j in 1:n-4 ))
 evaluator = JuMP.NLPEvaluator(m)
 MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
 
@@ -41,24 +42,20 @@ SPS2 = PartiallySeparableStructure.deduct_partially_separable_structure(obj3, n)
 a2 = rand(n)
 inputs2 = a2
 x = a2
-x = ones(n)
-res = Vector{typeof(x[1])}(undef,n)
 
-struct_Hess = PartiallySeparableStructure.struct_hessian(SPS2,x)
-bench_prod_hess_vec1 = @benchmark PartiallySeparableStructure.product_matrix_sps(SPS2, struct_Hess, x)
-bench_prod_hess_vec3 = @benchmark PartiallySeparableStructure.product_matrix_sps!(SPS2, struct_Hess, x, res)
 
-res1 = PartiallySeparableStructure.product_matrix_sps(SPS2, struct_Hess, x)
-PartiallySeparableStructure.product_matrix_sps!(SPS2, struct_Hess, x, res)
-@show norm(res1-res,2)
+nlp = MathOptNLPModel(m)
+lsr1_nlp = NLPModels.LSR1Model(nlp)
+
+initial_point = ones(n)
+# nlp.meta.x0 = copy(initial_point)
+# lsr1_nlp.meta.x0 = copy(initial_point)
+x1 = copy(initial_point)
+x2 = copy(initial_point)
+@show JSOSolvers.trunk(nlp,x = x1, max_eval=20000, nm_itmax=20000)
+@show JSOSolvers.trunk(lsr1_nlp,x = x2, max_eval=20000, nm_itmax=20000)
 
 error("fin")
-
-MOI_pattern = MathOptInterface.hessian_lagrangian_structure(evaluator)
-v_tmp = Vector{ Float64 }(undef, length(MOI_pattern))
-MOI_Hessian_product_x = Vector{ typeof(x[1]) }(undef,n)
-bench_prod_hess_vec2 = @benchmark MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_x, x, x, 1.0, zeros(0))
-
 
 
 
@@ -79,10 +76,12 @@ res4 = M_evaluation_expr_tree.evaluate_expr_tree(obj4,inputs2)
 res5 = eval(obj4)
 res6 = MathOptInterface.eval_objective( evaluator, x)
 
-@profview @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2,inputs2)
-@profview @benchmark MathOptInterface.eval_objective( evaluator, x)
+# @profview @benchmark PartiallySeparableStructure.evaluate_SPS(SPS2,inputs2)
+# @profview @benchmark MathOptInterface.eval_objective( evaluator, x)
 θ = 10^-6
 @test (res1 - res2 < θ ) && (res1 - res3 < θ ) && ( res1 - res4 < θ) && (res1 - res5 < θ)
+
+error("fin")
 
 error("fin comparaison evaluation")
 
@@ -100,12 +99,31 @@ benchgrad = @benchmark gradient!(results2, compiled_f_tape2, inputs2)
 f = (x :: PartiallySeparableStructure.element_function{implementation_expr_tree.t_expr_tree} -> PartiallySeparableStructure.element_gradient{typeof(inputs2[1])}( Vector{typeof(inputs2[1])}(undef, length(x.used_variable) )) )
 grad_x = PartiallySeparableStructure.grad_vector{typeof(inputs2[1])}( f.(SPS2.structure) )
 benchgrad3 =  @benchmark PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2,inputs2,grad_x)
-
+@profview @benchmark PartiallySeparableStructure.evaluate_SPS_gradient!(SPS2,inputs2,grad_x)
 
 grad_n = Vector{typeof(inputs2[1])}(undef,n)
 bench_build_grad = @benchmark PartiallySeparableStructure.build_gradient!(SPS2, grad_x, grad_n)
 
 
+println("evaluation du produit hessien vecteur")
+x = ones(n)
+res = Vector{typeof(x[1])}(undef,n)
+
+struct_Hess = PartiallySeparableStructure.struct_hessian(SPS2,x)
+bench_prod_hess_vec1 = @benchmark PartiallySeparableStructure.product_matrix_sps(SPS2, struct_Hess, x)
+bench_prod_hess_vec3 = @benchmark PartiallySeparableStructure.product_matrix_sps!(SPS2, struct_Hess, x, res)
+
+@profview @benchmark PartiallySeparableStructure.product_matrix_sps(SPS2, struct_Hess, x)
+
+res1 = PartiallySeparableStructure.product_matrix_sps(SPS2, struct_Hess, x)
+PartiallySeparableStructure.product_matrix_sps!(SPS2, struct_Hess, x, res)
+@show norm(res1-res,2)
+
+MOI_pattern = MathOptInterface.hessian_lagrangian_structure(evaluator)
+v_tmp = Vector{ Float64 }(undef, length(MOI_pattern))
+
+MOI_Hessian_product_x = Vector{ typeof(x[1]) }(undef,n)
+bench_prod_hess_vec2 = @benchmark MathOptInterface.eval_hessian_lagrangian_product(evaluator, MOI_Hessian_product_x, x, x, 1.0, zeros(0))
 #lent
 # results3 = similar(inputs2)
 # cfg10 = ForwardDiff.GradientConfig(f2, x, Chunk{10}());

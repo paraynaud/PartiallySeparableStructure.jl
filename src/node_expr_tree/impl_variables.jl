@@ -56,19 +56,19 @@ module variables
     (==)(a :: variable, b :: variable) =  (a.name == b.name) && (a.index == b.index)
 
 
-    function _evaluate_node(v :: variable, x :: Vector{T}) where T <: Number
-         return @inbounds x[v.index] :: T
-    end
-
-    function _evaluate_node(v :: variable, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number
-         return x[v.index] :: T
-    end
+    # function _evaluate_node(v :: variable, x :: Vector{T}) where T <: Number
+    #      return @inbounds x[v.index] :: T
+    # end
+    #
+    # function _evaluate_node(v :: variable, x :: SubArray{T,1,Array{T,1},Tuple{Array{Int64,1}},false}) where T <: Number
+    #      return x[v.index] :: T
+    # end
 
     function _evaluate_node(v :: variable, dic :: Dict{Int,T}) where T <: Number
         return dic[v.index] :: T
     end
 
-    function _evaluate_node(v :: variable, x :: AbstractVector{T}) where T <: Number
+    @inline function _evaluate_node(v :: variable, x :: AbstractVector{T}) where T <: Number
         return @inbounds x[v.index]
     end
 

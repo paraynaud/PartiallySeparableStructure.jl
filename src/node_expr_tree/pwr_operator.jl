@@ -54,7 +54,7 @@ module power_operators
     #         return @fastmath @inbounds (T)( value_ch[1]^(op.index) ) :: T
     # end
 
-    function _evaluate_node(op :: power_operator{Z}, value_ch :: AbstractVector{T}) where T <: Number where Z <: Number
+    @inline function _evaluate_node(op :: power_operator{Z}, value_ch :: AbstractVector{T}) where T <: Number where Z <: Number
             length(value_ch) == 1 || error("power has more than one argument")
             # return @fastmath @inbounds ( value_ch[1]^(op.index) )
             return ( value_ch[1]^(op.index) )

@@ -13,16 +13,19 @@ using JSOSolvers
 using ProfileView
 #partie pour rosenbrock
 # n_array = [100,500,1000, 2000, 3000, 5000, 10000]
-n_array = [100,200,300]
-#
+n_array = [100,500,1000,5000]
+# #
 i=1000
 (m,evaluator,obj) = create_Rosenbrock_JuMP_Model(i)
 println("fin de la définition du modèle JuMP")
 initial_point = create_initial_point_Rosenbrock(i)
-# valp, tp, bytesp, gctimep, memallocsp = @timed My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)
-# @show tp
-My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)
-@profview My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)
+x0 = copy(initial_point)
+x1 = copy(initial_point)
+nlp = MathOptNLPModel(m)
+nlp_original = MathOptNLPModel(m)
+lsr1_nlp = NLPModels.LSR1Model(nlp_original)
+res1 = JSOSolvers.trunk(lsr1_nlp,x = x0, max_eval=20000, nm_itmax=20000)
+res2 = JSOSolvers.trunk(nlp,x = x1, max_eval=20000, nm_itmax=20000)
 error("fin anticipé")
 
 
@@ -48,19 +51,21 @@ for i in n_array
 
 
     nlp = MathOptNLPModel(m)
-    # B = LSR1Operator(i, scaling=true) :: LSR1Operator{Float64} #scaling=true
-    # vall, tl, bytesl, gctimel, memallocsl = @timed solver_L_SR1_Ab_NLP(nlp, B, initial_point)
-    # fxl = MathOptInterface.eval_objective(evaluator, vall[1])
-    # io_ros_l = open("src/comparaison/results/rosenbrock_l.txt","a")
-    # @printf(io_ros_l, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, vall[2], fxl, tl, gctimel,  memallocsl.allocd )
-    # # println(io_ros_l, i,"\t&\t", vall[2],"\t&\t", tl,"\t&\t", gctimel,"\t&\t", memallocsl.allocd)
-    # close(io_ros_l)
+    lsr1_nlp = NLPModels.LSR1Model(nlp)
+    B = LSR1Operator(i, scaling=true) :: LSR1Operator{Float64} #scaling=true
+    vall, tl, bytesl, gctimel, memallocsl = @timed solver_L_SR1_Ab_NLP(nlp, B, initial_point)
+    fxl = MathOptInterface.eval_objective(evaluator, vall[1])
+    io_ros_l = open("src/comparaison/results/rosenbrock_l.txt","a")
+    @printf(io_ros_l, "%3d \t&\t%3d \t&\t%8.1e \t&\t%8.1e \t&\t%7.1e \t&\t%7.1e \n", i, vall[2], fxl, tl, gctimel,  memallocsl.allocd )
+    # println(io_ros_l, i,"\t&\t", vall[2],"\t&\t", tl,"\t&\t", gctimel,"\t&\t", memallocsl.allocd)
+    close(io_ros_l)
 
-    # nlp.meta.x0 = copy(initial_point)
-    @show JSOSolvers.trunk(nlp,x = initial_point, max_eval=20000, nm_itmax=20000)
+    x0 = copy(initial_point)
+    @show JSOSolvers.trunk(lsr1_nlp,x = x0, max_eval=20000, nm_itmax=20000)
+
 end
 
-error("fin test trunk")
+# error("fin test trunk")
 
 # println("fin de la boucle")
 
@@ -128,6 +133,8 @@ for i in n_array
     close(io_chpow_l)
 end
 
+
+
 io_chcrag_levy_p = open("src/comparaison/results/chained_cragg_levy_p.txt","w")
 io_chcrag_levy_l = open("src/comparaison/results/chained_cragg_levy_l.txt","w")
 close(io_chcrag_levy_p)
@@ -158,6 +165,16 @@ end
 
 
 
+# i=5000
+# println(" \n\n nouveau modèle chained powel à ", i, " variables")
+# (m,evaluator,obj) = create_chained_cragg_levy_JuMP_Model(i)
+# println("fin de la définition du modèle JuMP")
+# initial_point = create_initial_point_chained_Powel(i)
+# println("fin de la définition du point iniitial")
+#
+# nlp = MathOptNLPModel(m)
+#
+# @show JSOSolvers.trunk(nlp,x = initial_point, max_eval=20000, nm_itmax=20000)
 
 
 # val, t, bytes, gctime, memallocs = @timed  My_SPS_Model_Module.solver_TR_PSR1!(obj, i, initial_point)

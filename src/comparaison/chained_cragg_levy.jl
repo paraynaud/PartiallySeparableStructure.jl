@@ -1,5 +1,11 @@
 using NLPModels, JuMP, MathOptInterface, NLPModelsJuMP
 
+
+"""
+    create_chained_cragg_levy_JuMP_Model(n)
+Create a Chained Cragg Levy Model m using the package JuMP. It return (m,evaluator,obj), evaluator is usefull to use MOI function
+and obj is the Expr that describe the objective function of m.
+"""
 function create_chained_cragg_levy_JuMP_Model(n :: Int)
     m = Model()
     @variable(m, x[1:n])
@@ -10,7 +16,10 @@ function create_chained_cragg_levy_JuMP_Model(n :: Int)
     return (m, evaluator,obj)
 end
 
-
+"""
+    create_initial_point_chained_cragg_levy(n)
+Create the initial point of Cragg Levy chained function according to the article of Luksan & Vlcek. the initial point of size n
+"""
 function create_initial_point_chained_cragg_levy(n)
     point_initial = Vector{Float64}(undef, n)
     point_initial[1] = 1.0
@@ -22,4 +31,4 @@ end
 
 
 
- (m, evaluator,obj) = create_chained_cragg_levy_JuMP_Model(8)
+ # (m, evaluator,obj) = create_chained_cragg_levy_JuMP_Model(8)

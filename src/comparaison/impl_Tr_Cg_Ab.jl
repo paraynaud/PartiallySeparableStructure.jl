@@ -11,7 +11,7 @@ function compute_ratio(x :: AbstractVector{Y}, f_x :: Y, s :: Vector{Y}, nlp :: 
 end
 
 
-function upgrade_TR_SR1!( pk :: Float64, # value of the ratio
+function upgrade_TR_LO!( pk :: Float64, # value of the ratio
                      x_k :: AbstractVector{T}, # actual point
                      s_k :: AbstractVector{T}, # point found at the iteration k
                      g_k :: AbstractVector{T}, # array of element gradient
@@ -42,50 +42,93 @@ function upgrade_TR_SR1!( pk :: Float64, # value of the ratio
      return Δ
 end
 
+"""
+    solver_L_SR1_Ab_NLP(nlp, B, x0)
+solver_L_SR1_Ab_NLP is a optimisation method using Trust region with conjugate gradient. nlp is an AbstractNLPModel, B is an
+AbstractLinearOperator and x0 is an AbstractVector reprensenting the initial point of the method. The method return a tuple:
+with the final point and the number of iteration performming by the method.
+Even if the name suggest LSR1, B can be a BFGS Operator.
+"""
+function solver_TR_CG_Ab_NLP_LO(nlp :: AbstractNLPModel, B :: AbstractLinearOperator{T}, x_init :: AbstractVector{T}, cpt_max = 1000000) where T <: Number
+    η = 1e-3
+    n = length(x_init)
+    x = Vector{T}(undef,n)
+    x .= x_init
+    g = Vector{T}(undef,length(x_init))
+    g = NLPModels.grad!(nlp, x, g)
+    (Δ, ϵ, cpt) = (1.0, 10^-6, 0)
+    f_xk = NLPModels.obj(nlp, x)
+    @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
+    n_g_init = norm(g,2)
+    while (norm(g,2) > ϵ) && (norm(g,2) > ϵ * n_g_init)  && cpt < cpt_max  # stop condition
+        cpt = cpt + 1
 
+        cg_res = Krylov.cg(B, - g, radius = Δ)
+        sk = cg_res[1]  # result of the linear system solved by Krylov.cg
 
-    function solver_L_SR1_Ab_NLP(nlp :: AbstractNLPModel, B :: AbstractLinearOperator{T}, x_init :: AbstractVector{T}) where T <: Number
-        # opB(nlp,x) = LinearOperators.LinearOperator( n, n, true, true, y -> NLPModels.hprod(nlp,x,y) )
-        η = 1e-3
-        cpt_max = 500000
-        n = length(x_init)
-        x = Vector{T}(undef,n)
-        x .= x_init
-        g = Vector{T}(undef,length(x_init))
-        g = NLPModels.grad!(nlp, x, g)
-        (Δ, ϵ, cpt) = (1.0, 10^-6, 0)
-        f_xk = NLPModels.obj(nlp, x)
-        @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
-        n_g_init = norm(g,2)
-        while (norm(g,2) > ϵ) && (norm(g,2) > ϵ * n_g_init)  && cpt < cpt_max  # stop condition
-            cpt = cpt + 1
+        (pk, f_temp) = compute_ratio(x, f_xk, sk, nlp, B, g) # we compute the ratio
 
+        Δ = upgrade_TR_LO!(pk, x, sk, g, B, nlp, Δ) # we upgrade x,g,B,∆
 
-            cg_res = Krylov.cg(B, - g, radius = Δ)
-
-            sk = cg_res[1]  # result of the linear system solved by Krylov.cg
-
-            (pk, f_temp) = compute_ratio(x, f_xk, sk, nlp, B, g) # we compute the ratio
-            # println("norme de s_k: ", norm(sk, 2), "  ratio: ", pk)
-
-            Δ = upgrade_TR_SR1!(pk, x, sk, g, B, nlp, Δ) # we upgrade x,g,B,∆
-            if  pk > η
-                f_xk = f_temp
-            end
-            if mod(cpt,5000) == 0
-                @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
-            end
+        if  pk > η
+            f_xk = f_temp
         end
-
-        if cpt < cpt_max
-            println("\n\n\nNous nous somme arrêté grâce à un point stationnaire !!!\n\n\n")
-            println("cpt,\tf_xk,\tnorm de g,\trayon puis x en dessous ")
-            @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
-        else
-            println("\n\n\nNous nous sommes arrêté à cause du nombre d'itération max \n\n\n ")
-            println("cpt,\tf_xk,\tnorm de g,\trayon puis x en dessous ")
+        if mod(cpt,5000) == 0
             @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
         end
-
-        return (x, cpt)
     end
+
+    if cpt < cpt_max
+        println("\n\n\nNous nous somme arrêté grâce à un point stationnaire !!!\n\n\n")
+        println("cpt,\tf_xk,\tnorm de g,\trayon puis x en dessous ")
+        @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
+    else
+        println("\n\n\nNous nous sommes arrêté à cause du nombre d'itération max \n\n\n ")
+        println("cpt,\tf_xk,\tnorm de g,\trayon puis x en dessous ")
+        @printf "%3d %8.1e %7.1e %7.1e  \n" cpt f_xk norm(g,2) Δ
+    end
+
+    return (x, cpt)
+end
+
+
+
+using SolverTools
+function solver_TR_CG_Ab_NLP_LO_res(nlp :: AbstractNLPModel, B :: AbstractLinearOperator{T}, x_init :: AbstractVector{T}) where T <: Number
+    Δt = @timed ((x_final,cpt) = solver_TR_CG_Ab_NLP_LO(nlp, B, x_init))
+    status= :unknown
+    return GenericExecutionStats(status, nlp,
+                           solution = x_final,
+                           iter = cpt,  # not quite the number of iterations!
+                           primal_feas = norm(NLPModels.grad(nlp, x_final),2),
+                           dual_feas = -1,
+                           objective = NLPModels.obj(nlp, x_final),
+                           elapsed_time = Δt[2],
+                          )
+end
+
+function solver_TR_CG_Ab_NLP_L_SR1(nlp :: AbstractNLPModel, x_init :: AbstractVector{T}) where T <: Number
+    B = LSR1Operator(nlp.meta.nvar, scaling=true) :: LSR1Operator{T} #scaling=true
+    return solver_TR_CG_Ab_NLP_LO_res(nlp, B, x_init)
+end
+
+
+my_LSR1(x_init :: AbstractVector{T}) where T <: Number = (nlp -> my_LSR1(nlp,x_init) )
+my_LSR1(nlp :: AbstractNLPModel,x_init :: AbstractVector{T}) where T = solver_TR_CG_Ab_NLP_L_SR1(nlp,x_init)
+function my_LSR1(nlp :: AbstractNLPModel)
+    x :: AbstractVector=copy(nlp.meta.x0)
+    my_LSR1(nlp, x)
+end
+
+
+function solver_TR_CG_Ab_NLP_L_BFGS(nlp :: AbstractNLPModel, x_init :: AbstractVector{T}) where T <: Number
+    B = LBFGSOperator(nlp.meta.nvar, scaling=true) :: LBFGSOperator{T} #scaling=true
+    return solver_TR_CG_Ab_NLP_LO_res(nlp, B, x_init)
+end
+
+my_LBFGS(x_init :: AbstractVector{T}) where T <: Number = (nlp -> my_LBFGS(nlp,x_init) )
+my_LBFGS(nlp :: AbstractNLPModel,x_init :: AbstractVector{T}) where T <: Number = solver_TR_CG_Ab_NLP_L_BFGS(nlp,x_init)
+function my_LBFGS(nlp :: AbstractNLPModel)
+    x :: AbstractVector=copy(nlp.meta.x0)
+    my_LBFGS(nlp, x)
+end

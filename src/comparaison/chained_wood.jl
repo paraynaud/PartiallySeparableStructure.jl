@@ -2,16 +2,6 @@
 # using Test, BenchmarkTools, ProfileView, InteractiveUtils
 
 using NLPModels, JuMP, MathOptInterface, NLPModelsJuMP
-using Printf
-
-using BenchmarkTools, ProfileView
-
-
-# include("../ordered_include.jl")
-
-# using ..My_SPS_Model_Module
-
-
 
 
 function create_chained_wood_JuMP_Model(n :: Int)

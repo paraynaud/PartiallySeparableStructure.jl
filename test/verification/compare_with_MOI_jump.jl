@@ -44,6 +44,11 @@ obj2 = trait_expr_tree.transform_to_expr_tree(obj)
 obj3 = trait_expr_tree.transform_to_expr_tree(obj)
 SPS2 = PartiallySeparableStructure.deduct_partially_separable_structure(obj3, n)
 
+
+
+
+
+
 ones_ = ones(n)
 
 println("fin des initialisations")

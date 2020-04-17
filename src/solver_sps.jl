@@ -194,8 +194,7 @@ When the initialisation is done we can start the algorithme.
 
     #fonction traitant le coeur de l'algorithme, réalise principalement la boucle qui incrémente un compteur et met à jour la structure d'algo par effet de bord
     # De plus on effectue tous les affichage par itération dans cette fonction raison des printf
-    function iterations_TR!(s_a :: struct_algo{T,Y}) where T where Y <: Number
-        cpt_max = 200000
+    function iterations_TR!(s_a :: struct_algo{T,Y}, cpt_max = 200000) where T where Y <: Number
         cpt = 1 :: Int64
         n = s_a.sps.n_var
         # opB(s_a) = LinearOperators.LinearOperator(n, n, true, true, x -> PartiallySeparableStructure.product_matrix_sps(s_a.sps, s_a.tpl_B[s_a.index], x) )
@@ -225,6 +224,8 @@ When the initialisation is done we can start the algorithme.
     end
 
 
+
+
     solver_TR_PSR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, type=Float64 :: DataType ) where T where Y <: Number = _solver_TR_PSR1!(obj_Expr, n, x_init, trait_expr_tree.is_expr_tree(T), type)
     _solver_TR_PSR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, :: trait_expr_tree.type_expr_tree, type=Float64 :: DataType) where T where Y <: Number = _solver_TR_PSR1!(obj_Expr, n, x_init, type)
     _solver_TR_PSR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, :: trait_expr_tree.type_not_expr_tree, type=Float64 :: DataType) where T where Y <: Number = error("mal typé")
@@ -235,16 +236,48 @@ When the initialisation is done we can start the algorithme.
         init_struct_algo!(s_a, x_init)
 
         cpt = iterations_TR!(s_a)
-
-        return (cpt,s_a) :: Tuple{Int64,struct_algo{implementation_expr_tree.t_expr_tree, type}}
+        x_final = s_a.tpl_x[Int(s_a.index)]
+        return (x_final, s_a, cpt) :: Tuple{Vector{Y}, struct_algo{implementation_expr_tree.t_expr_tree, type}, Int}
     end
 
+using SolverTools
 
+    function _solver_TR_PSR1_2!(m :: Z, obj_Expr :: T, n :: Int, type:: DataType, x_init :: AbstractVector{Y}) where T where Y where Z <: AbstractNLPModel
+        Δt = @timed ((x_final, s_a, cpt) = solver_TR_PSR1!(obj_Expr, n, x_init, type))
+        status= :unknown
+        return GenericExecutionStats(status, m,
+                               solution = x_final,
+                               iter = cpt,  # not quite the number of iterations!
+                               primal_feas = norm(NLPModels.grad(m, x_final),2),
+                               dual_feas = -1,
+                               objective = NLPModels.obj(m, x_final),
+                               elapsed_time = Δt[2],
+                              )
+    end
+
+using NLPModelsJuMP, JuMP, MathOptInterface
+
+    function _solver_TR_PSR1!( model_JUMP :: T ) where T <: AbstractNLPModel
+        model = model_JUMP.eval.m
+        evaluator = JuMP.NLPEvaluator(model)
+        MathOptInterface.initialize(evaluator, [:ExprGraph])
+        obj_Expr = MathOptInterface.objective_expr(evaluator) :: Expr
+        n = model.moi_backend.model_cache.model.num_variables_created
+        x :: AbstractVector=copy(model_JUMP.meta.x0)
+        _solver_TR_PSR1_2!(model_JUMP, obj_Expr, n, typeof(x[1]), x)
+    end
+
+    solver_TR_PSR1!(m :: T ) where T <: AbstractNLPModel = _solver_TR_PSR1!(m)
 
 end
+
 
 
 
 # PartiallySeparableStructure.product_matrix_sps(s_a :: struct_algo{T, Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number = PartiallySeparableStructure.product_matrix_sps(s_a.sps, s_a.B, x)
 # PartiallySeparableStructure.product_vector_sps(s_a :: struct_algo{T, Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number = PartiallySeparableStructure.product_vector_sps(s_a.sps, s_a.g, x)
 # PartiallySeparableStructure.update_SPS_SR1!(s_a :: struct_algo{T,Y}) where T where Y <: Number = PartiallySeparableStructure.update_SPS_SR1!(s_a.sps, s_a.B_k, s_a.B_k1, PartiallySeparableStructure.minus_grad_vec!(s_a.g_k1, s_a.g_k, s_a.y), s_a.x_k1 - s_a.x_k)
+
+f1(x :: Int,y :: Int) = x+y
+f1(x :: Int) = (y -> f1(x,y))
+f1(2)(3)
