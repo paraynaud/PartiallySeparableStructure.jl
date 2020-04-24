@@ -30,4 +30,8 @@ function create_initial_point_chained_Powel(n)
 end
 
 
+using NLPModelsJuMP
+
 # (m, evaluator,obj) = create_chained_Powel_JuMP_Model(8)
+# nlp_m = NLPModelsJuMP.MathOptNLPModel(m)
+# NLPModelsJuMP.

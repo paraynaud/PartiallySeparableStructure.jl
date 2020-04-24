@@ -30,6 +30,7 @@ to the SR1 update method.
             @fastmath @inbounds B_1[:] = (B + num_den) :: Array{Y,2}
         else
             @inbounds B_1[:] = B :: Array{Y,2}
+            print("1")
         end
     end
 
@@ -51,19 +52,20 @@ to the BFGS update method.
                         B :: AbstractArray{Y,2}, #current approcimation of the Hessian
                         B_1 :: AbstractArray{Y,2}) where Y <: Number #Array that will store the next approximation of the Hessian
 
-        ω = 1e-8
-        α = 1 / (y' * Δx)
-        β = - (1 / (Δx' * B * Δx) )
-        u = y * y'
-        v = B * Δx
-
         if Δx' * y > 0
+            α = 1 / (y' * Δx)
+            β = - (1 / (Δx' * B * Δx) )
+            u = y * y'
+            v = B * Δx
             terme1 = (α * u * u')
             terme2 = (β * v * v')
-            @inbounds B_1[:] = (B + terme1 + terme2) :: Array{Y,2}
+            B_1[:] = (B + terme1 + terme2) :: Array{Y,2}
+            # @show norm(B_1* Δx- y,2)
         else
-            println("on ne satisfait pas le test Δxᵀy > 0 ")
-            @inbounds B_1[:] = B :: Array{Y,2}
+            # println("on ne satisfait pas le test Δxᵀy > 0 ")
+            # @inbounds B_1[:] = B :: Array{Y,2}
+            print("2")
+            B_1[:] = B :: Array{Y,2}
         end
     end
 

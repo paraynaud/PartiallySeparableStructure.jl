@@ -1,11 +1,76 @@
 include("../ordered_include.jl")
 
-include("chained_wood.jl")
-include("rosenbrock.jl")
-include("chained_powel.jl")
-include("chained_cragg_levy.jl")
+
+repo_model = "models/"
+include(repo_model * "chained_wood.jl")
+include( repo_model * "rosenbrock.jl")
+include( repo_model * "chained_powel.jl")
+include( repo_model * "chained_cragg_levy.jl")
 
 using JSOSolvers, SolverBenchmark
+
+using ..PartiallySeparableStructure
+using ..Quasi_Newton_update
+
+i = 100
+(m_ros, evaluator,obj) = create_Rosenbrock_JuMP_Model(i)
+init = create_initial_point_Rosenbrock(i)
+nlp = MathOptNLPModel(m_ros)
+# cpt_pbfgs = My_SPS_Model_Module.solver_TR_PBFGS!(nlp,x=init)
+cpt_pbfgs = My_SPS_Model_Module.solver_TR_PBFGS!(obj,i,init)
+# cpt_lsr1 = My_SPS_Model_Module.solver_TR_PSR1!(nlp,x=init)
+# my_LSR1(nlp,copy(init))
+# my_LBFGS(nlp,copy(init))
+
+s_a = cpt_pbfgs
+index = Int(cpt_pbfgs.index)
+autre_index = 2 - index + 1
+B = s_a.tpl_B[index]
+B₋₁ = s_a.tpl_B[autre_index]
+res1 = PartiallySeparableStructure.check_Inf_Nan(B)
+res2 = PartiallySeparableStructure.check_Inf_Nan(B₋₁)
+s_a.sps.structure[69]
+B_i = s_a.tpl_B[index].arr[69]
+Bi_1 = s_a.tpl_B[autre_index].arr[69]
+B2 = copy(Bi_1.elmt_hess)
+B3 = copy(Bi_1.elmt_hess)
+B4 = copy(Bi_1.elmt_hess)
+B5 = copy(Bi_1.elmt_hess)
+B6 = copy(Bi_1.elmt_hess)
+y = s_a.y.arr[69].g_i
+
+Δx1 = [1e-6, 1e-6]
+Δx2 = [1.0, 1.0]
+Δx3 = [-1e-10,- 1e-76]
+Δx_complet = s_a.tpl_x[index] - s_a.tpl_x[autre_index]
+Δx = view(Δx_complet, s_a.sps.structure[69].used_variable)
+n = i
+opB(B) = LinearOperators.LinearOperator(n, n, true, true, x -> PartiallySeparableStructure.product_matrix_sps(s_a.sps, B, x) )
+(s_k, info) = Krylov.cg(opB(B₋₁), - s_a.grad, radius = s_a.Δ)
+Δx_vrai  = view(s_k, s_a.sps.structure[69].used_variable)
+
+Quasi_Newton_update.update_BFGS!(Δx1,y,Bi_1.elmt_hess,B2)
+Quasi_Newton_update.update_BFGS!(Δx2,y,Bi_1.elmt_hess,B3)
+Quasi_Newton_update.update_BFGS!(Δx3,y,Bi_1.elmt_hess,B4)
+Quasi_Newton_update.update_BFGS!(Δx,y,Bi_1.elmt_hess,B5)
+Quasi_Newton_update.update_BFGS!(Δx_vrai,y,Bi_1.elmt_hess,B6)
+@show B2
+@show B3
+@show B4
+@show B5
+@show B6
+
+error("fin")
+
+α = 1 / (y' * Δx1)
+β = - (1 / (Δx1' * B * Δx1) )
+u = y * y'
+v = B * Δx
+terme1 = (α * u * u')
+terme2 = (β * v * v')
+B_1[:] = (B + terme1 + terme2) :: Array{Y,2}
+# PartiallySeparableStructure.product_matrix_sps(s_a.sps,B,rand(i))
+
 
 
 """
@@ -21,14 +86,16 @@ function create_all_problems(nb_var_array :: Vector{Int})
     (m_powel, evaluator,obj) = create_chained_Powel_JuMP_Model(i)
     (m_cragg_levy, evaluator,obj) = create_chained_cragg_levy_JuMP_Model(i)
     push!(problem_array, MathOptNLPModel(m_ros), MathOptNLPModel(m_chained), MathOptNLPModel(m_powel), MathOptNLPModel(m_cragg_levy))
+    # init = create_initial_point_Rosenbrock(i)
+    # push!(problem_array, (MathOptNLPModel(m_ros), init))
   end
   return problem_array
 end
 
 
 println(" \n\n génération des problemes")
-# n_array = [100,500,1000,2000,5000,10000]
-n_array = [10,20,30,100]
+n_array = [100,500,1000,2000]
+n_array = [10,20,30]
 # n_array = [1000,2000]
 problems = create_all_problems(n_array)
 
@@ -41,16 +108,25 @@ solvers = Dict{Symbol,Function}(
   :my_lsr1 => (m -> my_LSR1(m)),
   :my_lbfgs => (m -> my_LBFGS(m)),
   :p_sr1 => (m -> My_SPS_Model_Module.solver_TR_PSR1!(m)),
+  :p_bfgs => (m -> My_SPS_Model_Module.solver_TR_PBFGS!(m)),
   :trunk_sr1 => prob -> JSOSolvers.trunk(NLPModels.LSR1Model(prob), max_time=max_time, atol=atol, rtol=rtol),
   :trunk => prob -> JSOSolvers.trunk(prob, max_time=max_time, atol=atol, rtol=rtol)
   )
 
+  # solvers = Dict{Symbol,Function}(
+  #   :p_bfgs => ((nlp; kwargs...) -> My_SPS_Model_Module.solver_TR_PBFGS!(nlp;kwargs...)),
+  #   )
+  # (nlp,y) = problems[1]
+# My_SPS_Model_Module.solver_TR_PBFGS!(nlp;x=y)
+# solvers[:p_bfgs](nlp, x=y)
 
 #= Lancement du benchmark sur les problèmes générés, sur les solvers défini dans la variable solvers =#
 println("lancement des benchmmarks")
+# SolverTools.solve_problems(solvers[:p_bfgs], problems; reset_problem=false)
+# stats = bmark_solvers(solvers,problems,reset_problem=false, x=y)
 stats = bmark_solvers(solvers,problems)
+# error("fin")
 
-error("fin")
 
 #= Ecriture des résultats dans un fichier au format markdown=#
 println("écriture des résultats markdown")
@@ -60,7 +136,7 @@ close(io)
 io = open(location_md,"w+")
 keys_solver = keys(stats)
 for i in keys_solver
-  markdown_table(io,stats[i])
+  markdown_table(io, stats[i], cols=[ :id, :name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
 end
 close(io)
 
@@ -73,7 +149,7 @@ close(io)
 io = open(location_latex,"w+")
 keys_solver = keys(stats)
 for i in keys_solver
-  latex_table(io,stats[i])
+  latex_table(io, stats[i], cols=[ :id, :name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
 end
 close(io)
 
@@ -86,7 +162,7 @@ performance_profile(stats, df->df.elapsed_time)
 
 
 
-
+markdown_table(stdout, stats[:p_sr1], cols=[ :id, :name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
 
 
 

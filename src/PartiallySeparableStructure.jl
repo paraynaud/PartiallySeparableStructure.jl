@@ -321,7 +321,7 @@ We need the structure sps for the variable used in each B[i], to replace B[i]*x[
 """
     function product_matrix_sps(sps :: SPS{T}, B :: Hess_matrix{Y}, x :: Vector{Y}) where T where Y <: Number
         Bx = Vector{Y}(undef, sps.n_var)
-        product_matrix_sps(sps,B,x, Bx)
+        product_matrix_sps!(sps,B,x, Bx)
         return Bx
     end
 
@@ -374,9 +374,9 @@ On ne s'en sert pas en pratique mais peut-être pratique pour faire des vérific
     end
 
 """
-update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
-    update the Hessian approximation Bₖ using the SR1 method, according to the sps partially separable structre. To make
-    the update, we need the vector y and s.
+    update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
+update the Hessian approximation Bₖ using the SR1 method, according to the sps partially separable structre. To make
+the update, we need the vector y and s.
 """
     function update_SPS_SR1!(sps :: SPS{T}, B :: Hess_matrix{Y}, B_1 :: Hess_matrix{Y}, y :: Vector{Y}, s :: Vector{Y}) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
@@ -392,9 +392,9 @@ update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
     end
 
 """
-update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
-    update the Hessian approximation Bₖ using the SR1 method, according to the sps partially separable structre. To make
-    the update, we need the grad_vector y and the vector s. B, B_1 and y use structure linked with the partially separable structure stored in sps.
+    update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
+update the Hessian approximation Bₖ using the SR1 method, according to the sps partially separable structre. To make
+the update, we need the grad_vector y and the vector s. B, B_1 and y use structure linked with the partially separable structure stored in sps.
 """
     function update_SPS_SR1!(sps :: SPS{T}, B :: Hess_matrix{Y}, B_1 :: Hess_matrix{Y}, y :: grad_vector{Y}, s :: AbstractVector{Y}) where T where Y <: Number
         l_elmt_fun = length(sps.structure)
@@ -408,6 +408,46 @@ update_SPS_SR1(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
             temporise_debug = 1
         end
     end
+
+
+"""
+    update_SPS_BFGS(sps, Bₖ, Bₖ₊₁, yₖ, sₖ)
+update the Hessian approximation Bₖ using the SR1 method, according to the sps partially separable structre. To make
+the update, we need the grad_vector y and the vector s. B, B_1 and y use structure linked with the partially separable structure stored in sps.
+"""
+    function update_SPS_BFGS!(sps :: SPS{T}, B :: Hess_matrix{Y}, B_1 :: Hess_matrix{Y}, y :: grad_vector{Y}, s :: AbstractVector{Y}) where T where Y <: Number
+        l_elmt_fun = length(sps.structure)
+         # @Threads.threads for i in 1:l_elmt_fun
+         for i in 1:l_elmt_fun
+            @inbounds s_elem = Array(view(s, sps.structure[i].used_variable))
+            @inbounds y_elem = y.arr[i].g_i
+            @inbounds B_elem = B.arr[i].elmt_hess
+            @inbounds B_elem_1 = B_1.arr[i].elmt_hess
+            Quasi_Newton_update.update_BFGS!(s_elem, y_elem, B_elem, B_elem_1)
+            temporise_debug = 1
+        end
+    end
+
+    function check_Inf_Nan( B :: Hess_matrix{Y}) where Y <: Number
+        res = []
+        for i in 1:length(B.arr)
+            interet = check_Inf_Nan(B.arr[i].elmt_hess)
+            if interet != nothing
+                push!(res, (i,interet))
+            end 
+        end
+        return res
+    end
+
+    function check_Inf_Nan(Bi :: Array{Y,2}) where Y <: Number
+        for i in Bi
+            if isnan(i) || isinf(i)
+                println("oui")
+                return Bi
+            end
+        end
+    end
+
 
 
 """ fonction non utilisé maintenant """

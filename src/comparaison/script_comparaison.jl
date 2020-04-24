@@ -15,17 +15,21 @@ using ProfileView
 # n_array = [100,500,1000, 2000, 3000, 5000, 10000]
 n_array = [100,500,1000,5000]
 # #
-i=1000
+i=100
 (m,evaluator,obj) = create_Rosenbrock_JuMP_Model(i)
 println("fin de la définition du modèle JuMP")
 initial_point = create_initial_point_Rosenbrock(i)
+
 x0 = copy(initial_point)
 x1 = copy(initial_point)
 nlp = MathOptNLPModel(m)
 nlp_original = MathOptNLPModel(m)
-lsr1_nlp = NLPModels.LSR1Model(nlp_original)
-res1 = JSOSolvers.trunk(lsr1_nlp,x = x0, max_eval=20000, nm_itmax=20000)
-res2 = JSOSolvers.trunk(nlp,x = x1, max_eval=20000, nm_itmax=20000)
+# lsr1_nlp = NLPModels.LSR1Model(nlp_original)
+# res2 = JSOSolvers.trunk(nlp,x = x1, max_eval=20000, nm_itmax=20000)
+# res1 = JSOSolvers.trunk(lsr1_nlp,x = x0, max_eval=20000, nm_itmax=20000)
+res_pbfgs = My_SPS_Model_Module.solver_TR_PBFGS!(nlp_original)
+res_psr1 = My_SPS_Model_Module.solver_TR_PSR1!(nlp_original)
+
 error("fin anticipé")
 
 
