@@ -20,6 +20,9 @@ function create_Rosenbrock_JuMP_Model(n :: Int)
     evaluator = JuMP.NLPEvaluator(m)
     MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
     obj = MathOptInterface.objective_expr(evaluator)
+    vec_var = JuMP.all_variables(m)
+    vec_value = create_initial_point_Rosenbrock(n)
+    JuMP.set_start_value.(vec_var, vec_value)
     return (m, evaluator,obj)
 end
 
@@ -37,6 +40,11 @@ function create_initial_point_Rosenbrock(n)
     end
     return point_initial
 end
+
+# (m,evaluator,obj) = create_Rosenbrock_JuMP_Model(50)
+# nlp = MathOptNLPModel(m)
+# @show nlp.meta.x0
+
 
 # n_array = [100, 500, 1000, 2000, 3000, 5000]
 # n_array = [100,500,1000, 2000, 3000, 5000, 10000, 20000]

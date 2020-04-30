@@ -179,11 +179,15 @@ P-SR1
 This function perform a step of a Trust-Region method using a conjuguate-gragient method to solve the sub-problem of the Trust-Region.
 B is the LinearOperator needed by the cg (conjuguate-gragient method). struct_algo stored all the data relative to the problem and is modified if step is taken .
 """
-    function update_PSR1!(s_a :: struct_algo{T,Y}, B :: LinearOperator{Y}) where T where Y <: Number
-        # atol = sqrt(eps(Float64))
-        # rtol = sqrt(eps(Float64))
-        # (s_k, info) = Krylov.cg(B, - s_a.grad, atol=atol, rtol=rtol, radius = s_a.Δ, itmax=max(2*s_a.sps.n_var,50)) :: Tuple{Array{Y,1},Krylov.SimpleStats{Y}}
-        (s_k, info) = Krylov.cg(B, - s_a.grad, radius = s_a.Δ) :: Tuple{Array{Y,1},Krylov.SimpleStats{Y}}
+    function update_PSR1!(s_a :: struct_algo{T,Y}, B :: LinearOperator{Y};
+        atol :: Real=√eps(s_a.tpl_x[Int(s_a.index)]),
+        rtol :: Real=√eps(s_a.tpl_x[Int(s_a.index)]),
+        kwawrgs...
+        ) where T where Y <: Number
+
+        n = s_a.sps.n_var
+        (s_k, info) = Krylov.cg(B, - s_a.grad, atol=atol, rtol=rtol, radius = s_a.Δ, itmax=max(2 * n, 50)) :: Tuple{Array{Y,1},Krylov.SimpleStats{Y}}
+
         (ρₖ, fxₖ₊₁) = compute_ratio(s_a, s_k :: Vector{Y})
         if ρₖ > s_a.η #= on accepte le nouveau point =#
             s_a.index = other_index(s_a)
@@ -209,24 +213,32 @@ B is the LinearOperator needed by the cg (conjuguate-gragient method). struct_al
         else  #= cas ou nous faisons ni une bonne ni une mauvais approximation=#
             s_a.Δ = s_a.Δ
         end
-        # @show norm( PartiallySeparableStructure.product_matrix_sps(s_a.sps,s_a.tpl_B[Int(s_a.index)], s_a.tpl_x[Int(s_a.index)]) - s_a.grad,2)
-        # y_entier = PartiallySeparableStructure.build_gradient(s_a.sps, s_a.y)
-        # @show norm( PartiallySeparableStructure.product_matrix_sps(s_a.sps,s_a.tpl_B[Int(s_a.index)], s_k) - y_entier,2)
-
     end
 
 
     #fonction traitant le coeur de l'algorithme, réalise principalement la boucle qui incrémente un compteur et met à jour la structure d'algo par effet de bord
     # De plus on effectue tous les affichage par itération dans cette fonction raison des printf
-    function iterations_TR!(s_a :: struct_algo{T,Y}, cpt_max = 200000) where T where Y <: Number
+    iterations_TR_PSR1!(s_a :: struct_algo{T,Y}, vec_cpt :: Vector{Int}; kwargs...) where T where Y <: Number = (vec_cpt[1] = iterations_TR_PSR1!(s_a; kwargs...))
+    function iterations_TR_PSR1!(s_a :: struct_algo{T,Y};
+        max_eval :: Int=10000,
+        atol :: Real=√eps(eltype(s_a.tpl_x[Int(s_a.index)])),
+        rtol :: Real=√eps(eltype(s_a.tpl_x[Int(s_a.index)])),
+        kwargs... )  where T where Y <: Number
+
         cpt = 1 :: Int64
         n = s_a.sps.n_var
-        # opB(s_a) = LinearOperators.LinearOperator(n, n, true, true, x -> PartiallySeparableStructure.product_matrix_sps(s_a.sps, s_a.tpl_B[s_a.index], x) )
+
+        T2 = eltype(s_a.tpl_x[Int(s_a.index)])
+        ∇f₀ = s_a.grad
+        ∇fNorm2 = nrm2(n, ∇f₀)
+        cgtol = one(T2)  # Must be ≤ 1.
+        cgtol = max(rtol, min(T2(0.1), 9 * cgtol / 10, sqrt(∇fNorm2)))
+
         opB(s :: struct_algo{T,Y}) = LinearOperators.LinearOperator(n, n, true, true, x -> PartiallySeparableStructure.product_matrix_sps(s.sps, s.tpl_B[Int(s.index)], x) ) :: LinearOperator{Y}
         @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.tpl_f[Int(s_a.index)] norm(s_a.grad,2) s_a.Δ
-        n_g_init = norm(s_a.grad,2)
-        while ( (norm(s_a.grad,2) > s_a.ϵ ) && (norm(s_a.grad,2) > s_a.ϵ * n_g_init)  &&  cpt < cpt_max )
-            update_PSR1!(s_a, opB(s_a))
+
+        while ( (norm(s_a.grad,2) > s_a.ϵ ) && (norm(s_a.grad,2) > s_a.ϵ * ∇fNorm2)  &&  cpt < max_eval )
+            update_PSR1!(s_a, opB(s_a); atol=atol, rtol=cgtol)
             cpt = cpt + 1
             if mod(cpt,500) == 0
                 @printf "\n%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.tpl_f[Int(s_a.index)] norm(s_a.grad,2) s_a.Δ
@@ -234,12 +246,12 @@ B is the LinearOperator needed by the cg (conjuguate-gragient method). struct_al
 
         end
 
-        if cpt < cpt_max
-            println("\n\n\nNous nous somme arrêté grâce à un point stationnaire !!!")
+        if cpt < max_eval
+            println("\n\n\nNous nous somme arrêté grâce à un point stationnaire PSR1 !!!")
             println("cpt,\tf_xk,\tnorm de g,\trayon puis x en dessous ")
             @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n\n\n" cpt s_a.tpl_f[Int(s_a.index)]  norm(s_a.grad,2) s_a.Δ
         else
-            println("\n\n\nNous nous sommes arrêté à cause du nombre d'itération max ")
+            println("\n\n\nNous nous sommes arrêté à cause du nombre d'itération max PSR1")
             println("cpt,\tf_xk,\tnorm de g,\trayon ")
             @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n\n\n" cpt s_a.tpl_f[Int(s_a.index)]  norm(s_a.grad,2) s_a.Δ
         end
@@ -254,24 +266,30 @@ B is the LinearOperator needed by the cg (conjuguate-gragient method). struct_al
 Trust region method using the gradient conjugate method and the Partially Separable Structure of the problem of the parameters. This method use
 SR1 approximation.
 """
-    solver_TR_PSR1!(m :: T; x=Vector{Y}(undef,0) ) where T <: AbstractNLPModel where Y <: Number = _solver_TR_PSR1!(m,x=x )
-    solver_TR_PSR1!(m :: T ) where T <: AbstractNLPModel = _solver_TR_PSR1!(m)
-    solver_TR_PSR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, type=Float64 :: DataType ) where T where Y <: Number = _solver_TR_PSR1!(obj_Expr, n, x_init, trait_expr_tree.is_expr_tree(T), type)
-    _solver_TR_PSR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, :: trait_expr_tree.type_expr_tree, type=Float64 :: DataType) where T where Y <: Number = _solver_TR_PSR1!(obj_Expr, n, x_init, type)
-    _solver_TR_PSR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, :: trait_expr_tree.type_not_expr_tree, type=Float64 :: DataType) where T where Y <: Number = error("mal typé")
-    function _solver_TR_PSR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, type=Float64 :: DataType ) where T where Y <: Number
+    solver_TR_PSR1!(m :: T; kwargs...) where T <: AbstractNLPModel = _solver_TR_PSR1!(m; kwargs... )
+    solver_TR_PSR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, type=Float64 :: DataType; kwargs... ) where T where Y <: Number = _solver_TR_PSR1!(obj_Expr, n, x_init, trait_expr_tree.is_expr_tree(T), type; kwargs...)
+    _solver_TR_PSR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, :: trait_expr_tree.type_expr_tree, type=Float64 :: DataType; kwargs...) where T where Y <: Number = _solver_TR_PSR1!(obj_Expr, n, x_init, type; kwargs...)
+    _solver_TR_PSR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, :: trait_expr_tree.type_not_expr_tree, type=Float64 :: DataType; kwargs...) where T where Y <: Number = error("mal typé")
+    function _solver_TR_PSR1!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, type=Float64 :: DataType; kwargs... ) where T where Y <: Number
         work_obj = trait_expr_tree.transform_to_expr_tree(obj_Expr) :: implementation_expr_tree.t_expr_tree
         s_a = alloc_struct_algo(work_obj, n :: Int, type :: DataType ) :: struct_algo{implementation_expr_tree.t_expr_tree, type}
         init_struct_algo!(s_a, x_init)
+        pointer_cpt = Array{Int}([0])
 
-        cpt = iterations_TR!(s_a)
+        # try
+            cpt = iterations_TR_PSR1!(s_a, pointer_cpt; kwargs...)
+        # catch e
+        #     @show e
+        #     return (zeros(n),s_a,0)
+        # end
 
+        cpt = pointer_cpt[1]
         x_final = s_a.tpl_x[Int(s_a.index)]
         return (x_final, s_a, cpt) :: Tuple{Vector{Y}, struct_algo{implementation_expr_tree.t_expr_tree, type}, Int}
     end
 
-    function _solver_TR_PSR1_2!(m :: Z, obj_Expr :: T, n :: Int, type:: DataType, x_init :: AbstractVector{Y}) where T where Y where Z <: AbstractNLPModel
-        Δt = @timed ((x_final, s_a, cpt) = solver_TR_PSR1!(obj_Expr, n, x_init, type))
+    function _solver_TR_PSR1_2!(m :: Z, obj_Expr :: T, n :: Int, type:: DataType, x_init :: AbstractVector{Y}; kwargs...) where T where Y where Z <: AbstractNLPModel
+        Δt = @timed ((x_final, s_a, cpt) = solver_TR_PSR1!(obj_Expr, n, x_init, type; kwargs...))
         status= :unknown
         return GenericExecutionStats(status, m,
                                solution = x_final,
@@ -283,21 +301,16 @@ SR1 approximation.
                               )
     end
 
-    function _solver_TR_PSR1!( model_JUMP :: T; x= Vector{Y}(undef,0)) where T <: AbstractNLPModel where Y <: Number
 
+    function _solver_TR_PSR1!( model_JUMP :: T; x :: AbstractVector=copy(model_JUMP.meta.x0), kwargs...) where T <: AbstractNLPModel where Y <: Number
         model = model_JUMP.eval.m
         evaluator = JuMP.NLPEvaluator(model)
         MathOptInterface.initialize(evaluator, [:ExprGraph])
         obj_Expr = MathOptInterface.objective_expr(evaluator) :: Expr
         n = model.moi_backend.model_cache.model.num_variables_created
-        if isempty(x)
-            x0 :: AbstractVector=copy(model_JUMP.meta.x0)
-        else
-            x0 = copy(x)
-        end
-        _solver_TR_PSR1_2!(model_JUMP, obj_Expr, n, typeof(x0[1]), x0)
+        T2 = eltype(x)
+        _solver_TR_PSR1_2!(model_JUMP, obj_Expr, n, T2, x; kwargs...)
     end
-
 
 
 #=
@@ -318,11 +331,14 @@ P-BFGS
 This function perform a step of a Trust-Region method using a conjuguate-gragient method to solve the sub-problem of the Trust-Region.
 B is the LinearOperator needed by the cg (conjuguate-gragient method). struct_algo stored all the data relative to the problem and is modified if step is taken .
 """
-    function update_PBGS!(s_a :: struct_algo{T,Y}, B :: LinearOperator{Y}) where T where Y <: Number
-        # atol = sqrt(eps(Float64))
-        # rtol = sqrt(eps(Float64))
-        # (s_k, info) = Krylov.cg(B, - s_a.grad, atol=atol, rtol=rtol, radius = s_a.Δ, itmax=max(2*s_a.sps.n_var,50)) :: Tuple{Array{Y,1},Krylov.SimpleStats{Y}}
-        (s_k, info) = Krylov.cg(B, - s_a.grad, radius = s_a.Δ) :: Tuple{Array{Y,1},Krylov.SimpleStats{Y}}
+    function update_PBGS!(s_a :: struct_algo{T,Y}, B :: LinearOperator{Y};
+        atol :: Real=√eps(s_a.tpl_x[Int(s_a.index)]),
+        rtol :: Real=√eps(s_a.tpl_x[Int(s_a.index)]),
+        kwawrgs...
+        ) where T where Y <: Number
+
+        n = s_a.sps.n_var
+        (s_k, info) = Krylov.cg(B, - s_a.grad,atol=atol, rtol=rtol, radius = s_a.Δ, itmax=max(2 * n, 50)) :: Tuple{Array{Y,1},Krylov.SimpleStats{Y}}
         (ρₖ, fxₖ₊₁) = compute_ratio(s_a, s_k :: Vector{Y})
         if ρₖ > s_a.η #= on accepte le nouveau point =#
             s_a.index = other_index(s_a)
@@ -348,23 +364,32 @@ B is the LinearOperator needed by the cg (conjuguate-gragient method). struct_al
         else  #= cas ou nous faisons ni une bonne ni une mauvais approximation=#
             s_a.Δ = s_a.Δ
         end
-        # @show norm( PartiallySeparableStructure.product_matrix_sps(s_a.sps,s_a.tpl_B[Int(s_a.index)], s_a.tpl_x[Int(s_a.index)]) - s_a.grad,2)
-        # y_entier = PartiallySeparableStructure.build_gradient(s_a.sps, s_a.y)
-        # @show norm( PartiallySeparableStructure.product_matrix_sps(s_a.sps,s_a.tpl_B[Int(s_a.index)], s_k) - y_entier,2)
     end
 
 
     #fonction traitant le coeur de l'algorithme, réalise principalement la boucle qui incrémente un compteur et met à jour la structure d'algo par effet de bord
     # De plus on effectue tous les affichage par itération dans cette fonction raison des printf
-    function iterations_TR_PBGFS!(s_a :: struct_algo{T,Y}, cpt_max = 200000) where T where Y <: Number
+    iterations_TR_PBGFS!(s_a :: struct_algo{T,Y}, vec_cpt :: Vector{Int}; kwargs...) where T where Y <: Number = (vec_cpt[1] = iterations_TR_PBGFS!(s_a; kwargs...))
+    function iterations_TR_PBGFS!(s_a :: struct_algo{T,Y};
+            max_eval :: Int=10000,
+            atol :: Real=√eps(eltype(s_a.tpl_x[Int(s_a.index)])),
+            rtol :: Real=√eps(eltype(s_a.tpl_x[Int(s_a.index)])),
+            kwargs... )  where T where Y <: Number
+
         cpt = 1 :: Int64
         n = s_a.sps.n_var
-        # opB(s_a) = LinearOperators.LinearOperator(n, n, true, true, x -> PartiallySeparableStructure.product_matrix_sps(s_a.sps, s_a.tpl_B[s_a.index], x) )
+
+        T2 = eltype(s_a.tpl_x[Int(s_a.index)])
+        ∇f₀ = s_a.grad
+        ∇fNorm2 = nrm2(n, ∇f₀)
+        cgtol = one(T2)  # Must be ≤ 1.
+        cgtol = max(rtol, min(T2(0.1), 9 * cgtol / 10, sqrt(∇fNorm2)))
+
         opB(s :: struct_algo{T,Y}) = LinearOperators.LinearOperator(n, n, true, true, x -> PartiallySeparableStructure.product_matrix_sps(s.sps, s.tpl_B[Int(s.index)], x) ) :: LinearOperator{Y}
-        @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.tpl_f[Int(s_a.index)] norm(s_a.grad,2) s_a.Δ
-        n_g_init = norm(s_a.grad,2)
-        while ( (norm(s_a.grad,2) > s_a.ϵ ) && (norm(s_a.grad,2) > s_a.ϵ * n_g_init)  &&  cpt < cpt_max )
-            update_PBGS!(s_a, opB(s_a))
+        @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.tpl_f[Int(s_a.index)] ∇fNorm2 s_a.Δ
+
+        while ( (norm(s_a.grad,2) > s_a.ϵ ) && (norm(s_a.grad,2) > s_a.ϵ * ∇fNorm2)  &&  cpt < max_eval )
+            update_PBGS!(s_a, opB(s_a); atol=atol, rtol=cgtol)
             cpt = cpt + 1
             if mod(cpt,500) == 0
                 @printf "\n%3d \t%8.1e \t%7.1e \t%7.1e \n" cpt s_a.tpl_f[Int(s_a.index)] norm(s_a.grad,2) s_a.Δ
@@ -372,12 +397,12 @@ B is the LinearOperator needed by the cg (conjuguate-gragient method). struct_al
 
         end
 
-        if cpt < cpt_max
-            println("\n\n\nNous nous somme arrêté grâce à un point stationnaire !!!")
+        if cpt < max_eval
+            println("\n\n\nNous nous somme arrêté grâce à un point stationnaire PBFGS !!!")
             println("cpt,\tf_xk,\tnorm de g,\trayon puis x en dessous ")
             @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n\n\n" cpt s_a.tpl_f[Int(s_a.index)]  norm(s_a.grad,2) s_a.Δ
         else
-            println("\n\n\nNous nous sommes arrêté à cause du nombre d'itération max ")
+            println("\n\n\nNous nous sommes arrêté à cause du nombre d'itération max PBFGS")
             println("cpt,\tf_xk,\tnorm de g,\trayon ")
             @printf "%3d \t%8.1e \t%7.1e \t%7.1e \n\n\n" cpt s_a.tpl_f[Int(s_a.index)]  norm(s_a.grad,2) s_a.Δ
         end
@@ -391,26 +416,29 @@ B is the LinearOperator needed by the cg (conjuguate-gragient method). struct_al
     Trust region method using the gradient conjugate method and the Partially Separable Structure of the model from the parameters. This method use
     BFGS approximation.
     """
-        solver_TR_PBFGS!(m :: T; x=Vector{Any}(undef,0) ) where T <: AbstractNLPModel = _solver_TR_PBFGS!(m,x=x )
-        solver_TR_PBFGS!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, type=Float64 :: DataType ) where T where Y <: Number = _solver_TR_PBFGS!(obj_Expr, n, x_init, trait_expr_tree.is_expr_tree(T), type)
-        _solver_TR_PBFGS!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, :: trait_expr_tree.type_expr_tree, type=Float64 :: DataType) where T where Y <: Number = _solver_TR_PBFGS!(obj_Expr, n, x_init, type)
-        _solver_TR_PBFGS!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, :: trait_expr_tree.type_not_expr_tree, type=Float64 :: DataType) where T where Y <: Number = error("mal typé")
-        function _solver_TR_PBFGS!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, type=Float64 :: DataType ) where T where Y <: Number
+        solver_TR_PBFGS!(m :: T;  kwargs... ) where T <: AbstractNLPModel = _solver_TR_PBFGS!(m; kwargs... )
+        solver_TR_PBFGS!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, type=Float64 :: DataType ; kwargs...) where T where Y <: Number = _solver_TR_PBFGS!(obj_Expr, n, x_init, trait_expr_tree.is_expr_tree(T), type; kwargs...)
+        _solver_TR_PBFGS!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, :: trait_expr_tree.type_expr_tree, type=Float64 :: DataType; kwargs...) where T where Y <: Number = _solver_TR_PBFGS!(obj_Expr, n, x_init, type; kwargs...)
+        _solver_TR_PBFGS!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, :: trait_expr_tree.type_not_expr_tree, type=Float64 :: DataType; kwargs...) where T where Y <: Number = error("mal typé")
+        function _solver_TR_PBFGS!(obj_Expr :: T, n :: Int, x_init :: AbstractVector{Y}, type=Float64 :: DataType; kwargs... ) where T where Y <: Number
             work_obj = trait_expr_tree.transform_to_expr_tree(obj_Expr) :: implementation_expr_tree.t_expr_tree
             s_a = alloc_struct_algo(work_obj, n :: Int, type :: DataType ) :: struct_algo{implementation_expr_tree.t_expr_tree, type}
             init_struct_algo!(s_a, x_init)
-
-            try
-                cpt = iterations_TR_PBGFS!(s_a)
-            catch
-                return s_a
-            end
+            pointer_cpt = Array{Int}([0])
+            # try
+                cpt = iterations_TR_PBGFS!(s_a, pointer_cpt; kwargs...)
+            # catch e
+            #     @show e
+            #     return (zeros(n),s_a,-1)
+            # end
+            cpt = pointer_cpt[1]
             x_final = s_a.tpl_x[Int(s_a.index)]
             return (x_final, s_a, cpt) :: Tuple{Vector{Y}, struct_algo{implementation_expr_tree.t_expr_tree, type}, Int}
         end
 
-        function _solver_TR_PBFGS_2!(m :: Z, obj_Expr :: T, n :: Int, type:: DataType, x_init :: AbstractVector{Y}) where T where Y where Z <: AbstractNLPModel
-            Δt = @timed ((x_final, s_a, cpt) = solver_TR_PBFGS!(obj_Expr, n, x_init, type))
+
+        function _solver_TR_PBFGS_2!(m :: Z, obj_Expr :: T, n :: Int, type:: DataType, x_init :: AbstractVector{Y}; kwargs...) where T where Y where Z <: AbstractNLPModel
+            Δt = @timed ((x_final, s_a, cpt) = solver_TR_PBFGS!(obj_Expr, n, x_init, type; kwargs...))
             status= :unknown
             return GenericExecutionStats(status, m,
                                    solution = x_final,
@@ -422,18 +450,14 @@ B is the LinearOperator needed by the cg (conjuguate-gragient method). struct_al
                                   )
         end
 
-    function _solver_TR_PBFGS!( model_JUMP :: T; x= Vector{Y}(undef,0)) where T <: AbstractNLPModel where Y <: Number
+    function _solver_TR_PBFGS!( model_JUMP :: T; x :: AbstractVector=copy(model_JUMP.meta.x0), kwargs...) where T <: AbstractNLPModel where Y <: Number
             model = model_JUMP.eval.m
             evaluator = JuMP.NLPEvaluator(model)
             MathOptInterface.initialize(evaluator, [:ExprGraph])
             obj_Expr = MathOptInterface.objective_expr(evaluator) :: Expr
             n = model.moi_backend.model_cache.model.num_variables_created
-            if isempty(x)
-                x0 :: AbstractVector=copy(model_JUMP.meta.x0)
-            else
-                x0 = copy(x)
-            end
-            _solver_TR_PBFGS_2!(model_JUMP, obj_Expr, n, typeof(x0[1]), x0)
+            T2 = eltype(x)
+            _solver_TR_PBFGS_2!(model_JUMP, obj_Expr, n, T2, x; kwargs...)
         end
 
         # function _solver_TR_PBFGS!( model_JUMP :: T ; kwargs...) where T <: AbstractNLPModel

@@ -7,6 +7,9 @@ function create_chained_Powel_JuMP_Model(n :: Int)
     evaluator = JuMP.NLPEvaluator(m)
     MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
     obj = MathOptInterface.objective_expr(evaluator)
+    vec_var = JuMP.all_variables(m)
+    vec_value = create_initial_point_chained_Powel(n)
+    JuMP.set_start_value.(vec_var, vec_value)
     return (m, evaluator,obj)
 end
 
