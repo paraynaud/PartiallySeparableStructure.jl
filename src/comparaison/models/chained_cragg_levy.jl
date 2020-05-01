@@ -9,7 +9,7 @@ and obj is the Expr that describe the objective function of m.
 function create_chained_cragg_levy_JuMP_Model(n :: Int)
     m = Model()
     @variable(m, x[1:n])
-    @NLobjective(m, Min, sum( exp(x[Integer(2*j-1)])^4 + 100*(x[Integer(2*j)] - x[Integer(2*j+1)])^6 + (tan(x[Integer(2*j)]+1 - x[Integer(2*j+2)]))^4 + x[Integer(2*j-1)]^8 + (x[Integer(2*j+2)]-1)^2 for j in 1:((n-2)/2) ) ) #chained powel
+    @NLobjective(m, Min, sum( exp(x[2*j-1])^4 + 100*(x[2*j] - x[2*j+1])^6 + (tan(x[2*j+1]) - x[2*j+2])^4 + x[2*j-1]^8 + (x[2*j+2]-1)^2 for j in 1:Integer((n-2)/2) ) ) #chained powel
     evaluator = JuMP.NLPEvaluator(m)
     MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
     obj = MathOptInterface.objective_expr(evaluator)

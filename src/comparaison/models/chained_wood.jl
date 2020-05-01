@@ -8,7 +8,7 @@ function create_chained_wood_JuMP_Model(n :: Int)
     σ = 10e-5
     m = Model()
     @variable(m, x[1:n])
-    @NLobjective(m, Min, sum( 100 * (x[Integer(2*j-1)]^2 - x[Integer(2*j)])^2 + (x[Integer(2*j-1)] - 1)^2 + 90 * (x[Integer(2*j+1)]^2 - x[Integer(2*j+2)])^2 + (x[Integer(2*j+1)] -1)^2 + 10 * (x[Integer(2*j)] + x[Integer(2*j+2)] - 2)^2 + (x[Integer(2*j)] - x[Integer(2*j+2)])^2 * 0.1  for j in 1:((n-2)/2) )) #rosenbrock function
+    @NLobjective(m, Min, sum( 100 * (x[2*j-1]^2 - x[2*j])^2 + (x[2*j-1] - 1)^2 + 90 * (x[2*j+1]^2 - x[2*j+2])^2 + (x[2*j+1] -1)^2 + 10 * (x[2*j] + x[2*j+2] - 2)^2 + (x[2*j] - x[2*j+2])^2 * 0.1  for j in 1:Integer((n-2)/2) )) #rosenbrock function
     evaluator = JuMP.NLPEvaluator(m)
     MathOptInterface.initialize(evaluator, [:ExprGraph, :Hess])
     obj = MathOptInterface.objective_expr(evaluator)
@@ -62,7 +62,7 @@ end
 # end
 #
 #
-# (m,evaluator,obj_expr) = create_chained_wood_JuMP_Model(500)
+(m,evaluator,obj_expr) = create_chained_wood_JuMP_Model(8)
 # @profview cpt,s = My_SPS_Model_Module.solver_TR_PSR1!(obj_expr, 500, create_initial_point_chained_wood(500))
 #
 # println("fin de la boucle")

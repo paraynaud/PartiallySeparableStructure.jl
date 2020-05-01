@@ -105,7 +105,7 @@ println(" \n\n génération des problemes")
 n_array = [100,500,1000,2000,5000]
 # n_array = [10,20,30]
 # n_array = [1000,2000]
-# n_array = [100,200]
+n_array = [100,200]
 problems = create_all_problems(n_array)
 
 # res = My_SPS_Model_Module.solver_TR_PBFGS!.(problems)
@@ -128,7 +128,7 @@ solver_v2 = Dict{Symbol,Function}(
 
 const atol = 1.0e-5
 const rtol = 1.0e-6
-const max_time = 1.0
+const max_time = 300.0
 
 
 #= Lancement du benchmark sur les problèmes générés, sur les solvers défini dans la variable solvers =#
@@ -151,7 +151,7 @@ markdown_table(stdout, stats[:trunk_lsr1], cols=[ :id, :name, :nvar, :elapsed_ti
 
 
 
-# error("fin")
+error("fin")
 #= Ecriture des résultats dans un fichier au format markdown=#
 println("écriture des résultats markdown")
 location_md = string("src/comparaison/results/result_bench_md.txt")
