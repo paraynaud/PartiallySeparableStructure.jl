@@ -1,7 +1,7 @@
 module implementation_L_SR1
 
     using JuMP, MathOptInterface, LinearAlgebra, SparseArrays#, NLPModelsjuMP
-    using Test, BenchmarkTools, ProfileView, InteractiveUtils, Printf
+    using Test, BenchmarkTools, InteractiveUtils, Printf
 
 
     # include("../../src/ordered_include.jl")
