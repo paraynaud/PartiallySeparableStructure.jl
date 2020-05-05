@@ -1,4 +1,4 @@
-using Test, Revise
+using Test
 using InteractiveUtils
 using MathOptInterface, JuMP
 using BenchmarkTools

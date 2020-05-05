@@ -2,7 +2,7 @@ using JuMP, MathOptInterface, LinearAlgebra, SparseArrays
 using Test, BenchmarkTools, InteractiveUtils
 # using ProfileView
 
-include("../../src/ordered_include.jl")
+# include("../../src/ordered_include.jl")
 
 using ..PartiallySeparableStructure
 

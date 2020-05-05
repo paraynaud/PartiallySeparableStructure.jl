@@ -1,6 +1,6 @@
 include("../../src/ordered_include.jl")
 
-using Test, Revise
+using Test
 using InteractiveUtils
 using MathOptInterface, JuMP
 using BenchmarkTools
