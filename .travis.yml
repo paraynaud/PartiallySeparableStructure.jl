@@ -5,7 +5,7 @@ os:
   - linux
 
 julia:
-  - 1.3
+  - 1.3.1
 
 
 # # Uncomment the following lines to allow failures on nightly julia
@@ -33,6 +33,6 @@ jobs:
       script:
         - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();
                                     Pkg.develop(PackageSpec(path=pwd()))'
-        # bas- julia --project=docs/ docs/make.jl
-        - julia docs/make.jl
+        - julia --project=docs/ docs/make.jl
+        # - julia docs/make.jl
 after_success: skip
