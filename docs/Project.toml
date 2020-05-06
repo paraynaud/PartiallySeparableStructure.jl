@@ -2,7 +2,6 @@
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 DocumenterTools = "35a29f4d-8980-5a13-9543-d66fff28ecb8"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 JSOSolvers = "10dff2fc-5484-5881-a0e0-c90441020f8a"
