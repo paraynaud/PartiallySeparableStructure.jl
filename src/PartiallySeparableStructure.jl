@@ -1,4 +1,5 @@
 module PartiallySeparableStructure
+    include("pre_order_include.jl")
 
     using ..implementation_type_expr
     using ..algo_expr_tree, ..trait_expr_tree, ..trait_type_expr, ..M_evaluation_expr_tree
@@ -434,7 +435,7 @@ the update, we need the grad_vector y and the vector s. B, B_1 and y use structu
             interet = check_Inf_Nan(B.arr[i].elmt_hess)
             if interet != nothing
                 push!(res, (i,interet))
-            end 
+            end
         end
         return res
     end
