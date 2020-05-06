@@ -1,8 +1,8 @@
 using Documenter
 
 # include("../src/ordered_include.jl")
-
-using PartiallySeparableStructure.jl
+#
+# using .PartiallySeparableStructure
 
 
 makedocs(modules = [PartiallySeparableStructure],
