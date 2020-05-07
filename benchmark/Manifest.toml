@@ -228,9 +228,9 @@ version = "0.3.0"
 
 [[FFMPEG_jll]]
 deps = ["Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "LAME_jll", "LibVPX_jll", "Libdl", "Ogg_jll", "OpenSSL_jll", "Opus_jll", "Pkg", "Zlib_jll", "libass_jll", "libfdk_aac_jll", "libvorbis_jll", "x264_jll", "x265_jll"]
-git-tree-sha1 = "814bf7865005bee373521cb49cad46182bec53b4"
+git-tree-sha1 = "0fa07f43e5609ea54848b82b4bb330b250e9645b"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
-version = "4.1.0+2"
+version = "4.1.0+3"
 
 [[FastClosures]]
 git-tree-sha1 = "acebe244d53ee1b461970f8910c235b259e772ef"
@@ -707,7 +707,7 @@ version = "1.0.3"
 
 [[PartiallySeparableStructure]]
 deps = ["BenchmarkTools", "Documenter", "ForwardDiff", "InteractiveUtils", "JSOSolvers", "JuMP", "Krylov", "LinearAlgebra", "LinearOperators", "MathOptInterface", "NLPModels", "NLPModelsJuMP", "Printf", "ProfileView", "ReverseDiff", "Revise", "SolverBenchmark", "SolverTools", "SparseArrays", "StaticArrays", "Test"]
-git-tree-sha1 = "8bcb8c9a58745facc1f53351f788b4a7e26eebc9"
+git-tree-sha1 = "7b58ecc7fe459dabae5de89a603a2011acf7e4fb"
 repo-rev = "master"
 repo-url = "https://github.com/paraynaud/PartiallySeparableStructure.jl.git"
 uuid = "43463d34-ec20-11e9-07e3-7fcf08a3a70b"
