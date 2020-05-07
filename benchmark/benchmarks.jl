@@ -1,7 +1,7 @@
 using BenchmarkTools
 
 
-using .PartiallySeparableStructure
+using PartiallySeparableStructure
 include("../src/comparaison/models/rosenbrock.jl")
 
 const SUITE = BenchmarkGroup()
