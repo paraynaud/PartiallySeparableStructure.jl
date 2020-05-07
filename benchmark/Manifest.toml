@@ -707,7 +707,7 @@ version = "1.0.3"
 
 [[PartiallySeparableStructure]]
 deps = ["BenchmarkTools", "Documenter", "ForwardDiff", "InteractiveUtils", "JSOSolvers", "JuMP", "Krylov", "LinearAlgebra", "LinearOperators", "MathOptInterface", "NLPModels", "NLPModelsJuMP", "Printf", "ProfileView", "ReverseDiff", "Revise", "SolverBenchmark", "SolverTools", "SparseArrays", "StaticArrays", "Test"]
-git-tree-sha1 = "abde85e796e6347b9d166bac0e51f18365b65062"
+git-tree-sha1 = "8bcb8c9a58745facc1f53351f788b4a7e26eebc9"
 repo-rev = "master"
 repo-url = "https://github.com/paraynaud/PartiallySeparableStructure.jl.git"
 uuid = "43463d34-ec20-11e9-07e3-7fcf08a3a70b"

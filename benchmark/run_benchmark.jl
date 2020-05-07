@@ -4,7 +4,7 @@ using PkgBenchmark
 import PartiallySeparableStructure
 
 commit = benchmarkpkg("PartiallySeparableStructure")  # current state of repository , script="../benchmark/benchmark.jl"
-# pathof(PartiallySeparableStructure) , script="/benchmark/benchmark.jl"
+# pathof(PartiallySeparableStructure) , script="/benchmark/benchmarks.jl"
 master = benchmarkpkg("PartiallySeparableStructure.jl", "master")
 
 judgement = judge(commit, master)
