@@ -1,5 +1,5 @@
-include("pre_order_include.jl")
 module PartiallySeparableStructure
+    include("pre_order_include.jl")
 
     using ..implementation_type_expr
     using ..algo_expr_tree, ..trait_expr_tree, ..trait_type_expr, ..M_evaluation_expr_tree
@@ -489,60 +489,60 @@ end # module
 
 
 
-
-"""
-Sans parralélisation le code suivant et sans le typage ajouté:
-
-using ..PartiallySeparableStructure
-m = Model()
-n_x = 1000
-@variable(m, x[1:n_x])
-@NLobjective(m, Min, sum( x[j]^2 * x[j+1] for j in 1:n_x-1 ) + x[1]*5 )
-# @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]))
-eval_test = JuMP.NLPEvaluator(m)
-MathOptInterface.initialize(eval_test, [:ExprGraph])
-obj_o = MathOptInterface.objective_expr(eval_test)
-obj = copy(obj_o)
-
-@benchmark PartiallySeparableStructure.deduct_partially_separable_structure(obj_o, n_x)
-
-donne :
-BenchmarkTools.Trial:
-  memory estimate:  24.66 MiB
-  allocs estimate:  91298
-  --------------
-  minimum time:     8.254 ms (0.00% GC)
-  median time:      15.419 ms (0.00% GC)
-  mean time:        22.168 ms (35.00% GC)
-  maximum time:     291.164 ms (93.78% GC)
-  --------------
-  samples:          227
-  evals/sample:     1
- ------------------------------------------------------------------------------------------------
-Toujours sans parallélisation mais avec le typage on a :
-BenchmarkTools.Trial:
-  memory estimate:  24.57 MiB
-  allocs estimate:  87545
-  --------------
-  minimum time:     11.650 ms (0.00% GC)
-  median time:      15.854 ms (0.00% GC)
-  mean time:        18.443 ms (17.74% GC)
-  maximum time:     313.853 ms (94.39% GC)
-  --------------
-  samples:          271
-  evals/sample:     1
-------------------------------------------------------------------------------------------------
-
-
-BenchmarkTools.Trial:
-  memory estimate:  15.75 MiB
-  allocs estimate:  54560
-  --------------
-  minimum time:     7.658 ms (0.00% GC)
-  median time:      9.531 ms (0.00% GC)
-  mean time:        12.812 ms (24.83% GC)
-  maximum time:     439.355 ms (95.95% GC)
-  --------------
-  samples:          390
-  evals/sample:     1
- """
+# 
+# """
+# Sans parralélisation le code suivant et sans le typage ajouté:
+#
+# using ..PartiallySeparableStructure
+# m = Model()
+# n_x = 1000
+# @variable(m, x[1:n_x])
+# @NLobjective(m, Min, sum( x[j]^2 * x[j+1] for j in 1:n_x-1 ) + x[1]*5 )
+# # @NLobjective(m, Min, sum( (x[j] * x[j+1]   for j in 1:n_x-1  ) ) + sin(x[1]))
+# eval_test = JuMP.NLPEvaluator(m)
+# MathOptInterface.initialize(eval_test, [:ExprGraph])
+# obj_o = MathOptInterface.objective_expr(eval_test)
+# obj = copy(obj_o)
+#
+# @benchmark PartiallySeparableStructure.deduct_partially_separable_structure(obj_o, n_x)
+#
+# donne :
+# BenchmarkTools.Trial:
+#   memory estimate:  24.66 MiB
+#   allocs estimate:  91298
+#   --------------
+#   minimum time:     8.254 ms (0.00% GC)
+#   median time:      15.419 ms (0.00% GC)
+#   mean time:        22.168 ms (35.00% GC)
+#   maximum time:     291.164 ms (93.78% GC)
+#   --------------
+#   samples:          227
+#   evals/sample:     1
+#  ------------------------------------------------------------------------------------------------
+# Toujours sans parallélisation mais avec le typage on a :
+# BenchmarkTools.Trial:
+#   memory estimate:  24.57 MiB
+#   allocs estimate:  87545
+#   --------------
+#   minimum time:     11.650 ms (0.00% GC)
+#   median time:      15.854 ms (0.00% GC)
+#   mean time:        18.443 ms (17.74% GC)
+#   maximum time:     313.853 ms (94.39% GC)
+#   --------------
+#   samples:          271
+#   evals/sample:     1
+# ------------------------------------------------------------------------------------------------
+#
+#
+# BenchmarkTools.Trial:
+#   memory estimate:  15.75 MiB
+#   allocs estimate:  54560
+#   --------------
+#   minimum time:     7.658 ms (0.00% GC)
+#   median time:      9.531 ms (0.00% GC)
+#   mean time:        12.812 ms (24.83% GC)
+#   maximum time:     439.355 ms (95.95% GC)
+#   --------------
+#   samples:          390
+#   evals/sample:     1
+#  """

@@ -114,47 +114,47 @@ to the BFGS update method.
 
 end
 
-""" Evolution de Benchmark sur update SR1
-n = 5
-Avec @fastmaths
-    BenchmarkTools.Trial:
-      memory estimate:  1.64 KiB
-      allocs estimate:  9
-      --------------
-      minimum time:     477.041 ns (0.00% GC)
-      median time:      895.413 ns (0.00% GC)
-      mean time:        1.007 μs (0.00% GC)
-      maximum time:     3.291 μs (0.00% GC)
-      --------------
-      samples:          10000
-      evals/sample:     196
-
-avec @inbounds
-    BenchmarkTools.Trial:
-      memory estimate:  1.64 KiB
-      allocs estimate:  9
-      --------------
-      minimum time:     493.934 ns (0.00% GC)
-      median time:      889.399 ns (0.00% GC)
-      mean time:        1.018 μs (0.00% GC)
-      maximum time:     3.396 μs (0.00% GC)
-      --------------
-      samples:          10000
-      evals/sample:     198
-
-sans les @inbounds
-    BenchmarkTools.Trial:
-      memory estimate:  1.64 KiB
-      allocs estimate:  9
-      --------------
-      minimum time:     515.099 ns (0.00% GC)
-      median time:      952.078 ns (0.00% GC)
-      mean time:        1.038 μs (0.00% GC)
-      maximum time:     3.443 μs (0.00% GC)
-      --------------
-      samples:          10000
-      evals/sample:     192
-"""
+# """ Evolution de Benchmark sur update SR1
+# n = 5
+# Avec @fastmaths
+#     BenchmarkTools.Trial:
+#       memory estimate:  1.64 KiB
+#       allocs estimate:  9
+#       --------------
+#       minimum time:     477.041 ns (0.00% GC)
+#       median time:      895.413 ns (0.00% GC)
+#       mean time:        1.007 μs (0.00% GC)
+#       maximum time:     3.291 μs (0.00% GC)
+#       --------------
+#       samples:          10000
+#       evals/sample:     196
+#
+# avec @inbounds
+#     BenchmarkTools.Trial:
+#       memory estimate:  1.64 KiB
+#       allocs estimate:  9
+#       --------------
+#       minimum time:     493.934 ns (0.00% GC)
+#       median time:      889.399 ns (0.00% GC)
+#       mean time:        1.018 μs (0.00% GC)
+#       maximum time:     3.396 μs (0.00% GC)
+#       --------------
+#       samples:          10000
+#       evals/sample:     198
+#
+# sans les @inbounds
+#     BenchmarkTools.Trial:
+#       memory estimate:  1.64 KiB
+#       allocs estimate:  9
+#       --------------
+#       minimum time:     515.099 ns (0.00% GC)
+#       median time:      952.078 ns (0.00% GC)
+#       mean time:        1.038 μs (0.00% GC)
+#       maximum time:     3.443 μs (0.00% GC)
+#       --------------
+#       samples:          10000
+#       evals/sample:     192
+# """
 
 
 # a utiliser setproperty!, get_property, getindex, set_index!.
