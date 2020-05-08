@@ -2,7 +2,7 @@ using BenchmarkTools
 
 
 using PartiallySeparableStructure
-using ..implementation_type_expr, ..implementation_expr_tree, ..trait_expr_tree
+# using ..implementation_type_expr, ..implementation_expr_tree, ..trait_expr_tree
 include("../src/comparaison/models/rosenbrock.jl")
 
 const SUITE = BenchmarkGroup()
