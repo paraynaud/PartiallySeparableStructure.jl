@@ -114,7 +114,6 @@ evalutate the partially separable function f = ∑fᵢ, stored in the sps struct
 f(x) = ∑fᵢ(xᵢ), so we compute independently each fᵢ(xᵢ) and we return the sum.
 """
     function evaluate_SPS(sps :: SPS{T}, x :: AbstractVector{Y} ) where T where Y <: Number
-        sleep(0.1)
         # on utilise un mapreduce de manière à ne pas allouer un tableau temporaire, on utilise l'opérateur + pour le reduce car cela correspond
         # à la définition des fonctions partiellement séparable.
         @inbounds @fastmath mapreduce(elmt_fun :: element_function{T} -> M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun, view(x, elmt_fun.used_variable)) :: Y, + , sps.structure :: Vector{element_function{T}})
