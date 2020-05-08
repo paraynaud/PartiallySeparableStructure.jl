@@ -40,6 +40,8 @@ module PartiallySeparableStructure
     end
 
 
+expr_tree_from_Expr(obj :: Expr) = trait_expr_tree.transform_to_expr_tree(obj)
+
 """
     deduct_partially_separable_structure(expr_tree, n)
 

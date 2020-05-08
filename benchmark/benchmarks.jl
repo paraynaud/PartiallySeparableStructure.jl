@@ -17,7 +17,7 @@ SUITE["SPS_function"] = BenchmarkGroup()
 
 for p in problems
   (m_ros, evaluator, obj_ros) = p
-  obj_ros_expr_tree = trait_expr_tree.transform_to_expr_tree(obj_ros)
+  obj_ros_expr_tree = PartiallySeparableStructure.expr_tree_from_Expr(obj_ros)
 
   n = m_ros.moi_backend.model_cache.model.num_variables_created
   SPS_ros = PartiallySeparableStructure.deduct_partially_separable_structure(obj_ros_expr_tree, n)
