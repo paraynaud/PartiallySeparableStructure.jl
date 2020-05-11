@@ -31,9 +31,9 @@ SUITE["L-SR1"] = BenchmarkGroup()
 SUITE["P-SR1"] = BenchmarkGroup()
 SUITE["P-BFGS"] = BenchmarkGroup()
 
-const atol = 1.0e-5
-const rtol = 1.0e-6
-const max_time = 300.0
+atol = 1.0e-5
+rtol = 1.0e-6
+max_time = 300.0
 max_eval = 5000
 
 for i in 1:length(problems)
