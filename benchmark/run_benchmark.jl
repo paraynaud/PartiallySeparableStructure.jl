@@ -17,10 +17,11 @@
 # export_markdown("master.md", master)
 # export_markdown("commit.md", commit)
 
+# judgement = judge("PartiallySeparableStructure", "master")
 
 using PkgBenchmark
 import PartiallySeparableStructure
 commit = benchmarkpkg("PartiallySeparableStructure")
-master = benchmarkpkg("PartiallySeparableStructure", master)
+master = benchmarkpkg("PartiallySeparableStructure", "master")
 judgement = judge(master, commit)
 export_markdown("judgement.md", judgement)
