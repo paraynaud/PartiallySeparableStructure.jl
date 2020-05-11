@@ -37,10 +37,6 @@ for p in problems
 
   SUITE["SPS_function"]["Hessien ros $n var"] = @benchmarkable PartiallySeparableStructure.struct_hessian!($SPS_ros, $x, $H)
 
-  #calcull du produit hessien vecteur
-  SUITE["SPS_function"]["Hv ros $n var"] = @benchmarkable PartiallySeparableStructure.product_matrix_sps($SPS_ros, $H, $x)
-
-
 
 end
 
