@@ -17,11 +17,12 @@
 # export_markdown("master.md", master)
 # export_markdown("commit.md", commit)
 
-# judgement = judge("PartiallySeparableStructure", "master")
 
 using PkgBenchmark
 import PartiallySeparableStructure
-commit = benchmarkpkg("PartiallySeparableStructure")
-master = benchmarkpkg("PartiallySeparableStructure", "master")
+commit = benchmarkpkg("PartiallySeparableStructure")  #dernier commit sur la branche sur laquelle on se trouve
+master = benchmarkpkg("PartiallySeparableStructure", "master") # branche master
 judgement = judge(master, commit)
+# judgement = judge("PartiallySeparableStructure", "master")
 export_markdown("judgement.md", judgement)
+1
