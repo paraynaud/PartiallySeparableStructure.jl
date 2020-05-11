@@ -450,7 +450,8 @@ B is the LinearOperator needed by the cg (conjuguate-gragient method). struct_al
                                   )
         end
 
-    function _solver_TR_PBFGS!( model_JUMP :: T; x :: AbstractVector=copy(model_JUMP.meta.x0), kwargs...) where T <: AbstractNLPModel where Y <: Number
+
+        function _solver_TR_PBFGS!( model_JUMP :: T; x :: AbstractVector=copy(model_JUMP.meta.x0), kwargs...) where T <: AbstractNLPModel where Y <: Number
             model = model_JUMP.eval.m
             evaluator = JuMP.NLPEvaluator(model)
             MathOptInterface.initialize(evaluator, [:ExprGraph])
@@ -460,26 +461,9 @@ B is the LinearOperator needed by the cg (conjuguate-gragient method). struct_al
             _solver_TR_PBFGS_2!(model_JUMP, obj_Expr, n, T2, x; kwargs...)
         end
 
-        # function _solver_TR_PBFGS!( model_JUMP :: T ; kwargs...) where T <: AbstractNLPModel
-        #     getkwargs(kwargs)
-        #     model = model_JUMP.eval.m
-        #     evaluator = JuMP.NLPEvaluator(model)
-        #     MathOptInterface.initialize(evaluator, [:ExprGraph])
-        #     obj_Expr = MathOptInterface.objective_expr(evaluator) :: Expr
-        #     n = model.moi_backend.model_cache.model.num_variables_created
-        #     x :: AbstractVector=copy(model_JUMP.meta.x0)
-        #     _solver_TR_PBFGS_2!(model_JUMP, obj_Expr, n, typeof(x[1]), x)
-        # end
+
+
 
 
 
     end
-
-
-# PartiallySeparableStructure.product_matrix_sps(s_a :: struct_algo{T, Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number = PartiallySeparableStructure.product_matrix_sps(s_a.sps, s_a.B, x)
-# PartiallySeparableStructure.product_vector_sps(s_a :: struct_algo{T, Y}, x :: Vector{Z}) where T where Y <: Number where Z <: Number = PartiallySeparableStructure.product_vector_sps(s_a.sps, s_a.g, x)
-# PartiallySeparableStructure.update_SPS_SR1!(s_a :: struct_algo{T,Y}) where T where Y <: Number = PartiallySeparableStructure.update_SPS_SR1!(s_a.sps, s_a.B_k, s_a.B_k1, PartiallySeparableStructure.minus_grad_vec!(s_a.g_k1, s_a.g_k, s_a.y), s_a.x_k1 - s_a.x_k)
-#
-# f1(x :: Int,y :: Int) = x+y
-# f1(x :: Int) = (y -> f1(x,y))
-# f1(2)(3)

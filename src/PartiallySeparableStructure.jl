@@ -7,6 +7,7 @@ module PartiallySeparableStructure
     using ForwardDiff, SparseArrays, LinearAlgebra, ReverseDiff
     using Base.Threads
     import Base.-
+    using NLPModels
 
     mutable struct element_function{T}
         fun :: T
@@ -114,7 +115,6 @@ evalutate the partially separable function f = ∑fᵢ, stored in the sps struct
 f(x) = ∑fᵢ(xᵢ), so we compute independently each fᵢ(xᵢ) and we return the sum.
 """
     function evaluate_SPS(sps :: SPS{T}, x :: AbstractVector{Y} ) where T where Y <: Number
-        sleep(0.1)
         # on utilise un mapreduce de manière à ne pas allouer un tableau temporaire, on utilise l'opérateur + pour le reduce car cela correspond
         # à la définition des fonctions partiellement séparable.
         @inbounds @fastmath mapreduce(elmt_fun :: element_function{T} -> M_evaluation_expr_tree.evaluate_expr_tree(elmt_fun.fun, view(x, elmt_fun.used_variable)) :: Y, + , sps.structure :: Vector{element_function{T}})
@@ -484,13 +484,15 @@ the update, we need the grad_vector y and the vector s. B, B_1 and y use structu
     #     return res
     # end
 
+    include("solver_sps.jl")
 
+
+    solver_TR_PBFGS!(m :: T;  kwargs... ) where T <: AbstractNLPModel = My_SPS_Model_Module.solver_TR_PBFGS!(m; kwargs... )
+    solver_TR_PSR1!(m :: T;  kwargs... ) where T <: AbstractNLPModel = My_SPS_Model_Module.solver_TR_PSR1!(m; kwargs... )
 
     export deduct_partially_separable_structure
 
-    include("comparaison/ordered_include.jl")
-    include("solver_sps.jl")
-end # module
+end # module1
 
 
 

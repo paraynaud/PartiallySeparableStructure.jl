@@ -2,16 +2,26 @@ using BenchmarkTools
 using JSOSolvers, SolverBenchmark, SolverTools
 using NLPModelsJuMP
 
-using PartiallySeparableStructure
-# using ..implementation_type_expr, ..implementation_expr_tree, ..trait_expr_tree
 include("../src/comparaison/models/rosenbrock.jl")
 # include("../src/solver_sps.jl")
+# include("../src/PartiallySeparableStructure.jl")
+
+include("../src/ordered_include.jl")
+# import PartiallySeparableStructure
+# import PartiallySeparableStructure
+using ..PartiallySeparableStructure
+# using ..My_SPS_Model_Module
+
+
 const SUITE = BenchmarkGroup()
 
 
-n = [100,200,500]
+# n = [100,200,500]
+n = [10,20,30]
 
 problems = create_Rosenbrock_JuMP_Model.(n)
+
+
 
 SUITE["SPS_function"] = BenchmarkGroup()
 
@@ -40,22 +50,30 @@ for p in problems
 
 end
 
+const atol = 1.0e-5
+const rtol = 1.0e-6
+const max_time = 300.0
+max_eval = 5000
 
-# using .My_SPS_Model_Module
-#
-# nlp_problems = MathOptNLPModel.([p[1] for p in problems])
-# solver = Dict{Symbol,Function}(
-#   :trunk => ((prob;kwargs...) -> JSOSolvers.trunk(prob;kwargs...)),
-#   :trunk_lsr1 => (prob; kwargs...) -> JSOSolvers.trunk(NLPModels.LSR1Model(prob); kwargs...),
-#   :my_lbfgs => ((prob;kwargs...) -> my_LBFGS(prob;kwargs...)),
-#   :my_lsr1 => ((prob;kwargs...) -> my_LSR1(prob;kwargs...)),
-#   :p_bfgs => ((prob;kwargs...) -> My_SPS_Model_Module.solver_TR_PBFGS!(prob; kwargs...)),
-#   :p_sr1 => ((prob;kwargs...) -> My_SPS_Model_Module.solver_TR_PSR1!(prob; kwargs...))
-# )
-#
-#
-# const atol = 1.0e-5
-# const rtol = 1.0e-6
-# const max_time = 300.0
-# max_eval = 5000
-# stats = bmark_solvers(solver, nlp_problems; max_time=max_time, max_eval=max_eval, atol=atol, rtol=rtol)
+nlp_problems = MathOptNLPModel.([p[1] for p in problems])
+
+# PartiallySeparableStructure.solver_TR_PSR1!(nlp_problems[1]; max_time=max_time, max_eval=max_eval, atol=atol, rtol=rtol)
+# error("")
+
+
+solver = Dict{Symbol,Function}(
+  :trunk => ((prob;kwargs...) -> JSOSolvers.trunk(prob;kwargs...)),
+  :trunk_lsr1 => (prob; kwargs...) -> JSOSolvers.trunk(NLPModels.LSR1Model(prob); kwargs...),
+  :my_lbfgs => ((prob;kwargs...) -> my_LBFGS(prob;kwargs...)),
+  :my_lsr1 => ((prob;kwargs...) -> my_LSR1(prob;kwargs...)),
+  :p_bfgs => ((prob;kwargs...) -> PartiallySeparableStructure.solver_TR_PBFGS!(prob; kwargs...)),
+  :p_sr1 => ((prob;kwargs...) -> My_SPS_Model_Module.solver_TR_PSR1!(prob; kwargs...))
+)
+
+
+
+const atol = 1.0e-5
+const rtol = 1.0e-6
+const max_time = 300.0
+max_eval = 5000
+stats = bmark_solvers(solver, nlp_problems; max_time=max_time, max_eval=max_eval, atol=atol, rtol=rtol)

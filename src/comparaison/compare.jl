@@ -1,5 +1,6 @@
 include("../ordered_include.jl")
-
+# include("../PartiallySeparableStructure.jl")
+# include("../My_SPS_Model_Module.jl")
 
 repo_model = "models/"
 include(repo_model * "chained_wood.jl")
@@ -13,6 +14,7 @@ include( repo_model * "generalisation_Brown.jl")
 using JSOSolvers, SolverBenchmark
 
 using ..PartiallySeparableStructure
+using ..My_SPS_Model_Module
 using ..Quasi_Newton_update
 #
 # i = 100
