@@ -1,11 +1,11 @@
 using BenchmarkTools
-using JSOSolvers, SolverBenchmark
-
+using JSOSolvers, SolverBenchmark, SolverTools
+using NLPModelsJuMP
 
 using PartiallySeparableStructure
 # using ..implementation_type_expr, ..implementation_expr_tree, ..trait_expr_tree
 include("../src/comparaison/models/rosenbrock.jl")
-
+# include("../src/solver_sps.jl")
 const SUITE = BenchmarkGroup()
 
 
@@ -40,22 +40,22 @@ for p in problems
 
 end
 
-solver = Dict{Symbol,Function}(
-  :trunk => ((prob;kwargs...) -> JSOSolvers.trunk(prob;kwargs...)),
-  :trunk_lsr1 => (prob; kwargs...) -> JSOSolvers.trunk(NLPModels.LSR1Model(prob); kwargs...),
-  :my_lbfgs => ((prob;kwargs...) -> my_LBFGS(prob;kwargs...)),
-  :my_lsr1 => ((prob;kwargs...) -> my_LSR1(prob;kwargs...)),
-  :p_bfgs => ((prob;kwargs...) -> My_SPS_Model_Module.solver_TR_PBFGS!(prob; kwargs...)),
-  :p_sr1 => ((prob;kwargs...) -> My_SPS_Model_Module.solver_TR_PSR1!(prob; kwargs...))
-)
 
-
-  # A = get_div_grad(N, N, N)
-  # n = size(A, 1)
-  # b = ones(n)
-  # op = PreallocatedLinearOperator(A)
-  # M = opEye()
-  # SUITE["CG"]["DivGrad N=$N"]["Krylov"] = @benchmarkable cg($op, $b, M=$M, atol=0.0, rtol=$rtol, itmax=$n)
-  # rtol = 1.0e-6
-# error("test")
-# @show SUITE["SPS_function"]["OBJ ros 100 var"]
+# using .My_SPS_Model_Module
+#
+# nlp_problems = MathOptNLPModel.([p[1] for p in problems])
+# solver = Dict{Symbol,Function}(
+#   :trunk => ((prob;kwargs...) -> JSOSolvers.trunk(prob;kwargs...)),
+#   :trunk_lsr1 => (prob; kwargs...) -> JSOSolvers.trunk(NLPModels.LSR1Model(prob); kwargs...),
+#   :my_lbfgs => ((prob;kwargs...) -> my_LBFGS(prob;kwargs...)),
+#   :my_lsr1 => ((prob;kwargs...) -> my_LSR1(prob;kwargs...)),
+#   :p_bfgs => ((prob;kwargs...) -> My_SPS_Model_Module.solver_TR_PBFGS!(prob; kwargs...)),
+#   :p_sr1 => ((prob;kwargs...) -> My_SPS_Model_Module.solver_TR_PSR1!(prob; kwargs...))
+# )
+#
+#
+# const atol = 1.0e-5
+# const rtol = 1.0e-6
+# const max_time = 300.0
+# max_eval = 5000
+# stats = bmark_solvers(solver, nlp_problems; max_time=max_time, max_eval=max_eval, atol=atol, rtol=rtol)

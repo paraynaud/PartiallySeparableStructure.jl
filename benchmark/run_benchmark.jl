@@ -22,7 +22,7 @@ using PkgBenchmark
 using SolverBenchmark
 import PartiallySeparableStructure
 
-# 
+#
 # using Plots
 # # pyplot()  # recommended!
 # using PlotThemes
@@ -47,4 +47,4 @@ judgement = judge(master, commit)
 # judgement = judge("PartiallySeparableStructure", "master")
 export_markdown("benchmark/judgement.md", judgement)
 
-profile_package(judgement)
+# profile_package(judgement)
