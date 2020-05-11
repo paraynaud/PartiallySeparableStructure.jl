@@ -1,4 +1,5 @@
 using BenchmarkTools
+using JSOSolvers, SolverBenchmark
 
 
 using PartiallySeparableStructure
@@ -37,8 +38,17 @@ for p in problems
 
   SUITE["SPS_function"]["Hessien ros $n var"] = @benchmarkable PartiallySeparableStructure.struct_hessian!($SPS_ros, $x, $H)
 
-
 end
+
+solver = Dict{Symbol,Function}(
+  :trunk => ((prob;kwargs...) -> JSOSolvers.trunk(prob;kwargs...)),
+  :trunk_lsr1 => (prob; kwargs...) -> JSOSolvers.trunk(NLPModels.LSR1Model(prob); kwargs...),
+  :my_lbfgs => ((prob;kwargs...) -> my_LBFGS(prob;kwargs...)),
+  :my_lsr1 => ((prob;kwargs...) -> my_LSR1(prob;kwargs...)),
+  :p_bfgs => ((prob;kwargs...) -> My_SPS_Model_Module.solver_TR_PBFGS!(prob; kwargs...)),
+  :p_sr1 => ((prob;kwargs...) -> My_SPS_Model_Module.solver_TR_PSR1!(prob; kwargs...))
+)
+
 
   # A = get_div_grad(N, N, N)
   # n = size(A, 1)

@@ -490,6 +490,9 @@ the update, we need the grad_vector y and the vector s. B, B_1 and y use structu
 
 end # module
 
+include("comparaison/ordered_include.jl")
+include("solver_sps.jl")
+
 
 
 #
