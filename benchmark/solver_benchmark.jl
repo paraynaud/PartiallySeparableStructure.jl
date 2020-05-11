@@ -52,27 +52,3 @@ for i in 1:length(problems)
   SUITE["P-SR1"]["ros $n var"] = @benchmarkable PartiallySeparableStructure.solver_TR_PSR1!(prob; max_time=&max_time, max_eval=&max_eval, atol=&atol, rtol=&rtol)
 
 end
-
-const atol = 1.0e-5
-const rtol = 1.0e-6
-const max_time = 300.0
-max_eval = 5000
-
-
-# PartiallySeparableStructure.solver_TR_PSR1!(nlp_problems[1]; max_time=max_time, max_eval=max_eval, atol=atol, rtol=rtol)
-# error("")
-
-
-solver = Dict{Symbol,Function}(
-  :trunk => ((prob;kwargs...) -> JSOSolvers.trunk(prob;kwargs...)),
-  :trunk_lsr1 => (prob; kwargs...) -> JSOSolvers.trunk(NLPModels.LSR1Model(prob); kwargs...),
-  :my_lbfgs => ((prob;kwargs...) -> my_LBFGS(prob;kwargs...)),
-  :my_lsr1 => ((prob;kwargs...) -> my_LSR1(prob;kwargs...)),
-  :p_bfgs => ((prob;kwargs...) -> PartiallySeparableStructure.solver_TR_PBFGS!(prob; kwargs...)),
-  :p_sr1 => ((prob;kwargs...) -> PartiallySeparableStructure.solver_TR_PSR1!(prob; kwargs...))
-)
-
-
-
-
-stats = bmark_solvers(solver, nlp_problems; max_time=max_time, max_eval=max_eval, atol=atol, rtol=rtol)

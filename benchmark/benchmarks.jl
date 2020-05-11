@@ -16,8 +16,8 @@ using ..PartiallySeparableStructure
 const SUITE = BenchmarkGroup()
 
 
-# n = [100,200,500]
-n = [10,20,30]
+n = [100,200,500]
+# n = [10,20,30]
 
 problems = create_Rosenbrock_JuMP_Model.(n)
 
