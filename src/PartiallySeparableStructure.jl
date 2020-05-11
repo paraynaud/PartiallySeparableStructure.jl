@@ -488,10 +488,10 @@ the update, we need the grad_vector y and the vector s. B, B_1 and y use structu
 
     export deduct_partially_separable_structure
 
+    include("comparaison/ordered_include.jl")
+    include("solver_sps.jl")
 end # module
 
-include("comparaison/ordered_include.jl")
-include("solver_sps.jl")
 
 
 
