@@ -22,24 +22,6 @@ using PkgBenchmark
 using SolverBenchmark
 import PartiallySeparableStructure
 
-#
-# using Plots
-# # pyplot()  # recommended!
-# using PlotThemes
-# theme(:juno)
-#
-# common_plot_args = Dict{Symbol,Any}(
-#   :linewidth => 2,
-#   :alpha => .75,
-#   :titlefontsize => 8,
-#   :legendfontsize => 8,
-#   :xtickfontsize => 6,
-#   :ytickfontsize => 6,
-#   :guidefontsize => 8,
-# )
-# Plots.default(; common_plot_args...)
-
-
 
 commit = benchmarkpkg("PartiallySeparableStructure")  #dernier commit sur la branche sur laquelle on se trouve
 master = benchmarkpkg("PartiallySeparableStructure", "master") # branche master
@@ -47,4 +29,9 @@ judgement = judge(master, commit)
 # judgement = judge("PartiallySeparableStructure", "master")
 export_markdown("benchmark/judgement.md", judgement)
 
-# profile_package(judgement)
+
+commit_solver = benchmarkpkg("PartiallySeparableStructure")  #dernier commit sur la branche sur laquelle on se trouve
+master_solver = benchmarkpkg("PartiallySeparableStructure", "master") # branche master
+judgement_solver = judge(master_solver, commit_solver)
+# judgement = judge("PartiallySeparableStructure", "master")
+export_markdown("benchmark/judgement_solver.md", judgement_solver)
