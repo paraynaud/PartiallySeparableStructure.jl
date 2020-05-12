@@ -9,3 +9,5 @@ master_solver = benchmarkpkg("PartiallySeparableStructure", "master_dvpt", scrip
 judgement_solver = judge(master_solver, commit_solver)
 
 export_markdown("benchmark/judgement_solver.md", judgement_solver)
+
+# p = profile_solvers(commit_solver)
