@@ -44,7 +44,7 @@ for i in 1:length(problems)
 
   # SPS_ros = PartiallySeparableStructure.deduct_partially_separable_structure(obj_ros_expr_tree, n)
 
-  SUITE["Trunk"]["ros $n var"] = @benchmarkable $(JSOSolvers.trunk)(&prob; max_eval=&max_eval, atol=&atol, rtol=&rtol)
+  SUITE["Trunk"]["ros $n var"] = @benchmarkable $(JSOSolvers.trunk)(&prob)
   # SUITE["Trunk_LSR1"]["ros $n var"] = @benchmarkable JSOSolvers.trunk(NLPModels.LSR1Model(&prob); max_time=&max_time, max_eval=&max_eval, atol=&atol, rtol=&rtol)
   # SUITE["L-BFGS"]["ros $n var"] = @benchmarkable my_LBFGS(&prob; max_time=&max_time, max_eval=&max_eval, atol=&atol, rtol=&rtol)
   # SUITE["L-SR1"]["ros $n var"] = @benchmarkable my_LSR1(&prob; max_time=&max_time, max_eval=&max_eval, atol=&atol, rtol=&rtol)
