@@ -33,7 +33,6 @@ SUITE["P-BFGS"] = BenchmarkGroup()
 
 for i in 1:length(problems)
 
-  SUITE["ros $n var"] = BenchmarkGroup()
 
   atol = 1.0e-5
   rtol = 1.0e-6
@@ -45,6 +44,7 @@ for i in 1:length(problems)
   prob = nlp_problems[i]
   LSR1_prob = NLPModels.LSR1Model(prob)
 
+  SUITE["ros $n var"] = BenchmarkGroup()
   # SPS_ros = PartiallySeparableStructure.deduct_partially_separable_structure(obj_ros_expr_tree, n)
 
   SUITE["ros $n var"]["Trunk"] = @benchmarkable $(JSOSolvers.trunk)($prob)
