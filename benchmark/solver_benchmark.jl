@@ -9,7 +9,7 @@ include("../src/comparaison/models/rosenbrock.jl")
 include("../src/ordered_include.jl")
 # import PartiallySeparableStructure
 # import PartiallySeparableStructure
-# using ..PartiallySeparableStructure
+using ..PartiallySeparableStructure
 # using ..My_SPS_Model_Module
 
 
