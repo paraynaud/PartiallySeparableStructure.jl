@@ -1,5 +1,5 @@
 using BenchmarkTools
-using JSOSolvers, SolverBenchmark, SolverTools
+using JSOSolvers, SolverTools
 using NLPModelsJuMP
 
 include("../src/comparaison/models/rosenbrock.jl")
