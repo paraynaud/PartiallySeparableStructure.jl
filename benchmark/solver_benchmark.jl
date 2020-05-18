@@ -47,8 +47,8 @@ for i in 1:length(problems)
 
   SUITE["Trunk"]["ros $n var"] = @benchmarkable $(JSOSolvers.trunk)($prob)
   SUITE["Trunk_LSR1"]["ros $n var"] = @benchmarkable $(JSOSolvers.trunk)($LSR1_prob)
-  SUITE["L-BFGS"]["ros $n var"] = @benchmarkable my_LBFGS(&prob)
-  SUITE["L-SR1"]["ros $n var"] = @benchmarkable my_LSR1(&prob)
+  SUITE["L-BFGS"]["ros $n var"] = @benchmarkable $(my_LBFGS)(&prob)
+  SUITE["L-SR1"]["ros $n var"] = @benchmarkable $(my_LSR1)(&prob)
   # SUITE["P-BFGS"]["ros $n var"] = @benchmarkable PartiallySeparableStructure.solver_TR_PBFGS!(&prob)
   # SUITE["P-SR1"]["ros $n var"] = @benchmarkable PartiallySeparableStructure.solver_TR_PSR1!(&prob)
 
