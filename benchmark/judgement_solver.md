@@ -2,11 +2,11 @@
 
 ## Job Properties
 * Time of benchmarks:
-    - Target: 12 May 2020 - 16:41
-    - Baseline: 12 May 2020 - 16:39
+    - Target: 18 May 2020 - 14:06
+    - Baseline: 18 May 2020 - 14:05
 * Package commits:
     - Target: 5f0d24
-    - Baseline: 5f0d24
+    - Baseline: 06303b
 * Julia commits:
     - Target: 2d5741
     - Baseline: 2d5741
@@ -25,7 +25,9 @@ benchmark results remained invariant between builds).
 
 | ID                        | time ratio                   | memory ratio |
 |---------------------------|------------------------------|--------------|
-| `["Trunk", "ros 20 var"]` | 0.84 (5%) :white_check_mark: |   1.00 (1%)  |
+| `["Trunk", "ros 10 var"]` | 0.56 (5%) :white_check_mark: |   1.00 (1%)  |
+| `["Trunk", "ros 20 var"]` | 0.75 (5%) :white_check_mark: |   1.00 (1%)  |
+| `["Trunk", "ros 30 var"]` | 0.85 (5%) :white_check_mark: |   1.00 (1%)  |
 
 ## Benchmark Group List
 Here's a list of all the benchmark groups executed by this job:
@@ -43,17 +45,17 @@ Platform Info:
       Microsoft Windows [version 10.0.18362.476]
   CPU: Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz: 
               speed         user         nice          sys         idle          irq
-       #1  1498 MHz    1853171            0      1440359     20525718       765296  ticks
-       #2  1498 MHz    1349078            0       523203     21946750        49078  ticks
-       #3  1498 MHz    2169750            0       610328     21038953        19390  ticks
-       #4  1498 MHz    1146375            0       458765     22213890        14890  ticks
-       #5  1498 MHz    1541109            0       570046     21707875        22968  ticks
-       #6  1498 MHz    1007875            0       388312     22422828         9656  ticks
-       #7  1498 MHz    2323765            0       469546     21025703        17671  ticks
-       #8  1498 MHz    1289421            0       420718     22108875         6937  ticks
+       #1  1498 MHz     664937            0       480734     14641218       174828  ticks
+       #2  1498 MHz     280343            0       160828     15345515         7000  ticks
+       #3  1498 MHz    1104531            0       421140     14261015         5671  ticks
+       #4  1498 MHz     408062            0       164125     15214500         2046  ticks
+       #5  1498 MHz     855140            0       339109     14592437         4781  ticks
+       #6  1498 MHz     434156            0       195093     15157437         2000  ticks
+       #7  1498 MHz     693437            0       245968     14847281         3562  ticks
+       #8  1498 MHz     423312            0       261796     15101562         2453  ticks
        
-  Memory: 31.775043487548828 GB (17720.24609375 MB free)
-  Uptime: 23819.0 sec
+  Memory: 31.775043487548828 GB (20054.40234375 MB free)
+  Uptime: 18801.0 sec
   Load Avg:  0.0  0.0  0.0
   WORD_SIZE: 64
   LIBM: libopenlibm
@@ -69,17 +71,17 @@ Platform Info:
       Microsoft Windows [version 10.0.18362.476]
   CPU: Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz: 
               speed         user         nice          sys         idle          irq
-       #1  1498 MHz    1840000            0      1435000     20458140       764546  ticks
-       #2  1498 MHz    1334156            0       520656     21878109        48921  ticks
-       #3  1498 MHz    2149312            0       605906     20977703        19281  ticks
-       #4  1498 MHz    1127328            0       454312     22151281        14812  ticks
-       #5  1498 MHz    1525515            0       565031     21642375        22890  ticks
-       #6  1498 MHz     994328            0       385125     22353468         9609  ticks
-       #7  1498 MHz    2307671            0       465281     20959953        17531  ticks
-       #8  1498 MHz    1272296            0       416437     22044171         6859  ticks
+       #1  1498 MHz     656750            0       476843     14589984       174265  ticks
+       #2  1498 MHz     271718            0       158828     15292828         6953  ticks
+       #3  1498 MHz    1088781            0       418187     14216406         5609  ticks
+       #4  1498 MHz     396171            0       161578     15165625         2000  ticks
+       #5  1498 MHz     841203            0       335593     14546578         4734  ticks
+       #6  1498 MHz     419828            0       193359     15110187         1968  ticks
+       #7  1498 MHz     677578            0       243796     14802000         3531  ticks
+       #8  1498 MHz     406843            0       259671     15056843         2453  ticks
        
-  Memory: 31.775043487548828 GB (17846.62109375 MB free)
-  Uptime: 23732.0 sec
+  Memory: 31.775043487548828 GB (20960.70703125 MB free)
+  Uptime: 18737.0 sec
   Load Avg:  0.0  0.0  0.0
   WORD_SIZE: 64
   LIBM: libopenlibm

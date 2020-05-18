@@ -10,4 +10,4 @@ judgement_solver = judge(master_dvpt_solver, commit_solver)
 
 export_markdown("benchmark/judgement_solver.md", judgement_solver)
 
-# p = SolverBenchmark.profile_solvers(commit_solver)
+p = SolverBenchmark.profile_solvers(commit_solver)
