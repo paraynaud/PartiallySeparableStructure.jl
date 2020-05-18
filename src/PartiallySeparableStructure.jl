@@ -487,10 +487,10 @@ the update, we need the grad_vector y and the vector s. B, B_1 and y use structu
     include("solver_sps.jl")
 
 
-    solver_TR_PBFGS!(m :: T;  kwargs... ) where T <: AbstractNLPModel = My_SPS_Model_Module.solver_TR_PBFGS!(m; kwargs... )
-    solver_TR_PSR1!(m :: T;  kwargs... ) where T <: AbstractNLPModel = My_SPS_Model_Module.solver_TR_PSR1!(m; kwargs... )
+    solver_TR_PBFGS(m :: T;  kwargs... ) where T <: AbstractNLPModel = My_SPS_Model_Module.solver_TR_PBFGS!(m; kwargs... )
+    solver_TR_PSR1(m :: T;  kwargs... ) where T <: AbstractNLPModel = My_SPS_Model_Module.solver_TR_PSR1!(m; kwargs... )
 
-    export deduct_partially_separable_structure
+    export deduct_partially_separable_structure, solver_TR_PBFGS, solver_TR_PSR1
 
 end # module1
 
