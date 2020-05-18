@@ -47,12 +47,13 @@ for i in 1:length(problems)
   SUITE["ros $n var"] = BenchmarkGroup()
   # SPS_ros = PartiallySeparableStructure.deduct_partially_separable_structure(obj_ros_expr_tree, n)
 
+  # solver_TR_PBFGS(prob)
   SUITE["ros $n var"]["Trunk"] = @benchmarkable $(JSOSolvers.trunk)($prob)
   SUITE["ros $n var"]["Trunk_LSR1"] = @benchmarkable $(JSOSolvers.trunk)($LSR1_prob)
   SUITE["ros $n var"]["L-BFGS"] = @benchmarkable $(my_LBFGS)($prob)
   SUITE["ros $n var"]["L-SR1"] = @benchmarkable $(my_LSR1)($prob)
-  SUITE["ros $n var"]["P-BFGS"] = @benchmarkable $(solver_TR_PBFGS)($prob)
-  SUITE["ros $n var"]["P-SR1"] = @benchmarkable &(solver_TR_PSR1)(&prob)
+  SUITE["ros $n var"]["P-BFGS"] = @benchmarkable (solver_TR_PBFGS)(prob)
+  SUITE["ros $n var"]["P-SR1"] = @benchmarkable (solver_TR_PSR1)(prob)
 
   # SUITE["P-BFGS"]["ros $n var"] = @benchmarkable $(PartiallySeparableStructure.solver_TR_PBFGS!)(&prob)
 
