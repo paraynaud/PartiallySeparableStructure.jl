@@ -1,6 +1,7 @@
 using PkgBenchmark
 using SolverBenchmark
 import PartiallySeparableStructure
+using Plots
 
 
 commit_solver = benchmarkpkg("PartiallySeparableStructure",script="benchmark/solver_benchmark.jl")  #dernier commit sur la branche sur laquelle on se trouve
@@ -11,3 +12,4 @@ judgement_solver = judge(master_dvpt_solver, commit_solver)
 export_markdown("benchmark/judgement_solver.md", judgement_solver)
 
 p = SolverBenchmark.profile_solvers(commit_solver)
+savefig(p, "benchmark/profile_solver.png")
