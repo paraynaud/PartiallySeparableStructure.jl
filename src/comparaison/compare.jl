@@ -95,7 +95,7 @@ function create_all_problems(nb_var_array :: Vector{Int})
     (m_powel, evaluator,obj) = create_chained_Powel_JuMP_Model(i)
     (m_cragg_levy, evaluator,obj) = create_chained_cragg_levy_JuMP_Model(i)
     (m_brown, evaluator,obj) = create_generalisation_Brown(i)
-    push!(problem_array, MathOptNLPModel(m_ros), MathOptNLPModel(m_chained), MathOptNLPModel(m_powel), MathOptNLPModel(m_cragg_levy), MathOptNLPModel(m_brown))
+    push!(problem_array, MathOptNLPModel(m_ros, name="Ros "*string(i)), MathOptNLPModel(m_chained, name="ChainedWood "*string(i)), MathOptNLPModel(m_powel, name="ChainedPowel "*string(i)), MathOptNLPModel(m_cragg_levy, name="CraggLevy "*string(i)), MathOptNLPModel(m_brown, name="Brown "*string(i)))
     # init = create_initial_point_Rosenbrock(i)
     # push!(problem_array, (MathOptNLPModel(m_ros), init))
   end
@@ -105,11 +105,12 @@ end
 
 println(" \n\n génération des problemes")
 n_array = [100,500,1000,2000,5000]
-# n_array = [10,20,30]
+n_array = [10,20,30]
 # n_array = [1000,2000]
-n_array = [100,200]
+# n_array = [100,200]
 problems = create_all_problems(n_array)
 
+# error("test")
 # res = My_SPS_Model_Module.solver_TR_PBFGS!.(problems)
 #
 #
@@ -124,8 +125,8 @@ solver_v2 = Dict{Symbol,Function}(
   :trunk_lsr1 => (prob; kwargs...) -> JSOSolvers.trunk(NLPModels.LSR1Model(prob); kwargs...),
   :my_lbfgs => ((prob;kwargs...) -> my_LBFGS(prob;kwargs...)),
   :my_lsr1 => ((prob;kwargs...) -> my_LSR1(prob;kwargs...)),
-  :p_bfgs => ((prob;kwargs...) -> My_SPS_Model_Module.solver_TR_PBFGS!(prob; kwargs...)),
-  :p_sr1 => ((prob;kwargs...) -> My_SPS_Model_Module.solver_TR_PSR1!(prob; kwargs...))
+  :p_bfgs => ((prob;kwargs...) -> PartiallySeparableStructure.solver_TR_PBFGS(prob; kwargs...)),
+  :p_sr1 => ((prob;kwargs...) -> PartiallySeparableStructure.solver_TR_PSR1(prob; kwargs...))
 )
 
 const atol = 1.0e-5
@@ -144,11 +145,11 @@ performance_profile(stats, df->df.elapsed_time)
 performance_profile(stats, df->df.iter)
 
 println("affichage des tables")
-markdown_table(stdout, stats[:p_sr1], cols=[ :id, :name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
-markdown_table(stdout, stats[:p_bfgs], cols=[ :id, :name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
-markdown_table(stdout, stats[:my_lbfgs], cols=[ :id, :name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
-markdown_table(stdout, stats[:trunk], cols=[ :id, :name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
-markdown_table(stdout, stats[:trunk_lsr1], cols=[ :id, :name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
+markdown_table(stdout, stats[:p_sr1], cols=[  :name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
+markdown_table(stdout, stats[:p_bfgs], cols=[ :name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
+markdown_table(stdout, stats[:my_lbfgs], cols=[:name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
+markdown_table(stdout, stats[:trunk], cols=[:name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
+markdown_table(stdout, stats[:trunk_lsr1], cols=[:name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
 
 
 
@@ -161,7 +162,7 @@ io = open(location_md,"w")
 close(io)
 io = open(location_md,"w+")
 for i in keys_solver
-  markdown_table(io, stats[i], cols=[ :id, :name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
+  markdown_table(io, stats[i], cols=[ :name, :nvar, :elapsed_time, :iter, :status, :objective, :neval_obj, :neval_grad ])
 end
 close(io)
 

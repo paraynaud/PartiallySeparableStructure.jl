@@ -7,4 +7,5 @@ results = PkgBenchmark.benchmarkpkg("PartiallySeparableStructure", script="bench
 
 # process benchmark results and post gist
 p = profile_solvers(results)
+error("error")
 savefig(p, "benchmark/profile_JuMP.png")

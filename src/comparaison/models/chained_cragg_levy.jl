@@ -16,6 +16,8 @@ function create_chained_cragg_levy_JuMP_Model(n :: Int)
     vec_var = JuMP.all_variables(m)
     vec_value = create_initial_point_chained_cragg_levy(n)
     JuMP.set_start_value.(vec_var, vec_value)
+    # JuMP.set_name(m, "Cragg Levy "*string(n))
+    # m.moi_backend.model_cache.model.name = "Cragg Levy "*string(n)
     return (m, evaluator,obj)
 end
 
@@ -34,4 +36,5 @@ end
 
 
 
- # (m, evaluator,obj) = create_chained_cragg_levy_JuMP_Model(8)
+#  (m, evaluator,obj) = create_chained_cragg_levy_JuMP_Model(8)
+# @show m.moi_backend.model_cache.model.name
