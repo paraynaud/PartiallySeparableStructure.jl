@@ -22,7 +22,7 @@ SUITE["JuMP"] = BenchmarkGroup()
 for p in problems
   (m_ros, evaluator, obj_ros) = p
   n = m_ros.moi_backend.model_cache.model.num_variables_created
-  x = ones(n
+  x = ones(n) 
   SUITE["JuMP"]["ROS $n variable"] = BenchmarkGroup()
   SUITE["SPS"]["ROS $n variable"] = BenchmarkGroup()
 
