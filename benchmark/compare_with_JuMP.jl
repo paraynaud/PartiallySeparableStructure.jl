@@ -11,7 +11,7 @@ const SUITE = BenchmarkGroup()
 
 
 # n = [100,200,500]
-# n = (x -> 100*x).()[1:100;])
+n = (x -> 100*x).([1:100;])
 
 problems = create_Rosenbrock_JuMP_Model.(n)
 
