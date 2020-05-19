@@ -60,7 +60,7 @@ for p in problems
 
 
   SPS_Structured_Hessian_en_x = PartiallySeparableStructure.struct_hessian!(SPS_ros, x, H)
-  SUITE["SPS"]["ROS $n variable"]["Hv"] = @benchmarkable PartiallySeparableStructure.product_matrix_sps($SPS_ros, $SPS_Structured_Hessian_en_x, $y)
+  SUITE["SPS"]["ROS $n variable"]["Hv"] = @benchmarkable PartiallySeparableStructure.product_matrix_sps($SPS_ros, $H, $y)
 
   MOI_Hessian_product_y = Vector{ typeof(y[1]) }(undef,n)
   SUITE["JuMP"]["ROS $n variable"]["Hv"] = @benchmarkable MathOptInterface.eval_hessian_lagrangian_product($evaluator, $MOI_Hessian_product_y, $x, $y, 1.0, zeros(0))
