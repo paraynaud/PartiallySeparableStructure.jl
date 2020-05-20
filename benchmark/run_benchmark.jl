@@ -1,6 +1,6 @@
 using PkgBenchmark
 using SolverBenchmark
-import PartiallySeparableStructure
+# import PartiallySeparableStructure
 
 
 commit = benchmarkpkg("PartiallySeparableStructure")  #dernier commit sur la branche sur laquelle on se trouve
