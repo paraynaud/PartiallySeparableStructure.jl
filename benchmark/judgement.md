@@ -2,11 +2,11 @@
 
 ## Job Properties
 * Time of benchmarks:
-    - Target: 11 May 2020 - 22:28
-    - Baseline: 11 May 2020 - 22:27
+    - Target: 20 May 2020 - 09:48
+    - Baseline: 20 May 2020 - 09:46
 * Package commits:
-    - Target: 61f590
-    - Baseline: 9aec19
+    - Target: c75cd0
+    - Baseline: c75cd0
 * Julia commits:
     - Target: 2d5741
     - Baseline: 2d5741
@@ -23,17 +23,15 @@ than `1.0` denotes a possible improvement (marked with :white_check_mark:). Only
 that indicate possible regressions or improvements - are shown below (thus, an empty table means that all
 benchmark results remained invariant between builds).
 
-| ID                                        | time ratio                   | memory ratio |
-|-------------------------------------------|------------------------------|--------------|
-| `["SPS_function", "Hessien ros 100 var"]` |                1.12 (5%) :x: |   1.00 (1%)  |
-| `["SPS_function", "Hessien ros 200 var"]` |                1.12 (5%) :x: |   1.00 (1%)  |
-| `["SPS_function", "Hessien ros 500 var"]` |                1.10 (5%) :x: |   1.00 (1%)  |
-| `["SPS_function", "OBJ ros 100 var"]`     |             1510.24 (5%) :x: |   1.00 (1%)  |
-| `["SPS_function", "OBJ ros 200 var"]`     |              417.24 (5%) :x: |   1.00 (1%)  |
-| `["SPS_function", "OBJ ros 500 var"]`     |              248.52 (5%) :x: |   1.00 (1%)  |
-| `["SPS_function", "grad ros 100 var"]`    | 0.79 (5%) :white_check_mark: |   1.00 (1%)  |
-| `["SPS_function", "grad ros 200 var"]`    | 0.60 (5%) :white_check_mark: |   1.00 (1%)  |
-| `["SPS_function", "grad ros 500 var"]`    |                1.20 (5%) :x: |   1.00 (1%)  |
+| ID                                       | time ratio                   | memory ratio |
+|------------------------------------------|------------------------------|--------------|
+| `["SPS_function", "Hessien ros 20 var"]` |                1.33 (5%) :x: |   1.00 (1%)  |
+| `["SPS_function", "Hessien ros 30 var"]` | 0.84 (5%) :white_check_mark: |   1.00 (1%)  |
+| `["SPS_function", "OBJ ros 10 var"]`     | 0.93 (5%) :white_check_mark: |   1.00 (1%)  |
+| `["SPS_function", "OBJ ros 20 var"]`     |                1.63 (5%) :x: |   1.00 (1%)  |
+| `["SPS_function", "OBJ ros 30 var"]`     | 0.77 (5%) :white_check_mark: |   1.00 (1%)  |
+| `["SPS_function", "grad ros 10 var"]`    | 0.88 (5%) :white_check_mark: |   1.00 (1%)  |
+| `["SPS_function", "grad ros 20 var"]`    |                1.44 (5%) :x: |   1.00 (1%)  |
 
 ## Benchmark Group List
 Here's a list of all the benchmark groups executed by this job:
@@ -51,17 +49,17 @@ Platform Info:
       Microsoft Windows [version 10.0.18362.476]
   CPU: Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz: 
               speed         user         nice          sys         idle          irq
-       #1  1498 MHz    2135375            0      1345343     21181968       507640  ticks
-       #2  1498 MHz    3001312            0       497828     21163312        44953  ticks
-       #3  1498 MHz    3448468            0       730406     20483593        15812  ticks
-       #4  1498 MHz    2064296            0       456484     22141671         7875  ticks
-       #5  1498 MHz    2531921            0       707234     21423296        23640  ticks
-       #6  1498 MHz    2061750            0       721718     21879000        10171  ticks
-       #7  1498 MHz    2830953            0       665187     21166328        18906  ticks
-       #8  1498 MHz    2379093            0       551875     21731484        14281  ticks
+       #1  1498 MHz    2157500            0      2464031     51209593      1021750  ticks
+       #2  1498 MHz    3482218            0      1070781     51277906        84250  ticks
+       #3  1498 MHz    4082515            0      1089375     50659015        35953  ticks
+       #4  1498 MHz    1692625            0       685250     53453031        23640  ticks
+       #5  1498 MHz    2774343            0       956000     52100562        26687  ticks
+       #6  1498 MHz    1400562            0       659578     53770765        14843  ticks
+       #7  1498 MHz    2367390            0       811843     52651671        49734  ticks
+       #8  1498 MHz    1336625            0       467437     54026828         9890  ticks
        
-  Memory: 31.775043487548828 GB (15314.46484375 MB free)
-  Uptime: 27579.0 sec
+  Memory: 31.775043487548828 GB (19261.0703125 MB free)
+  Uptime: 88977.0 sec
   Load Avg:  0.0  0.0  0.0
   WORD_SIZE: 64
   LIBM: libopenlibm
@@ -77,17 +75,17 @@ Platform Info:
       Microsoft Windows [version 10.0.18362.476]
   CPU: Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz: 
               speed         user         nice          sys         idle          irq
-       #1  1498 MHz    2109609            0      1336968     21113093       506968  ticks
-       #2  1498 MHz    2976640            0       493546     21089265        44796  ticks
-       #3  1498 MHz    3413093            0       724125     20422234        15734  ticks
-       #4  1498 MHz    2030453            0       451593     22077406         7796  ticks
-       #5  1498 MHz    2499937            0       700406     21359109        23500  ticks
-       #6  1498 MHz    2032453            0       716406     21810593        10156  ticks
-       #7  1498 MHz    2795125            0       659953     21104375        18781  ticks
-       #8  1498 MHz    2340328            0       546875     21672250        14187  ticks
+       #1  1498 MHz    2147140            0      2458937     51155046      1021187  ticks
+       #2  1498 MHz    3474531            0      1068828     51217546        84203  ticks
+       #3  1498 MHz    4067921            0      1086750     50606234        35843  ticks
+       #4  1498 MHz    1682453            0       683781     53394671        23609  ticks
+       #5  1498 MHz    2762593            0       953843     52044468        26609  ticks
+       #6  1498 MHz    1388578            0       657828     53714500        14812  ticks
+       #7  1498 MHz    2351578            0       809531     52599796        49687  ticks
+       #8  1498 MHz    1315281            0       465765     53979843         9875  ticks
        
-  Memory: 31.775043487548828 GB (17001.4140625 MB free)
-  Uptime: 27476.0 sec
+  Memory: 31.775043487548828 GB (19371.16015625 MB free)
+  Uptime: 88907.0 sec
   Load Avg:  0.0  0.0  0.0
   WORD_SIZE: 64
   LIBM: libopenlibm
